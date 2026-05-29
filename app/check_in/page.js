@@ -809,57 +809,67 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
 function PassengerForm({ formData, setFormData, onSubmit, loading, errorMessage }) {
   return (
     <motion.section
-      className="absolute inset-0 px-7 py-8"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.55 }}
+      className="absolute inset-0 overflow-hidden px-7 py-8"
+      initial={{ opacity: 0, scale: 1.015, filter: "blur(8px)" }}
+      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, scale: 0.99, filter: "blur(6px)" }}
+      transition={{ duration: 1.35, ease: [0.22, 1, 0.36, 1] }}
     >
       <AviationBackground />
-      <div className="relative z-10 flex justify-center pt-4">
+
+      <div className="relative z-10 flex justify-center pt-5">
         <Logo compact />
       </div>
 
-      <div className="relative z-10 mt-14">
-        <p className="mb-3 text-[11px] tracking-[0.28em] text-[#d7a247]">PASSENGER CHECK-IN</p>
-        <h1 className="text-4xl font-semibold leading-none tracking-[-0.04em]">Generate Your Boarding Pass</h1>
-        <p className="mt-4 text-sm leading-6 text-white/65">
-          Enter your details to create your personal boarding pass for the event and the secret destination giveaway.
+      <div className="relative z-10 mt-16">
+        <p className="mb-4 text-[9px] uppercase tracking-[0.42em] text-[#d7a247]/90">
+          PRIVATE PASSENGER CHECK-IN
+        </p>
+
+        <h1 className="max-w-[92%] text-[2.55rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white">
+          Generate Your Boarding Pass
+        </h1>
+
+        <div className="mt-7 h-[1px] w-20 bg-gradient-to-r from-[#d7a247] to-transparent" />
+
+        <p className="mt-6 max-w-[90%] text-[14px] leading-7 text-white/68">
+          Enter your details to unlock your personal digital boarding pass for the event experience.
         </p>
       </div>
 
       {errorMessage && (
-        <div className="relative z-10 mt-5 flex items-start gap-3 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-100">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{errorMessage}</p>
+        <div className="relative z-10 mt-6 rounded-3xl border border-red-400/25 bg-red-500/10 p-4 text-sm text-red-100 backdrop-blur-xl">
+          {errorMessage}
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="relative z-10 mt-8 space-y-4">
-        <label className="block rounded-3xl border border-white/10 bg-white/7 p-4 backdrop-blur-xl">
-          <span className="mb-3 flex items-center gap-2 text-[10px] tracking-[0.25em] text-[#d7a247]">
-            <User className="h-4 w-4" /> PASSENGER NAME
+      <form onSubmit={onSubmit} className="relative z-10 mt-9 space-y-5">
+        <label className="block rounded-[2rem] border border-white/12 bg-[#02050c]/38 p-5 backdrop-blur-2xl">
+          <span className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[#d7a247]/90">
+            <User className="h-4 w-4" /> Passenger Name
           </span>
+
           <input
             type="text"
             required
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className="w-full bg-transparent text-lg outline-none placeholder:text-white/30"
-            placeholder="Your full name"
+            className="w-full bg-transparent text-[18px] text-white outline-none placeholder:text-white/28"
+            placeholder="Full name"
           />
         </label>
 
-        <label className="block rounded-3xl border border-white/10 bg-white/7 p-4 backdrop-blur-xl">
-          <span className="mb-3 flex items-center gap-2 text-[10px] tracking-[0.25em] text-[#d7a247]">
-            <Mail className="h-4 w-4" /> EMAIL ADDRESS
+        <label className="block rounded-[2rem] border border-white/12 bg-[#02050c]/38 p-5 backdrop-blur-2xl">
+          <span className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[#d7a247]/90">
+            <Mail className="h-4 w-4" /> Contact Email
           </span>
+
           <input
             type="email"
             required
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full bg-transparent text-lg outline-none placeholder:text-white/30"
+            className="w-full bg-transparent text-[18px] text-white outline-none placeholder:text-white/28"
             placeholder="your@email.com"
           />
         </label>
@@ -867,9 +877,17 @@ function PassengerForm({ formData, setFormData, onSubmit, loading, errorMessage 
         <button
           type="submit"
           disabled={loading}
-          className="mt-6 w-full rounded-full bg-[#d7a247] px-6 py-4 text-sm font-bold tracking-[0.18em] text-[#061225] disabled:opacity-50"
+          className="group relative mt-7 flex w-full items-center justify-between overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#02050c]/46 px-5 py-[16px] text-[#f7f1e6] shadow-[0_18px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl disabled:opacity-50"
         >
-          {loading ? "PROCESSING CHECK-IN" : "GENERATE BOARDING PASS"}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#d7a247]/14 via-white/7 to-transparent" />
+
+          <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em]">
+            {loading ? "Processing Check-In" : "Generate Boarding Pass"}
+          </span>
+
+          <span className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a]">
+            <ArrowRight className="h-4 w-4" />
+          </span>
         </button>
       </form>
     </motion.section>
