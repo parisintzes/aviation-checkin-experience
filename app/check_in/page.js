@@ -957,52 +957,70 @@ function GeneratingScreen() {
 /*
   ============================================================
   SECTION 14 — BOARDING PASS SCREEN
-  Εδώ εμφανίζεται το τελικό boarding pass.
-
-  ΤΙ ΕΠΗΡΕΑΖΕΙ
-  ------------------------------------------------------------
-  - Το τελικό digital ticket.
-  - Τα στοιχεία που βλέπει ο συμμετέχων.
-  - Το visual reward moment μετά το check-in.
+  Premium boarding pass reveal.
 */
 
 function BoardingPassScreen({ pass, onFinish }) {
   return (
     <motion.section
-      className="absolute inset-0 px-5 py-6 overflow-y-auto"
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.7 }}
+      className="absolute inset-0 overflow-y-auto px-5 py-6"
+      initial={{ opacity: 0, scale: 1.015, filter: "blur(8px)" }}
+      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, scale: 0.99, filter: "blur(6px)" }}
+      transition={{ duration: 1.45, ease: [0.22, 1, 0.36, 1] }}
     >
       <AviationBackground />
 
-      <div className="relative z-10 mb-5 flex justify-center">
+      <div className="relative z-10 mb-6 flex justify-center pt-2">
         <Logo compact />
       </div>
 
       <motion.div
-        className="relative z-10 rounded-[2.2rem] border border-white/15 bg-white/10 backdrop-blur-2xl overflow-hidden shadow-2xl"
-        initial={{ scale: 0.94, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.25, duration: 0.7 }}
+        className="relative z-10 overflow-hidden rounded-[2.35rem] border border-[#d7a247]/22 bg-[#02050c]/48 shadow-[0_28px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
+        initial={{ opacity: 0, y: 28, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ delay: 0.25, duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="p-6 bg-gradient-to-br from-[#102b4d]/95 to-[#050b16]/95">
-          <p className="text-[11px] tracking-[0.3em] text-[#d7a247]">BOARDING PASS</p>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#d7a247]/10 via-white/5 to-transparent" />
+        <div className="absolute right-[-25%] top-[-18%] h-56 w-56 rounded-full bg-[#d7a247]/14 blur-3xl" />
 
-          <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="relative p-7">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] uppercase tracking-[0.42em] text-[#d7a247]/90">
+              Boarding Pass
+            </p>
+            <p className="text-[9px] uppercase tracking-[0.28em] text-white/38">
+              OMMT / 1025
+            </p>
+          </div>
+
+          <div className="mt-10 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <div>
-              <p className="text-5xl font-semibold tracking-[0.08em]">{pass.from}</p>
-              <p className="mt-2 text-[10px] tracking-[0.2em] text-white/55 uppercase">{pass.fromCity}</p>
+              <p className="text-[3.15rem] font-semibold leading-none tracking-[0.08em] text-white">
+                {pass.from}
+              </p>
+              <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-white/48">
+                {pass.fromCity}
+              </p>
             </div>
-            <Plane className="h-7 w-7 text-[#d7a247] rotate-90" />
+
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#d7a247]/30 bg-[#d7a247]/10 text-[#f7d27a]">
+              <Plane className="h-5 w-5 rotate-90" />
+            </div>
+
             <div className="text-right">
-              <p className="text-5xl font-semibold tracking-[0.08em]">{pass.to}</p>
-              <p className="mt-2 text-[10px] tracking-[0.2em] text-white/55 uppercase">{pass.toCity}</p>
+              <p className="text-[3.15rem] font-semibold leading-none tracking-[0.08em] text-white">
+                {pass.to}
+              </p>
+              <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-white/48">
+                {pass.toCity}
+              </p>
             </div>
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-4 border-y border-white/10 py-5">
+          <div className="mt-9 h-[1px] w-full bg-gradient-to-r from-transparent via-white/16 to-transparent" />
+
+          <div className="mt-7 grid grid-cols-2 gap-x-6 gap-y-6">
             <InfoBlock label="Passenger" value={pass.fullName} />
             <InfoBlock label="Flight" value={pass.flight} />
             <InfoBlock label="Terminal" value={pass.terminal} />
@@ -1011,33 +1029,49 @@ function BoardingPassScreen({ pass, onFinish }) {
             <InfoBlock label="Boarding" value={pass.boardingTime} />
           </div>
 
-          <p className="mt-8 text-2xl leading-snug tracking-[0.12em]">
-            YOUR JOURNEY <br /> STARTS <span className="text-[#d7a247]">HERE.</span>
+          <div className="mt-9 h-[1px] w-full bg-gradient-to-r from-transparent via-white/16 to-transparent" />
+
+          <p className="mt-8 text-[1.75rem] font-light leading-snug tracking-[0.16em] text-white/92">
+            YOUR JOURNEY <br />
+            STARTS <span className="text-[#d7a247]">HERE.</span>
           </p>
         </div>
 
-        <div className="p-6 bg-[#030914]">
-          <div className="flex items-center justify-center gap-4">
+        <div className="relative border-t border-white/10 bg-[#01040b]/70 p-6">
+          <div className="flex items-center justify-center gap-5">
             <FakeBarcode />
-            <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-white/25 bg-white text-[#061225]">
-              <QrCode className="h-16 w-16" />
+
+            <div className="flex h-24 w-24 items-center justify-center rounded-[1.45rem] border border-[#d7a247]/20 bg-white text-[#061225] shadow-[0_16px_40px_rgba(255,255,255,0.08)]">
+              <QrCode className="h-15 w-15" />
             </div>
+
             <FakeBarcode />
           </div>
 
-          <div className="mt-6 flex justify-between text-[10px] tracking-[0.2em] text-white/55">
+          <div className="mt-6 flex justify-between text-[9px] uppercase tracking-[0.28em] text-white/42">
             <span>SEQ 00025</span>
             <span>{pass.boardingId}</span>
           </div>
         </div>
       </motion.div>
 
-      <button
+      <motion.button
         onClick={onFinish}
-        className="relative z-10 mt-5 w-full rounded-full bg-white px-6 py-4 text-sm font-bold tracking-[0.16em] text-[#061225]"
+        className="group relative z-10 mt-5 flex w-full items-center justify-between overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#02050c]/46 px-5 py-[16px] text-[#f7f1e6] shadow-[0_18px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
+        initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ delay: 0.55, duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
       >
-        COMPLETE CHECK-IN
-      </button>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#d7a247]/14 via-white/7 to-transparent" />
+
+        <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em]">
+          Complete Check-In
+        </span>
+
+        <span className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a]">
+          <ArrowRight className="h-4 w-4" />
+        </span>
+      </motion.button>
     </motion.section>
   );
 }
@@ -1045,20 +1079,27 @@ function BoardingPassScreen({ pass, onFinish }) {
 function InfoBlock({ label, value }) {
   return (
     <div>
-      <p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-[#d7a247]">{label}</p>
-      <p className="text-sm font-semibold uppercase tracking-[0.08em] text-white">{value}</p>
+      <p className="mb-2 text-[9px] uppercase tracking-[0.32em] text-[#d7a247]/85">
+        {label}
+      </p>
+      <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white/92">
+        {value}
+      </p>
     </div>
   );
 }
 
 function FakeBarcode() {
   return (
-    <div className="flex h-20 w-20 items-end justify-center gap-[2px] opacity-80">
+    <div className="flex h-20 w-20 items-end justify-center gap-[2px] opacity-85">
       {Array.from({ length: 18 }).map((_, index) => (
         <span
           key={index}
           className="bg-[#d7a247]"
-          style={{ width: index % 3 === 0 ? 3 : 1, height: `${40 + ((index * 13) % 35)}px` }}
+          style={{
+            width: index % 3 === 0 ? 3 : 1,
+            height: `${40 + ((index * 13) % 35)}px`,
+          }}
         />
       ))}
     </div>
@@ -1068,32 +1109,81 @@ function FakeBarcode() {
 /*
   ============================================================
   SECTION 15 — CONFIRMATION SCREEN
-  Τελική οθόνη επιβεβαίωσης.
-
-  ΤΙ ΕΠΗΡΕΑΖΕΙ
-  ------------------------------------------------------------
-  - Το τελευταίο μήνυμα που βλέπει ο χρήστης.
-  - Την αίσθηση ολοκλήρωσης.
-  - Το expectation ότι θα λάβει boarding pass στο email.
+  Premium final confirmation screen.
 */
 
 function ConfirmationScreen({ email }) {
   return (
     <motion.section
-      className="absolute inset-0 px-7 py-8 flex flex-col justify-center text-center"
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0 }}
+      className="absolute inset-0 flex flex-col justify-center px-7 py-8 text-center"
+      initial={{ opacity: 0, scale: 1.015, filter: "blur(8px)" }}
+      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, scale: 0.99, filter: "blur(6px)" }}
+      transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
     >
       <AviationBackground />
+
       <div className="relative z-10">
-        <CheckCircle2 className="mx-auto h-16 w-16 text-[#d7a247]" />
-        <h1 className="mt-8 text-4xl font-semibold leading-none tracking-[-0.04em]">Your Boarding Pass Is Ready</h1>
-        <p className="mt-5 text-sm leading-6 text-white/65">
+        <motion.div
+          className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a] shadow-[0_0_55px_rgba(215,162,71,0.18)]"
+          initial={{ opacity: 0, scale: 0.86 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <CheckCircle2 className="h-10 w-10" />
+        </motion.div>
+
+        <motion.p
+          className="mt-10 text-[9px] uppercase tracking-[0.42em] text-[#d7a247]/90"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.42, duration: 1 }}
+        >
+          Boarding Confirmed
+        </motion.p>
+
+        <motion.h1
+          className="mx-auto mt-5 max-w-[92%] text-[2.55rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white"
+          initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ delay: 0.55, duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Your Boarding Pass Is Ready
+        </motion.h1>
+
+        <motion.div
+          className="mx-auto mt-7 h-[1px] w-20 bg-gradient-to-r from-transparent via-[#d7a247] to-transparent"
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ delay: 0.9, duration: 1.1 }}
+        />
+
+        <motion.p
+          className="mx-auto mt-7 max-w-[88%] text-[14px] leading-7 text-white/66"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.05, duration: 1 }}
+        >
           Your digital boarding pass will be sent to:
-        </p>
-        <p className="mt-3 text-[#d7a247] tracking-[0.08em]">{email}</p>
-        <p className="mt-10 text-[11px] tracking-[0.3em] text-white/50">BOARD. EXPLORE. BEYOND.</p>
+        </motion.p>
+
+        <motion.p
+          className="mt-4 text-[15px] tracking-[0.12em] text-[#d7a247]"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.18, duration: 1 }}
+        >
+          {email}
+        </motion.p>
+
+        <motion.p
+          className="mt-12 text-[10px] uppercase tracking-[0.36em] text-white/42"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.35, duration: 1 }}
+        >
+          Board. Explore. Beyond.
+        </motion.p>
       </div>
     </motion.section>
   );
