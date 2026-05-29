@@ -719,24 +719,29 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
         </motion.div>
       </div>
 
-      {/* Premium action button */}
-      <div className="absolute bottom-10 left-7 right-7 z-20">
-        <button
-          onClick={onNext}
-          className="group relative flex w-full items-center justify-center overflow-hidden rounded-full border border-white/18 bg-white/95 px-6 py-[18px] text-[12px] font-semibold tracking-[0.26em] text-[#051225] shadow-[0_18px_70px_rgba(0,0,0,0.35)] backdrop-blur-xl"
-        >
-          <motion.div
-            className="absolute inset-y-0 left-[-35%] w-28 rotate-12 bg-gradient-to-r from-transparent via-white/90 to-transparent blur-xl"
-            animate={{ left: ["-35%", "135%"] }}
-            transition={{ duration: 4.8, repeat: Infinity, ease: "easeInOut" }}
-          />
+     {/* Premium aviation control */}
+<div className="absolute bottom-10 left-7 right-7 z-20">
+  <button
+    onClick={onNext}
+    className="group relative flex w-full items-center justify-between overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#02050c]/42 px-5 py-[15px] text-[#f7f1e6] shadow-[0_18px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
+  >
+    <div className="absolute inset-0 bg-gradient-to-r from-[#d7a247]/12 via-white/7 to-transparent opacity-80" />
 
-          <span className="relative z-10 flex items-center gap-4">
-            {slide.button.toUpperCase()}
-            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-          </span>
-        </button>
-      </div>
+    <motion.div
+      className="absolute inset-y-0 left-[-40%] w-32 rotate-12 bg-gradient-to-r from-transparent via-[#f7d27a]/28 to-transparent blur-xl"
+      animate={{ left: ["-40%", "135%"] }}
+      transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
+    />
+
+    <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em] text-[#f7f1e6]/88">
+      {slide.button.toUpperCase()}
+    </span>
+
+    <span className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a] transition-transform duration-300 group-hover:translate-x-1">
+      <ArrowRight className="h-4 w-4" />
+    </span>
+  </button>
+</div>
     </motion.section>
   );
 }
