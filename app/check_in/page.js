@@ -652,12 +652,27 @@ function SplashScreen({ onComplete }) {
 function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
   return (
     <motion.section
-      className="absolute inset-0 overflow-hidden"
-      initial={{ opacity: 0, y: 14, scale: 1.01 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -12, scale: 0.99 }}
-      transition={{ duration: 1.25, ease: [0.16, 1, 0.3, 1] }}
-    >
+  className="absolute inset-0 overflow-hidden"
+  initial={{
+    opacity: 0,
+    scale: 1.035,
+    filter: "blur(10px)",
+  }}
+  animate={{
+    opacity: 1,
+    scale: 1,
+    filter: "blur(0px)",
+  }}
+  exit={{
+    opacity: 0,
+    scale: 0.985,
+    filter: "blur(8px)",
+  }}
+  transition={{
+    duration: 1.8,
+    ease: [0.22, 1, 0.36, 1],
+  }}
+>
       <motion.img
         src={
           slideNumber === 0
@@ -668,8 +683,16 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
         }
         alt="Onboarding Background"
         className="absolute inset-0 h-full w-full object-cover"
-        animate={{ scale: [1.015, 1.045, 1.015], y: [0, -8, 0] }}
-        transition={{ duration: 26, repeat: Infinity, ease: "easeInOut" }}
+        animate={{
+  scale: [1.02, 1.055, 1.02],
+  y: [0, -12, 0],
+  x: [0, -4, 0],
+}}
+transition={{
+  duration: 32,
+  repeat: Infinity,
+  ease: "easeInOut",
+}}
       />
 
       {/* Premium cinematic overlays */}
@@ -697,11 +720,22 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
 
       {/* Editorial content block */}
       <div className="absolute bottom-36 left-7 right-7 z-20">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-[88%]"
+       <motion.div
+  initial={{
+    opacity: 0,
+    y: 26,
+    filter: "blur(12px)",
+  }}
+  animate={{
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+  }}
+          transition={{
+  delay: 0.35,
+  duration: 1.45,
+  ease: [0.22, 1, 0.36, 1],
+}}
         >
           <p className="mb-5 text-[9px] uppercase tracking-[0.42em] text-[#d7a247]/90">
             {slide.eyebrow}
