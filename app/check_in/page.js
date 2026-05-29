@@ -989,6 +989,7 @@ function BoardingPassScreen({ pass, onFinish }) {
             <p className="text-[10px] uppercase tracking-[0.42em] text-[#d7a247]/90">
               Boarding Pass
             </p>
+
             <p className="text-[9px] uppercase tracking-[0.28em] text-white/38">
               OMMT / 1025
             </p>
@@ -1038,33 +1039,35 @@ function BoardingPassScreen({ pass, onFinish }) {
         </div>
 
         <div className="relative border-t border-[#d7a247]/14 bg-[#01040b]/76 px-7 py-7">
-  <div className="mb-5 flex items-center justify-between">
-    <span className="text-[9px] uppercase tracking-[0.34em] text-[#d7a247]/70">
-      Digital Boarding ID
-    </span>
-    <span className="text-[9px] uppercase tracking-[0.28em] text-white/38">
-      {pass.boardingId}
-    </span>
-  </div>
+          <div className="mb-5 flex items-center justify-between">
+            <span className="text-[9px] uppercase tracking-[0.34em] text-[#d7a247]/70">
+              Digital Boarding ID
+            </span>
 
-  <div className="flex h-24 w-full items-end justify-center gap-[3px] overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] px-5 pb-5 pt-4">
-    {Array.from({ length: 42 }).map((_, index) => (
-      <span
-        key={index}
-        className="bg-[#d7a247]"
-        style={{
-          width: index % 5 === 0 ? 4 : index % 2 === 0 ? 2 : 1,
-          height: `${34 + ((index * 17) % 48)}px`,
-          opacity: index % 4 === 0 ? 0.9 : 0.68,
-        }}
-      />
-    ))}
-  </div>
+            <span className="text-[9px] uppercase tracking-[0.28em] text-white/38">
+              {pass.boardingId}
+            </span>
+          </div>
 
-  <div className="mt-5 flex justify-between text-[9px] uppercase tracking-[0.28em] text-white/38">
-    <span>SEQ 00025</span>
-    <span>OMMT SECURE PASS</span>
-  </div>
+          <div className="flex h-24 w-full items-end justify-center gap-[3px] overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] px-5 pb-5 pt-4">
+            {Array.from({ length: 42 }).map((_, index) => (
+              <span
+                key={index}
+                className="bg-[#d7a247]"
+                style={{
+                  width: index % 5 === 0 ? 4 : index % 2 === 0 ? 2 : 1,
+                  height: `${34 + ((index * 17) % 48)}px`,
+                  opacity: index % 4 === 0 ? 0.9 : 0.68,
+                }}
+              />
+            ))}
+          </div>
+
+          <div className="mt-5 flex justify-between text-[9px] uppercase tracking-[0.28em] text-white/38">
+            <span>SEQ 00025</span>
+            <span>OMMT SECURE PASS</span>
+          </div>
+        </div>
       </motion.div>
 
       <motion.button
@@ -1094,30 +1097,13 @@ function InfoBlock({ label, value }) {
       <p className="mb-2 text-[9px] uppercase tracking-[0.32em] text-[#d7a247]/85">
         {label}
       </p>
+
       <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white/92">
         {value}
       </p>
     </div>
   );
 }
-
-function FakeBarcode() {
-  return (
-    <div className="flex h-20 w-20 items-end justify-center gap-[2px] opacity-85">
-      {Array.from({ length: 18 }).map((_, index) => (
-        <span
-          key={index}
-          className="bg-[#d7a247]"
-          style={{
-            width: index % 3 === 0 ? 3 : 1,
-            height: `${40 + ((index * 13) % 35)}px`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 /*
   ============================================================
   SECTION 15 — CONFIRMATION SCREEN
