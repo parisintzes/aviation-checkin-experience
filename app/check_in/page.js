@@ -1037,21 +1037,35 @@ function BoardingPassScreen({ pass, onFinish }) {
           </p>
         </div>
 
-        <div className="relative border-t border-white/10 bg-[#01040b]/70 p-6">
-          <div className="flex items-center justify-center gap-5">
-            <FakeBarcode />
+        <div className="relative border-t border-[#d7a247]/14 bg-[#01040b]/76 px-7 py-7">
+  <div className="mb-5 flex items-center justify-between">
+    <span className="text-[9px] uppercase tracking-[0.34em] text-[#d7a247]/70">
+      Digital Boarding ID
+    </span>
+    <span className="text-[9px] uppercase tracking-[0.28em] text-white/38">
+      {pass.boardingId}
+    </span>
+  </div>
 
-            <div className="flex h-24 w-24 items-center justify-center rounded-[1.45rem] border border-[#d7a247]/20 bg-white text-[#061225] shadow-[0_16px_40px_rgba(255,255,255,0.08)]">
-              <QrCode className="h-15 w-15" />
-            </div>
+  <div className="flex h-24 w-full items-end justify-center gap-[3px] overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] px-5 pb-5 pt-4">
+    {Array.from({ length: 42 }).map((_, index) => (
+      <span
+        key={index}
+        className="bg-[#d7a247]"
+        style={{
+          width: index % 5 === 0 ? 4 : index % 2 === 0 ? 2 : 1,
+          height: `${34 + ((index * 17) % 48)}px`,
+          opacity: index % 4 === 0 ? 0.9 : 0.68,
+        }}
+      />
+    ))}
+  </div>
 
-            <FakeBarcode />
-          </div>
-
-          <div className="mt-6 flex justify-between text-[9px] uppercase tracking-[0.28em] text-white/42">
-            <span>SEQ 00025</span>
-            <span>{pass.boardingId}</span>
-          </div>
+  <div className="mt-5 flex justify-between text-[9px] uppercase tracking-[0.28em] text-white/38">
+    <span>SEQ 00025</span>
+    <span>OMMT SECURE PASS</span>
+  </div>
+</div>
         </div>
       </motion.div>
 
