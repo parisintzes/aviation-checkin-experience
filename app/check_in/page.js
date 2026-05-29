@@ -646,33 +646,22 @@ function SplashScreen({ onComplete }) {
   ============================================================
   SECTION 11 — ONBOARDING SCREEN
   Premium aviation onboarding experience.
-  Inspired by luxury airline calmness + Apple-style product clarity.
+  Smooth cinematic choreography for the three slides.
 */
 
 function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
   return (
     <motion.section
-  className="absolute inset-0 overflow-hidden"
-  initial={{
-    opacity: 0,
-    scale: 1.035,
-    filter: "blur(10px)",
-  }}
-  animate={{
-    opacity: 1,
-    scale: 1,
-    filter: "blur(0px)",
-  }}
-  exit={{
-    opacity: 0,
-    scale: 0.985,
-    filter: "blur(8px)",
-  }}
-  transition={{
-    duration: 1.8,
-    ease: [0.22, 1, 0.36, 1],
-  }}
->
+      className="absolute inset-0 overflow-hidden"
+      initial={{ opacity: 0, scale: 1.025, filter: "blur(8px)" }}
+      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, scale: 0.99, filter: "blur(7px)" }}
+      transition={{
+        duration: 1.75,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+    >
+      {/* Cinematic background image */}
       <motion.img
         src={
           slideNumber === 0
@@ -683,25 +672,37 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
         }
         alt="Onboarding Background"
         className="absolute inset-0 h-full w-full object-cover"
+        initial={{ scale: 1.04, opacity: 0.92 }}
         animate={{
-  scale: [1.02, 1.055, 1.02],
-  y: [0, -12, 0],
-  x: [0, -4, 0],
-}}
-transition={{
-  duration: 32,
-  repeat: Infinity,
-  ease: "easeInOut",
-}}
+          scale: [1.04, 1.07, 1.04],
+          x: [0, -5, 0],
+          y: [0, -10, 0],
+          opacity: 1,
+        }}
+        transition={{
+          scale: { duration: 34, repeat: Infinity, ease: "easeInOut" },
+          x: { duration: 34, repeat: Infinity, ease: "easeInOut" },
+          y: { duration: 34, repeat: Infinity, ease: "easeInOut" },
+          opacity: { duration: 1.2, ease: "easeOut" },
+        }}
       />
 
       {/* Premium cinematic overlays */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#02050c]/98 via-[#02050c]/48 to-[#02050c]/16" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#02050c]/78 via-[#02050c]/18 to-transparent" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(215,162,71,0.20)_0%,transparent_34%)]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#02050c]/98 via-[#02050c]/50 to-[#02050c]/16" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#02050c]/82 via-[#02050c]/24 to-transparent" />
+      <motion.div
+        className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(215,162,71,0.22)_0%,transparent_35%)]"
+        animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.04, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+      />
 
       {/* Top navigation system */}
-      <div className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-7 pt-8">
+      <motion.div
+        className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-7 pt-8"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+      >
         <motion.img
           src="/logos/ommt-orbit-mark.webp"
           alt="OMMTo Orbit Mark"
@@ -716,26 +717,18 @@ transition={{
             0{slideNumber + 1}/0{totalSlides}
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Editorial content block */}
       <div className="absolute bottom-36 left-7 right-7 z-20">
-       <motion.div
-  initial={{
-    opacity: 0,
-    y: 26,
-    filter: "blur(12px)",
-  }}
-  animate={{
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-  }}
+        <motion.div
+          initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{
-  delay: 0.35,
-  duration: 1.45,
-  ease: [0.22, 1, 0.36, 1],
-}}
+            delay: 0.45,
+            duration: 1.55,
+            ease: [0.22, 1, 0.36, 1],
+          }}
         >
           <p className="mb-5 text-[9px] uppercase tracking-[0.42em] text-[#d7a247]/90">
             {slide.eyebrow}
@@ -745,7 +738,12 @@ transition={{
             {slide.title}
           </h1>
 
-          <div className="mt-7 h-[1px] w-20 bg-gradient-to-r from-[#d7a247] via-[#d7a247]/60 to-transparent" />
+          <motion.div
+            className="mt-7 h-[1px] w-20 bg-gradient-to-r from-[#d7a247] via-[#d7a247]/60 to-transparent"
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{ delay: 0.9, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+          />
 
           <p className="mt-6 max-w-[86%] text-[13.5px] leading-7 text-white/68">
             {slide.body}
@@ -753,29 +751,34 @@ transition={{
         </motion.div>
       </div>
 
-     {/* Premium aviation control */}
-<div className="absolute bottom-10 left-7 right-7 z-20">
-  <button
-    onClick={onNext}
-    className="group relative flex w-full items-center justify-between overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#02050c]/42 px-5 py-[15px] text-[#f7f1e6] shadow-[0_18px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
-  >
-    <div className="absolute inset-0 bg-gradient-to-r from-[#d7a247]/12 via-white/7 to-transparent opacity-80" />
+      {/* Premium aviation control */}
+      <motion.div
+        className="absolute bottom-10 left-7 right-7 z-20"
+        initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ delay: 0.75, duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <button
+          onClick={onNext}
+          className="group relative flex w-full items-center justify-between overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#02050c]/42 px-5 py-[15px] text-[#f7f1e6] shadow-[0_18px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#d7a247]/12 via-white/7 to-transparent opacity-80" />
 
-    <motion.div
-      className="absolute inset-y-0 left-[-40%] w-32 rotate-12 bg-gradient-to-r from-transparent via-[#f7d27a]/28 to-transparent blur-xl"
-      animate={{ left: ["-40%", "135%"] }}
-      transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
-    />
+          <motion.div
+            className="absolute inset-y-0 left-[-40%] w-32 rotate-12 bg-gradient-to-r from-transparent via-[#f7d27a]/28 to-transparent blur-xl"
+            animate={{ left: ["-40%", "135%"] }}
+            transition={{ duration: 5.6, repeat: Infinity, ease: "easeInOut" }}
+          />
 
-    <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em] text-[#f7f1e6]/88">
-      {slide.button.toUpperCase()}
-    </span>
+          <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em] text-[#f7f1e6]/88">
+            {slide.button.toUpperCase()}
+          </span>
 
-    <span className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a] transition-transform duration-300 group-hover:translate-x-1">
-      <ArrowRight className="h-4 w-4" />
-    </span>
-  </button>
-</div>
+          <span className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a] transition-transform duration-300 group-hover:translate-x-1">
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        </button>
+      </motion.div>
     </motion.section>
   );
 }
