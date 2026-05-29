@@ -278,7 +278,7 @@ export default function CheckInPage() {
   return (
     <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
       <MobileShell>
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="sync">
           {stage === "splash" && <SplashScreen key="splash" onComplete={() => setStage("onboarding")} />}
 
           {stage === "onboarding" && (
@@ -653,13 +653,30 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
   return (
     <motion.section
       className="absolute inset-0 overflow-hidden"
-      initial={{ opacity: 0, scale: 1.025, filter: "blur(8px)" }}
-      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-      exit={{ opacity: 0, scale: 0.99, filter: "blur(7px)" }}
+      initial={{
+  opacity: 0,
+  scale: 1.015,
+  y: 18,
+  filter: "blur(10px)",
+}}
+
+animate={{
+  opacity: 1,
+  scale: 1,
+  y: 0,
+  filter: "blur(0px)",
+}}
+
+exit={{
+  opacity: 0,
+  scale: 1.01,
+  y: -12,
+  filter: "blur(6px)",
+}}
       transition={{
-        duration: 1.75,
-        ease: [0.22, 1, 0.36, 1],
-      }}
+  duration: 2.2,
+  ease: [0.16, 1, 0.3, 1],
+}}
     >
       {/* Cinematic background image */}
       <motion.img
@@ -674,17 +691,14 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
         className="absolute inset-0 h-full w-full object-cover"
         initial={{ scale: 1.04, opacity: 0.92 }}
         animate={{
-          scale: [1.04, 1.07, 1.04],
-          x: [0, -5, 0],
-          y: [0, -10, 0],
-          opacity: 1,
-        }}
-        transition={{
-          scale: { duration: 34, repeat: Infinity, ease: "easeInOut" },
-          x: { duration: 34, repeat: Infinity, ease: "easeInOut" },
-          y: { duration: 34, repeat: Infinity, ease: "easeInOut" },
-          opacity: { duration: 1.2, ease: "easeOut" },
-        }}
+         animate={{
+  scale: [1.02, 1.045],
+  y: [0, -14],
+}}
+       transition={{
+  duration: 18,
+  ease: "linear",
+}}
       />
 
       {/* Premium cinematic overlays */}
