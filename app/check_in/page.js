@@ -161,7 +161,7 @@ function generateBoardingData(fullName, email) {
 */
 
 export default function CheckInPage() {
-  const [stage, setStage] = useState("form");
+  const [stage, setStage] = useState("splash");
   const [slide, setSlide] = useState(0);
   const [formData, setFormData] = useState({ fullName: "", email: "" });
   const [boardingPass, setBoardingPass] = useState(null);
