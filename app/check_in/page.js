@@ -282,15 +282,14 @@ export default function CheckInPage() {
           {stage === "splash" && <SplashScreen key="splash" onComplete={() => setStage("onboarding")} />}
 
           {stage === "onboarding" && (
-            <OnboardingScreen
-              key="onboarding"
-              slide={onboardingSlides[slide]}
-              slideNumber={slide}
-              totalSlides={onboardingSlides.length}
-              onNext={handleNextSlide}
-            />
-          )}
-
+  <OnboardingScreen
+    key={`onboarding-${slide}`}
+    slide={onboardingSlides[slide]}
+    slideNumber={slide}
+    totalSlides={onboardingSlides.length}
+    onNext={handleNextSlide}
+  />
+  )}
           {stage === "form" && (
             <PassengerForm
               key="form"
