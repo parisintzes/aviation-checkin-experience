@@ -1065,8 +1065,6 @@ function BoardingPassScreen({ pass, onFinish }) {
     <span>SEQ 00025</span>
     <span>OMMT SECURE PASS</span>
   </div>
-</div>
-        </div>
       </motion.div>
 
       <motion.button
