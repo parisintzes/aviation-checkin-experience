@@ -654,29 +654,27 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
     <motion.section
       className="absolute inset-0 overflow-hidden"
       initial={{
-  opacity: 0,
-  scale: 1.015,
-  y: 18,
-  filter: "blur(10px)",
-}}
-
-animate={{
-  opacity: 1,
-  scale: 1,
-  y: 0,
-  filter: "blur(0px)",
-}}
-
-exit={{
-  opacity: 0,
-  scale: 1.01,
-  y: -12,
-  filter: "blur(6px)",
-}}
+        opacity: 0,
+        scale: 1.015,
+        y: 18,
+        filter: "blur(10px)",
+      }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        filter: "blur(0px)",
+      }}
+      exit={{
+        opacity: 0,
+        scale: 1.01,
+        y: -12,
+        filter: "blur(6px)",
+      }}
       transition={{
-  duration: 2.2,
-  ease: [0.16, 1, 0.3, 1],
-}}
+        duration: 2.2,
+        ease: [0.16, 1, 0.3, 1],
+      }}
     >
       {/* Cinematic background image */}
       <motion.img
@@ -691,19 +689,20 @@ exit={{
         className="absolute inset-0 h-full w-full object-cover"
         initial={{ scale: 1.04, opacity: 0.92 }}
         animate={{
-         animate={{
-  scale: [1.02, 1.045],
-  y: [0, -14],
-}}
-       transition={{
-  duration: 18,
-  ease: "linear",
-}}
+          scale: [1.02, 1.045],
+          y: [0, -14],
+          opacity: 1,
+        }}
+        transition={{
+          duration: 18,
+          ease: "linear",
+        }}
       />
 
       {/* Premium cinematic overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#02050c]/98 via-[#02050c]/50 to-[#02050c]/16" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#02050c]/82 via-[#02050c]/24 to-transparent" />
+
       <motion.div
         className="absolute inset-0 bg-[radial-gradient(circle_at_72%_18%,rgba(215,162,71,0.22)_0%,transparent_35%)]"
         animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.04, 1] }}
@@ -753,7 +752,7 @@ exit={{
           </h1>
 
           <motion.div
-            className="mt-7 h-[1px] w-20 bg-gradient-to-r from-[#d7a247] via-[#d7a247]/60 to-transparent"
+            className="mt-7 h-[1px] w-20 origin-left bg-gradient-to-r from-[#d7a247] via-[#d7a247]/60 to-transparent"
             initial={{ scaleX: 0, opacity: 0 }}
             animate={{ scaleX: 1, opacity: 1 }}
             transition={{ delay: 0.9, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
