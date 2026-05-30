@@ -164,13 +164,13 @@ export default function CheckInPage() {
   const onboardingSlides = useMemo(
     () => [
       {
-        eyebrow: "WELCOME ABOARD",
-        title: " Marketing Made in Greece | On Air.",
-        body:
-          body:
-  "Καλωσορίσατε σε μία νέα experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΗ Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξή σας σε μέρος της εμπειρίας."
-        button: "Begin Boarding",
-      },
+       {
+  eyebrow: "WELCOME ABOARD",
+  title: "Marketing Made in Greece | On Air",
+  body:
+    "Καλωσορίσατε σε μία νέα experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΤο Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξή σας σε μέρος της εμπειρίας.",
+  button: "Begin Boarding",
+},
       {
         eyebrow: "SECRET DESTINATION GIVEAWAY",
         title: "One Boarding Pass. One Mystery Flight.",
@@ -1149,7 +1149,7 @@ function ConfirmationScreen({ email }) {
         </p>
 
         <h1 className="mx-auto mt-5 max-w-[92%] text-[2.55rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white">
-          Your Boarding Pass Is Ready
+          Your Boarding Pass is Ready
         </h1>
 
         <div className="mx-auto mt-7 h-[1px] w-20 bg-gradient-to-r from-transparent via-[#d7a247] to-transparent" />
