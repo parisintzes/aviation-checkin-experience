@@ -1113,6 +1113,7 @@ function InfoBlock({ label, value }) {
   ============================================================
   SECTION 15 — CONFIRMATION SCREEN
   Premium final confirmation screen.
+  ============================================================
 */
 
 function ConfirmationScreen({ email }) {
@@ -1127,66 +1128,31 @@ function ConfirmationScreen({ email }) {
       <AviationBackground />
 
       <div className="relative z-10">
-        <motion.div
-          className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a] shadow-[0_0_55px_rgba(215,162,71,0.18)]"
-          initial={{ opacity: 0, scale: 0.86 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.25, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <motion.div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 text-[#f7d27a]">
           <CheckCircle2 className="h-10 w-10" />
         </motion.div>
 
-        <motion.p
-          className="mt-10 text-[9px] uppercase tracking-[0.42em] text-[#d7a247]/90"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.42, duration: 1 }}
-        >
+        <p className="mt-10 text-[9px] uppercase tracking-[0.42em] text-[#d7a247]/90">
           Boarding Confirmed
-        </motion.p>
+        </p>
 
-        <motion.h1
-          className="mx-auto mt-5 max-w-[92%] text-[2.55rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white"
-          initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ delay: 0.55, duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
-        >
+        <h1 className="mx-auto mt-5 max-w-[92%] text-[2.55rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white">
           Your Boarding Pass Is Ready
-        </motion.h1>
+        </h1>
 
-        <motion.div
-          className="mx-auto mt-7 h-[1px] w-20 bg-gradient-to-r from-transparent via-[#d7a247] to-transparent"
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ delay: 0.9, duration: 1.1 }}
-        />
+        <div className="mx-auto mt-7 h-[1px] w-20 bg-gradient-to-r from-transparent via-[#d7a247] to-transparent" />
 
-        <motion.p
-          className="mx-auto mt-7 max-w-[88%] text-[14px] leading-7 text-white/66"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05, duration: 1 }}
-        >
+        <p className="mx-auto mt-7 max-w-[88%] text-[14px] leading-7 text-white/66">
           Your digital boarding pass will be sent to:
-        </motion.p>
+        </p>
 
-        <motion.p
-          className="mt-4 text-[15px] tracking-[0.12em] text-[#d7a247]"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.18, duration: 1 }}
-        >
+        <p className="mt-4 text-[15px] tracking-[0.12em] text-[#d7a247]">
           {email}
-        </motion.p>
+        </p>
 
-        <motion.p
-          className="mt-12 text-[10px] uppercase tracking-[0.36em] text-white/42"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.35, duration: 1 }}
-        >
+        <p className="mt-12 text-[10px] uppercase tracking-[0.36em] text-white/42">
           Board. Explore. Beyond.
-        </motion.p>
+        </p>
       </div>
     </motion.section>
   );
@@ -1209,32 +1175,23 @@ function PrivacyModal({ onClose }) {
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className="max-h-[82vh] w-full max-w-[390px] overflow-y-auto rounded-[2rem] border border-[#d7a247]/30 bg-[#06152a]/95 p-6 text-white shadow-[0_25px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
       >
-        <div>
-          <p className="text-[9px] uppercase tracking-[0.38em] text-[#d7a247]">
-            Passenger Information & Data Protection Notice
-          </p>
+        <p className="text-[9px] uppercase tracking-[0.38em] text-[#d7a247]">
+          Passenger Information & Data Protection Notice
+        </p>
 
-          <h2 className="mt-4 text-[2rem] font-semibold leading-[1] tracking-[-0.04em] text-white">
-            Προστασία Προσωπικών Δεδομένων
-          </h2>
+        <h2 className="mt-4 text-[2rem] font-semibold leading-[1] tracking-[-0.04em] text-white">
+          Προστασία Προσωπικών Δεδομένων
+        </h2>
 
-          <div className="mt-5 h-[1px] w-16 bg-gradient-to-r from-[#d7a247] to-transparent" />
-        </div>
+        <div className="mt-5 h-[1px] w-16 bg-gradient-to-r from-[#d7a247] to-transparent" />
 
         <div className="mt-7 space-y-7 text-[13px] leading-7 text-white/72">
           <div>
             <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
               Purpose of the Platform
             </h3>
-
             <p>
-              Η παρούσα ψηφιακή πλατφόρμα check-in δημιουργήθηκε στο πλαίσιο της εμπειρίας
-              <span className="text-white">
-                {" "}Philoxenia 2026 – Marketing Made in Greece | On Air
-              </span>
-              , με στόχο τη διαχείριση της συμμετοχής των επισκεπτών, την προσωποποιημένη
-              έκδοση boarding pass και τη συνολική υποστήριξη της διαδραστικής εμπειρίας
-              της εκδήλωσης.
+              Η παρούσα ψηφιακή πλατφόρμα check-in δημιουργήθηκε στο πλαίσιο της εμπειρίας Philoxenia 2026 – Marketing Made in Greece | On Air, με στόχο τη διαχείριση της συμμετοχής των επισκεπτών, την προσωποποιημένη έκδοση boarding pass και τη συνολική υποστήριξη της διαδραστικής εμπειρίας της εκδήλωσης.
             </p>
           </div>
 
@@ -1242,16 +1199,8 @@ function PrivacyModal({ onClose }) {
             <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
               Data Collection
             </h3>
-
             <p>
-              Τα προσωπικά δεδομένα που καταχωρούνται μέσω της εφαρμογής, όπως ονοματεπώνυμο,
-              στοιχεία επικοινωνίας και πληροφορίες συμμετοχής, συλλέγονται και υποβάλλονται
-              σε επεξεργασία αποκλειστικά για λειτουργικούς, οργανωτικούς και επικοινωνιακούς
-              σκοπούς που σχετίζονται με τη συμμετοχή σας στην εκδήλωση και στο
-              <span className="text-white">
-                {" "}Secret Destination Giveaway Experience
-              </span>
-              .
+              Τα προσωπικά δεδομένα που καταχωρούνται μέσω της εφαρμογής, όπως ονοματεπώνυμο, στοιχεία επικοινωνίας και πληροφορίες συμμετοχής, συλλέγονται και υποβάλλονται σε επεξεργασία αποκλειστικά για λειτουργικούς, οργανωτικούς και επικοινωνιακούς σκοπούς που σχετίζονται με τη συμμετοχή σας στην εκδήλωση και στο Secret Destination Giveaway Experience.
             </p>
           </div>
 
@@ -1259,15 +1208,8 @@ function PrivacyModal({ onClose }) {
             <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
               GDPR Compliance
             </h3>
-
             <p>
-              Η επεξεργασία των δεδομένων πραγματοποιείται σύμφωνα με τον Ευρωπαϊκό Κανονισμό
-              Προστασίας Δεδομένων
-              <span className="text-white">
-                {" "}(GDPR – EU 2016/679)
-              </span>
-              , με σεβασμό στις αρχές της διαφάνειας, της ασφάλειας και της περιορισμένης χρήσης
-              των πληροφοριών που παρέχονται από τους συμμετέχοντες.
+              Η επεξεργασία των δεδομένων πραγματοποιείται σύμφωνα με τον Ευρωπαϊκό Κανονισμό Προστασίας Δεδομένων GDPR – EU 2016/679, με σεβασμό στις αρχές της διαφάνειας, της ασφάλειας και της περιορισμένης χρήσης των πληροφοριών που παρέχονται από τους συμμετέχοντες.
             </p>
           </div>
 
@@ -1275,11 +1217,8 @@ function PrivacyModal({ onClose }) {
             <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
               Data Usage Policy
             </h3>
-
             <p>
-              Τα δεδομένα δεν διαμοιράζονται, δεν πωλούνται και δεν χρησιμοποιούνται για
-              μη εξουσιοδοτημένες εμπορικές ενέργειες ή δραστηριότητες εκτός του πλαισίου
-              της συγκεκριμένης διοργάνωσης.
+              Τα δεδομένα δεν διαμοιράζονται, δεν πωλούνται και δεν χρησιμοποιούνται για μη εξουσιοδοτημένες εμπορικές ενέργειες ή δραστηριότητες εκτός του πλαισίου της συγκεκριμένης διοργάνωσης.
             </p>
           </div>
 
@@ -1287,12 +1226,8 @@ function PrivacyModal({ onClose }) {
             <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
               Participation Consent
             </h3>
-
             <p>
-              Με την ολοκλήρωση της διαδικασίας check-in, οι συμμετέχοντες αποδέχονται τη χρήση
-              των στοιχείων τους αποκλειστικά για τις ανάγκες λειτουργίας της εμπειρίας,
-              της επικοινωνίας σχετικά με την εκδήλωση και της διαδικασίας ταυτοποίησης
-              κατά την είσοδο.
+              Με την ολοκλήρωση της διαδικασίας check-in, οι συμμετέχοντες αποδέχονται τη χρήση των στοιχείων τους αποκλειστικά για τις ανάγκες λειτουργίας της εμπειρίας, της επικοινωνίας σχετικά με την εκδήλωση και της διαδικασίας ταυτοποίησης κατά την είσοδο.
             </p>
           </div>
 
@@ -1300,14 +1235,8 @@ function PrivacyModal({ onClose }) {
             <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
               Academic Use
             </h3>
-
             <p>
-              Η πλατφόρμα λειτουργεί αποκλειστικά για ακαδημαϊκούς και εκπαιδευτικούς σκοπούς
-              στο πλαίσιο της διοργάνωσης του
-              <span className="text-white">
-                {" "}Department of Organisation Management, Marketing and Tourism
-              </span>
-              {" "}του International Hellenic University.
+              Η πλατφόρμα λειτουργεί αποκλειστικά για ακαδημαϊκούς και εκπαιδευτικούς σκοπούς στο πλαίσιο της διοργάνωσης του Department of Organisation Management, Marketing and Tourism του International Hellenic University.
             </p>
           </div>
         </div>
@@ -1316,8 +1245,6 @@ function PrivacyModal({ onClose }) {
           onClick={onClose}
           className="group relative mt-9 flex w-full items-center justify-center overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 px-5 py-[14px] text-[#f7f1e6] backdrop-blur-2xl transition-all duration-300 hover:bg-[#d7a247]/16"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[#d7a247]/10 via-white/5 to-transparent" />
-
           <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em] text-[#f7d27a]">
             Κατανόησα
           </span>
@@ -1326,4 +1253,3 @@ function PrivacyModal({ onClose }) {
     </div>
   );
 }
-
