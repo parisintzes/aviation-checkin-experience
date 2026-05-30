@@ -301,8 +301,11 @@ export default function CheckInPage() {
       </AnimatePresence>
 
     </MobileShell>
-  </main>
-);
+
+    </main>
+
+  );
+
 }
 /*
   ============================================================
@@ -1264,4 +1267,4 @@ function PrivacyModal({ onClose }) {
     </div>
   );
 }
-}
+
