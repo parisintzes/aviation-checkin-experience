@@ -1056,9 +1056,10 @@ function BoardingPassScreen({ pass, onFinish }) {
               </p>
             </div>
 
-            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#d7a247]/30 bg-[#d7a247]/10 text-[#f7d27a]">
-              <Plane className="h-5 w-5 rotate-90" />
-            </div>
+            <div className="flex items-center justify-center">
+  <div className="h-[1px] w-20 bg-[#d7a247]/80" />
+  <ArrowRight className="-ml-2 h-5 w-5 text-[#d7a247]" />
+</div>
 
             <div className="text-right">
               <p className="text-[3.15rem] font-semibold leading-none tracking-[0.08em] text-white">
@@ -1100,19 +1101,25 @@ function BoardingPassScreen({ pass, onFinish }) {
             </span>
           </div>
 
-          <div className="flex h-24 w-full items-end justify-center gap-[3px] overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] px-5 pb-5 pt-4">
-            {Array.from({ length: 42 }).map((_, index) => (
-              <span
-                key={index}
-                className="bg-[#d7a247]"
-                style={{
-                  width: index % 5 === 0 ? 4 : index % 2 === 0 ? 2 : 1,
-                  height: `${34 + ((index * 17) % 48)}px`,
-                  opacity: index % 4 === 0 ? 0.9 : 0.68,
-                }}
-              />
-            ))}
-          </div>
+         <div className="flex h-28 w-full items-stretch justify-center gap-[2px] overflow-hidden rounded-xl bg-white px-4 py-4">
+  {Array.from({ length: 64 }).map((_, index) => (
+    <span
+      key={index}
+      className="bg-black"
+      style={{
+        width:
+          index % 11 === 0
+            ? 5
+            : index % 7 === 0
+            ? 4
+            : index % 3 === 0
+            ? 2
+            : 1,
+        opacity: index % 9 === 0 ? 0.55 : 1,
+      }}
+    />
+  ))}
+</div>
 
           <div className="mt-5 flex justify-between text-[9px] uppercase tracking-[0.28em] text-white/38">
             <span>SEQ 00025</span>
