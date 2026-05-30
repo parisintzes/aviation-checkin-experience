@@ -478,11 +478,7 @@ function AviationBackground() {
 
 function Logo({ compact = false }) {
   return (
-    <motion.div
-      className="relative flex justify-center"
-      animate={{ scale: [1, 1.015, 1], y: [0, -2, 0] }}
-      transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-    >
+    <div className="relative flex justify-center">
       <div className="absolute inset-0 scale-125 rounded-full bg-[#d7a247]/10 blur-3xl" />
 
       <img
@@ -492,7 +488,7 @@ function Logo({ compact = false }) {
           compact ? "w-[170px]" : "w-[285px]"
         }`}
       />
-    </motion.div>
+    </div>
   );
 }
 
@@ -698,9 +694,9 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
         filter: "blur(6px)",
       }}
       transition={{
-        duration: 2.2,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+  duration: slideNumber === 0 ? 2.2 : 1.35,
+  ease: [0.16, 1, 0.3, 1],
+}}
     >
       {/* Cinematic background image */}
       <motion.img
@@ -878,7 +874,7 @@ function PassengerForm({
         <div className="mt-7 h-[1px] w-20 bg-gradient-to-r from-[#d7a247] to-transparent" />
 
         <p className="mt-6 max-w-[90%] text-[14px] leading-7 text-white/68">
-          Συμπληρώστε τα στοιχεία σας για να ενεργοποιήσετε την προσωπική σας κάρτα επιβίβασης
+          Συμπληρώστε τα στοιχεία σας για να ενεργοποιήσετε την προσωπική σας κάρτα επιβίβασης.
         </p>
       </div>
 
