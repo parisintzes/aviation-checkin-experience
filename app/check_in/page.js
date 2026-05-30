@@ -207,7 +207,7 @@ export default function CheckInPage() {
     ============================================================
     SECTION 6 — FORM SUBMIT + SUPABASE INSERT
     
-    async function handleSubmit(event) {
+   async function handleSubmit(event) {
   event.preventDefault();
   setErrorMessage("");
 
@@ -293,8 +293,6 @@ export default function CheckInPage() {
   setTimeout(() => {
     setStage("boarding-pass");
   }, 2400);
-  );
-}
 }
 
 /*
