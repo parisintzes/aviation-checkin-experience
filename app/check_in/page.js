@@ -195,109 +195,67 @@ export default function CheckInPage() {
     []
   );
 
-  function handleNextSlide() {
+    function handleNextSlide() {
     if (slide < onboardingSlides.length - 1) {
       setSlide(slide + 1);
     } else {
       setStage("form");
     }
   }
-}
 
   /*
   ============================================================
   SECTION 6 — FORM SUBMIT + SUPABASE INSERT
-  Αυτό είναι το πιο κρίσιμο τεχνικό σημείο.
   ============================================================
-*/
+  */
 
-async function handleSubmit(event) {
-  event.preventDefault();
-  setErrorMessage("");
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setErrorMessage("");
 
-  const fullName = formData.fullName.trim();
-  const email = formData.email.trim().toLowerCase();
+    const fullName = formData.fullName.trim();
+    const email = formData.email.trim().toLowerCase();
 
-  if (!fullName || !email) {
-    setErrorMessage("Please complete both passenger name and email.");
-    return;
-  }
+    if (!fullName || !email) {
+      setErrorMessage("Please complete both passenger name and email.");
+      return;
+    }
 
-  const generatedPass = generateBoardingData(fullName, email);
+    const generatedPass = generateBoardingData(fullName, email);
 
-  setLoading(true);
+    setLoading(true);
 
-  const { error } = await supabase.from("participants").insert([
-    {
-      full_name: generatedPass.fullName,
-      email: generatedPass.email,
-      ticket_code: generatedPass.ticketCode,
-      flight: generatedPass.flight,
-      seat: generatedPass.seat,
-      gate: generatedPass.gate,
-      terminal: generatedPass.terminal,
-      status: "eligible",
-      email_sent: false,
-      email_error: null,
-    },
-  ]);
-
-  if (error) {
-    console.log("SUPABASE ERROR:", error);
-    setLoading(false);
-    setErrorMessage(error?.message || "Check-in failed. Please try again.");
-    return;
-  }
-
-  const emailResponse = await fetch("/api/send-boarding-pass", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      fullName: generatedPass.fullName,
-      email: generatedPass.email,
-      flight: generatedPass.flight,
-      from: generatedPass.from,
-      to: generatedPass.to,
-      seat: generatedPass.seat,
-      gate: generatedPass.gate,
-      terminal: generatedPass.terminal,
-      boardingId: generatedPass.boardingId,
-    }),
-  });
-
-  const emailResult = await emailResponse.json();
-
-  if (emailResult.success) {
-    await supabase
-      .from("participants")
-      .update({
-        email_sent: true,
-        email_sent_at: new Date().toISOString(),
-        email_error: null,
-      })
-      .eq("ticket_code", generatedPass.ticketCode);
-  } else {
-    await supabase
-      .from("participants")
-      .update({
+    const { error } = await supabase.from("participants").insert([
+      {
+        full_name: generatedPass.fullName,
+        email: generatedPass.email,
+        ticket_code: generatedPass.ticketCode,
+        flight: generatedPass.flight,
+        seat: generatedPass.seat,
+        gate: generatedPass.gate,
+        terminal: generatedPass.terminal,
+        status: "eligible",
         email_sent: false,
-        email_error: emailResult.error || "Email sending failed",
-      })
-      .eq("ticket_code", generatedPass.ticketCode);
+        email_error: null,
+      },
+    ]);
 
-    console.log("EMAIL ERROR:", emailResult.error);
+    if (error) {
+      console.log("SUPABASE ERROR:", error);
+      setLoading(false);
+      setErrorMessage(error?.message || "Check-in failed. Please try again.");
+      return;
+    }
+
+    setLoading(false);
+    setBoardingPass(generatedPass);
+    setStage("generating");
+
+    setTimeout(() => {
+      setStage("boarding-pass");
+    }, 2400);
   }
 
-  setLoading(false);
-  setBoardingPass(generatedPass);
-  setStage("generating");
-
-  setTimeout(() => {
-    setStage("boarding-pass");
-  }, 2400);
-}
   return (
     <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
       <MobileShell>
