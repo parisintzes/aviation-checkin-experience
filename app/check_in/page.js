@@ -204,10 +204,13 @@ export default function CheckInPage() {
   }
 
   /*
-    ============================================================
-    SECTION 6 — FORM SUBMIT + SUPABASE INSERT
-    
-   async function handleSubmit(event) {
+  ============================================================
+  SECTION 6 — FORM SUBMIT + SUPABASE INSERT
+  Αυτό είναι το πιο κρίσιμο τεχνικό σημείο.
+  ============================================================
+*/
+
+async function handleSubmit(event) {
   event.preventDefault();
   setErrorMessage("");
 
@@ -1165,4 +1168,4 @@ function ConfirmationScreen({ email }) {
     </motion.section>
   );
 }
-}
+
