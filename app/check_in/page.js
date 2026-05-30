@@ -171,12 +171,12 @@ export default function CheckInPage() {
   const onboardingSlides = useMemo(
     () => [
       {
-        eyebrow: "WELCOME ABOARD",
-        title: BRAND.eventTitle,
-        body:
-        “Μία immersive digital εμπειρία check-in, εμπνευσμένη από τον κόσμο της αεροπορίας, σχεδιασμένη να μετατρέψει την άφιξή σας στην αρχή του ταξιδιού.\n\nΗ προσωποποιημένη κάρτα επιβίβασής σας θα σας δώσει πρόσβαση στην εκδήλωση και θα ενεργοποιήσει τη συμμετοχή σας στο Secret Destination Giveaway Experience.\n\nΤο ταξίδι σας ξεκινά εδώ.”,
-        button: "Begin Boarding",
-      },
+  eyebrow: "WELCOME ABOARD",
+  title: BRAND.eventTitle,
+  body:
+    "Μία immersive digital εμπειρία check-in, εμπνευσμένη από τον κόσμο της αεροπορίας, σχεδιασμένη να μετατρέψει την άφιξή σας στην αρχή του ταξιδιού.\n\nΗ προσωποποιημένη κάρτα επιβίβασής σας θα σας δώσει πρόσβαση στην εκδήλωση και θα ενεργοποιήσει τη συμμετοχή σας στο Secret Destination Giveaway Experience.\n\nΤο ταξίδι σας ξεκινά εδώ.",
+  button: "Begin Boarding",
+},
       {
         eyebrow: "SECRET DESTINATION GIVEAWAY",
         title: "One Boarding Pass. One Mystery Flight.",
