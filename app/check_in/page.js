@@ -1253,3 +1253,4 @@ function PrivacyModal({ onClose }) {
     </div>
   );
 }
+}
