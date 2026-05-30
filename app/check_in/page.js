@@ -233,15 +233,51 @@ export default function CheckInPage() {
     ]);
 
     if (error) {
-      console.log("SUPABASE ERROR:", error);
-      setLoading(false);
-      setErrorMessage(error?.message || "Check-in failed. Please try again.");
-      return;
-    }
+  console.log("SUPABASE ERROR:", error);
+  setLoading(false);
+  setErrorMessage(error?.message || "Check-in failed. Please try again.");
+  return;
+}
 
-    setLoading(false);
-    setBoardingPass(generatedPass);
-    setStage("generating");
+/*
+============================================================
+SEND BOARDING PASS EMAIL
+============================================================
+*/
+
+const emailResponse = await fetch("/api/send-boarding-pass", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    fullName: generatedPass.fullName,
+    email: generatedPass.email,
+    flight: generatedPass.flight,
+    from: generatedPass.from,
+    to: generatedPass.to,
+    seat: generatedPass.seat,
+    gate: generatedPass.gate,
+    terminal: generatedPass.terminal,
+    boardingId: generatedPass.boardingId,
+  }),
+});
+
+const emailResult = await emailResponse.json();
+
+if (!emailResult.success) {
+  console.log("EMAIL ERROR:", emailResult.error);
+}
+
+/*
+============================================================
+CONTINUE EXPERIENCE
+============================================================
+*/
+
+setLoading(false);
+setBoardingPass(generatedPass);
+setStage("generating");
 
     setTimeout(() => {
       setStage("boarding-pass");
