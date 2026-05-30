@@ -167,7 +167,7 @@ export default function CheckInPage() {
       eyebrow: "WELCOME ABOARD",
       title: "Marketing Made in Greece - On Air",
       body:
-        "Καλωσορίσατε σε μία experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΗ Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξη σας σε μέρος της εμπειρίας.",
+        "Καλωσορίσατε σε μία experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο ταξίδι.\n\nΗ Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξη σας σε μέρος της εμπειρίας.",
       button: "Begin Boarding",
     },
       {
