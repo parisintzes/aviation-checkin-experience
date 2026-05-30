@@ -820,7 +820,7 @@ function PassengerForm({ formData, setFormData, onSubmit, loading, errorMessage 
         <div className="mt-7 h-[1px] w-20 bg-gradient-to-r from-[#d7a247] to-transparent" />
 
         <p className="mt-6 max-w-[90%] text-[14px] leading-7 text-white/68">
-          Enter your details to unlock your personal digital boarding pass for the event experience.
+          Συμπληρώστε τα στοιχεία σας για να ενεργοποιήσετε την προσωπική σας κάρτα επιβίβασης
         </p>
       </div>
 
@@ -861,7 +861,21 @@ function PassengerForm({ formData, setFormData, onSubmit, loading, errorMessage 
           />
         </label>
 
-        <button
+<div className="px-2 -mt-1">
+  <button
+    type="button"
+    onClick={() =>
+      alert(
+        "Passenger Information & Privacy Protocol\n\nΗ επεξεργασία των προσωπικών δεδομένων πραγματοποιείται αποκλειστικά για λειτουργικούς και οργανωτικούς σκοπούς της εμπειρίας check-in και της συμμετοχής στην εκδήλωση, σύμφωνα με τις αρχές του GDPR (EU 2016/679)."
+      )
+    }
+    className="text-[9px] uppercase tracking-[0.24em] text-white/32 transition-all duration-300 hover:text-[#d7a247]"
+  >
+    Passenger Information & Privacy Protocol
+  </button>
+</div>
+
+<button
           type="submit"
           disabled={loading}
           className="group relative mt-7 flex w-full items-center justify-between overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#02050c]/46 px-5 py-[16px] text-[#f7f1e6] shadow-[0_18px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl disabled:opacity-50"
