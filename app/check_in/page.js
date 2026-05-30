@@ -299,53 +299,52 @@ async function handleSubmit(event) {
   }, 2400);
 }
   return (
-  <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
-    <MobileShell>
-      <AnimatePresence mode="wait">
-        {stage === "splash" && (
-          <SplashScreen key="splash" onComplete={() => setStage("onboarding")} />
-        )}
+    <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
+      <MobileShell>
+        <AnimatePresence mode="wait">
+          {stage === "splash" && (
+            <SplashScreen key="splash" onComplete={() => setStage("onboarding")} />
+          )}
 
-        {stage === "onboarding" && (
-          <OnboardingScreen
-            key={`onboarding-${slide}`}
-            slide={onboardingSlides[slide]}
-            slideNumber={slide}
-            totalSlides={onboardingSlides.length}
-            onNext={handleNextSlide}
-          />
-        )}
+          {stage === "onboarding" && (
+            <OnboardingScreen
+              key={`onboarding-${slide}`}
+              slide={onboardingSlides[slide]}
+              slideNumber={slide}
+              totalSlides={onboardingSlides.length}
+              onNext={handleNextSlide}
+            />
+          )}
 
-        {stage === "form" && (
-          <PassengerForm
-            key="form"
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={handleSubmit}
-            loading={loading}
-            errorMessage={errorMessage}
-          />
-        )}
+          {stage === "form" && (
+            <PassengerForm
+              key="form"
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleSubmit}
+              loading={loading}
+              errorMessage={errorMessage}
+            />
+          )}
 
-        {stage === "generating" && <GeneratingScreen key="generating" />}
+          {stage === "generating" && <GeneratingScreen key="generating" />}
 
-        {stage === "boarding-pass" && boardingPass && (
-          <BoardingPassScreen
-            key="boarding-pass"
-            pass={boardingPass}
-            onFinish={() => setStage("confirmation")}
-          />
-        )}
+          {stage === "boarding-pass" && boardingPass && (
+            <BoardingPassScreen
+              key="boarding-pass"
+              pass={boardingPass}
+              onFinish={() => setStage("confirmation")}
+            />
+          )}
 
-        {stage === "confirmation" && boardingPass && (
-          <ConfirmationScreen key="confirmation" email={boardingPass.email} />
-        )}
-      </AnimatePresence>
-    </MobileShell>
-  </main>
-);
+          {stage === "confirmation" && boardingPass && (
+            <ConfirmationScreen key="confirmation" email={boardingPass.email} />
+          )}
+        </AnimatePresence>
+      </MobileShell>
+    </main>
+  );
 }
-
 /*
   ============================================================
   SECTION 7 — MOBILE SHELL
