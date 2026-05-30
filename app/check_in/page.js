@@ -150,14 +150,6 @@ function generateBoardingData(fullName, email) {
   ============================================================
   SECTION 5 — MAIN APP COMPONENT
   Εδώ ελέγχεται όλη η ροή της εφαρμογής.
-
-  ΤΙ ΕΠΗΡΕΑΖΕΙ
-  ------------------------------------------------------------
-  - Σε ποια οθόνη βρίσκεται ο χρήστης.
-  - Πότε εμφανίζεται το splash.
-  - Πότε εμφανίζονται τα onboarding slides.
-  - Πότε γίνεται submit στο Supabase.
-  - Πότε εμφανίζεται το boarding pass.
 */
 
 export default function CheckInPage() {
@@ -167,6 +159,7 @@ export default function CheckInPage() {
   const [boardingPass, setBoardingPass] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const onboardingSlides = useMemo(
     () => [
@@ -195,14 +188,13 @@ export default function CheckInPage() {
     []
   );
 
-    function handleNextSlide() {
+  function handleNextSlide() {
     if (slide < onboardingSlides.length - 1) {
       setSlide(slide + 1);
     } else {
       setStage("form");
     }
   }
-
   /*
   ============================================================
   SECTION 6 — FORM SUBMIT + SUPABASE INSERT
@@ -257,52 +249,61 @@ export default function CheckInPage() {
   }
 
   return (
-    <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
-      <MobileShell>
-        <AnimatePresence mode="wait">
-          {stage === "splash" && (
-            <SplashScreen key="splash" onComplete={() => setStage("onboarding")} />
-          )}
+  <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
+    <MobileShell>
 
-          {stage === "onboarding" && (
-            <OnboardingScreen
-              key={`onboarding-${slide}`}
-              slide={onboardingSlides[slide]}
-              slideNumber={slide}
-              totalSlides={onboardingSlides.length}
-              onNext={handleNextSlide}
-            />
-          )}
+      {showPrivacyModal && (
+        <PrivacyModal onClose={() => setShowPrivacyModal(false)} />
+      )}
 
-          {stage === "form" && (
-            <PassengerForm
-              key="form"
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              loading={loading}
-              errorMessage={errorMessage}
-            />
-          )}
+      <AnimatePresence mode="wait">
+        {stage === "splash" && (
+          <SplashScreen key="splash" onComplete={() => setStage("onboarding")} />
+        )}
 
-          {stage === "generating" && <GeneratingScreen key="generating" />}
+        {stage === "onboarding" && (
+          <OnboardingScreen
+            key={`onboarding-${slide}`}
+            slide={onboardingSlides[slide]}
+            slideNumber={slide}
+            totalSlides={onboardingSlides.length}
+            onNext={handleNextSlide}
+          />
+        )}
 
-          {stage === "boarding-pass" && boardingPass && (
-            <BoardingPassScreen
-              key="boarding-pass"
-              pass={boardingPass}
-              onFinish={() => setStage("confirmation")}
-            />
-          )}
+        {stage === "form" && (
+          <PassengerForm
+            key="form"
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleSubmit}
+            loading={loading}
+            errorMessage={errorMessage}
+            setShowPrivacyModal={setShowPrivacyModal}
+          />
+        )}
 
-          {stage === "confirmation" && boardingPass && (
-            <ConfirmationScreen key="confirmation" email={boardingPass.email} />
-          )}
-        </AnimatePresence>
-      </MobileShell>
-    </main>
-  );
-}
+        {stage === "generating" && <GeneratingScreen key="generating" />}
+
+        {stage === "boarding-pass" && boardingPass && (
+          <BoardingPassScreen
+            key="boarding-pass"
+            pass={boardingPass}
+            onFinish={() => setStage("confirmation")}
+          />
+        )}
+
+        {stage === "confirmation" && boardingPass && (
+          <ConfirmationScreen
+            key="confirmation"
+            email={boardingPass.email}
+          />
+        )}
+      </AnimatePresence>
+
+    </MobileShell>
+  </main>
+);
 /*
   ============================================================
   SECTION 7 — MOBILE SHELL
@@ -793,7 +794,14 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
   - Το πρώτο πραγματικό interaction του χρήστη.
 */
 
-function PassengerForm({ formData, setFormData, onSubmit, loading, errorMessage }) {
+function PassengerForm({
+  formData,
+  setFormData,
+  onSubmit,
+  loading,
+  errorMessage,
+  setShowPrivacyModal,
+}) {
   return (
     <motion.section
       className="absolute inset-0 overflow-hidden px-7 py-8"
@@ -864,12 +872,8 @@ function PassengerForm({ formData, setFormData, onSubmit, loading, errorMessage 
 <div className="px-2 -mt-1">
   <button
     type="button"
-    onClick={() =>
-      alert(
-        "Passenger Information & Privacy Protocol\n\nΗ επεξεργασία των προσωπικών δεδομένων πραγματοποιείται αποκλειστικά για λειτουργικούς και οργανωτικούς σκοπούς της εμπειρίας check-in και της συμμετοχής στην εκδήλωση, σύμφωνα με τις αρχές του GDPR (EU 2016/679)."
-      )
-    }
-    className="text-[9px] uppercase tracking-[0.24em] text-white/32 transition-all duration-300 hover:text-[#d7a247]"
+    onClick={() => setShowPrivacyModal(true)}
+    className="relative z-10 w-full text-center text-[9px] uppercase tracking-[0.24em] text-white/32 transition-all duration-300 hover:text-[#d7a247]"
   >
     Passenger Information & Privacy Protocol
   </button>
@@ -1185,6 +1189,141 @@ function ConfirmationScreen({ email }) {
         </motion.p>
       </div>
     </motion.section>
+  );
+}
+
+/*
+  ============================================================
+  SECTION 16 — PRIVACY MODAL
+  Passenger Information & Data Protection Notice
+  ============================================================
+*/
+
+function PrivacyModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-6 backdrop-blur-xl">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.98, y: 10 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className="max-h-[82vh] w-full max-w-[390px] overflow-y-auto rounded-[2rem] border border-[#d7a247]/30 bg-[#06152a]/95 p-6 text-white shadow-[0_25px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
+      >
+        <div>
+          <p className="text-[9px] uppercase tracking-[0.38em] text-[#d7a247]">
+            Passenger Information & Data Protection Notice
+          </p>
+
+          <h2 className="mt-4 text-[2rem] font-semibold leading-[1] tracking-[-0.04em] text-white">
+            Προστασία Προσωπικών Δεδομένων
+          </h2>
+
+          <div className="mt-5 h-[1px] w-16 bg-gradient-to-r from-[#d7a247] to-transparent" />
+        </div>
+
+        <div className="mt-7 space-y-7 text-[13px] leading-7 text-white/72">
+          <div>
+            <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
+              Purpose of the Platform
+            </h3>
+
+            <p>
+              Η παρούσα ψηφιακή πλατφόρμα check-in δημιουργήθηκε στο πλαίσιο της εμπειρίας
+              <span className="text-white">
+                {" "}Philoxenia 2026 – Marketing Made in Greece | On Air
+              </span>
+              , με στόχο τη διαχείριση της συμμετοχής των επισκεπτών, την προσωποποιημένη
+              έκδοση boarding pass και τη συνολική υποστήριξη της διαδραστικής εμπειρίας
+              της εκδήλωσης.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
+              Data Collection
+            </h3>
+
+            <p>
+              Τα προσωπικά δεδομένα που καταχωρούνται μέσω της εφαρμογής, όπως ονοματεπώνυμο,
+              στοιχεία επικοινωνίας και πληροφορίες συμμετοχής, συλλέγονται και υποβάλλονται
+              σε επεξεργασία αποκλειστικά για λειτουργικούς, οργανωτικούς και επικοινωνιακούς
+              σκοπούς που σχετίζονται με τη συμμετοχή σας στην εκδήλωση και στο
+              <span className="text-white">
+                {" "}Secret Destination Giveaway Experience
+              </span>
+              .
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
+              GDPR Compliance
+            </h3>
+
+            <p>
+              Η επεξεργασία των δεδομένων πραγματοποιείται σύμφωνα με τον Ευρωπαϊκό Κανονισμό
+              Προστασίας Δεδομένων
+              <span className="text-white">
+                {" "}(GDPR – EU 2016/679)
+              </span>
+              , με σεβασμό στις αρχές της διαφάνειας, της ασφάλειας και της περιορισμένης χρήσης
+              των πληροφοριών που παρέχονται από τους συμμετέχοντες.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
+              Data Usage Policy
+            </h3>
+
+            <p>
+              Τα δεδομένα δεν διαμοιράζονται, δεν πωλούνται και δεν χρησιμοποιούνται για
+              μη εξουσιοδοτημένες εμπορικές ενέργειες ή δραστηριότητες εκτός του πλαισίου
+              της συγκεκριμένης διοργάνωσης.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
+              Participation Consent
+            </h3>
+
+            <p>
+              Με την ολοκλήρωση της διαδικασίας check-in, οι συμμετέχοντες αποδέχονται τη χρήση
+              των στοιχείων τους αποκλειστικά για τις ανάγκες λειτουργίας της εμπειρίας,
+              της επικοινωνίας σχετικά με την εκδήλωση και της διαδικασίας ταυτοποίησης
+              κατά την είσοδο.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="mb-2 text-[10px] uppercase tracking-[0.28em] text-[#d7a247]">
+              Academic Use
+            </h3>
+
+            <p>
+              Η πλατφόρμα λειτουργεί αποκλειστικά για ακαδημαϊκούς και εκπαιδευτικούς σκοπούς
+              στο πλαίσιο της διοργάνωσης του
+              <span className="text-white">
+                {" "}Department of Organisation Management, Marketing and Tourism
+              </span>
+              {" "}του International Hellenic University.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          className="group relative mt-9 flex w-full items-center justify-center overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 px-5 py-[14px] text-[#f7f1e6] backdrop-blur-2xl transition-all duration-300 hover:bg-[#d7a247]/16"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-[#d7a247]/10 via-white/5 to-transparent" />
+
+          <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em] text-[#f7d27a]">
+            Κατανόησα
+          </span>
+        </button>
+      </motion.div>
+    </div>
   );
 }
 
