@@ -1165,3 +1165,4 @@ function ConfirmationScreen({ email }) {
     </motion.section>
   );
 }
+}
