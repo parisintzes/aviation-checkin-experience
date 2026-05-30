@@ -20,7 +20,7 @@ export async function POST(req) {
 
     const firstName = fullName?.split(" ")?.[0] || fullName || "Passenger";
 
-    const barcodeBars = Array.from({ length: 28 })
+    const barcodeBars = Array.from({ length: 44 })
       .map((_, index) => {
         const width =
           index % 7 === 0 ? 4 : index % 3 === 0 ? 3 : index % 2 === 0 ? 2 : 1;
@@ -80,24 +80,22 @@ export async function POST(req) {
 
                       <td width="20%" align="center">
 
- <div style="
-  width:82px;
-  height:82px;
-  border:1px solid rgba(215,162,71,0.55);
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin:0 auto;
-">
+ <td width="20%" align="center">
+
   <div style="
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    border:1px solid rgba(215,162,71,0.45);
+    background:rgba(215,162,71,0.08);
     color:#d7a247;
-    font-size:26px;
-    line-height:1;
+    font-size:24px;
+    line-height:48px;
+    text-align:center;
+    font-family:Arial,Helvetica,sans-serif;
   ">
-    ✈
+    &#9992;
   </div>
-</div>
 
 </td>
 
