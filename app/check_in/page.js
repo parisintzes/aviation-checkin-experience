@@ -745,9 +745,20 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
             transition={{ delay: 0.9, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
           />
 
-          <p className="mt-6 max-w-[86%] text-[13.5px] leading-7 text-white/68">
-            {slide.body}
-          </p>
+         <div className="mt-6 max-w-[82%] space-y-5">
+  {slide.body.split("\n\n").map((paragraph, index) => (
+    <p
+      key={index}
+      className={`text-[13px] leading-[1.95] tracking-[0.01em] ${
+        index === 0
+          ? "text-white/78"
+          : "text-white/56"
+      }`}
+    >
+      {paragraph}
+    </p>
+  ))}
+</div>
         </motion.div>
       </div>
 
@@ -1246,7 +1257,7 @@ function PrivacyModal({ onClose }) {
           className="group relative mt-9 flex w-full items-center justify-center overflow-hidden rounded-full border border-[#d7a247]/35 bg-[#d7a247]/10 px-5 py-[14px] text-[#f7f1e6] backdrop-blur-2xl transition-all duration-300 hover:bg-[#d7a247]/16"
         >
           <span className="relative z-10 text-[10px] font-medium uppercase tracking-[0.32em] text-[#f7d27a]">
-            Κατανόησα
+            Continue to Check-In
           </span>
         </button>
       </motion.div>
