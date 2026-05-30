@@ -206,26 +206,8 @@ export default function CheckInPage() {
   /*
     ============================================================
     SECTION 6 — FORM SUBMIT + SUPABASE INSERT
-    Αυτό είναι το πιο κρίσιμο τεχνικό σημείο.
-
-    ΤΙ ΚΑΝΕΙ
-    ------------------------------------------------------------
-    1. Σταματάει το default form submit.
-    2. Δημιουργεί boarding pass data.
-    3. Αποθηκεύει τα στοιχεία στο Supabase.
-    4. Αν πετύχει, δείχνει premium loading.
-    5. Μετά εμφανίζει το boarding pass.
-
-    ΤΙ ΠΡΕΠΕΙ ΝΑ ΠΡΟΣΕΞΕΙΣ
-    ------------------------------------------------------------
-    Στον παλιό σου κώδικα δημιουργούσες ticketCode αλλά ΔΕΝ το
-    αποθήκευες στο Supabase. Αυτό ήταν λάθος, γιατί μετά δεν θα
-    μπορούσες να κάνεις αξιόπιστη live draw με βάση τον κωδικό.
-
-    Εδώ αποθηκεύουμε και τον κωδικό και τα generated στοιχεία.
-  */
-
-  async function handleSubmit(event) {
+    
+    async function handleSubmit(event) {
   event.preventDefault();
   setErrorMessage("");
 
@@ -234,11 +216,6 @@ export default function CheckInPage() {
 
   if (!fullName || !email) {
     setErrorMessage("Please complete both passenger name and email.");
-    return;
-  }
-
-  if (!supabase) {
-    setErrorMessage("Supabase is not configured. Please check your .env.local file.");
     return;
   }
 
@@ -256,17 +233,60 @@ export default function CheckInPage() {
       gate: generatedPass.gate,
       terminal: generatedPass.terminal,
       status: "eligible",
+      email_sent: false,
+      email_error: null,
     },
   ]);
 
-  setLoading(false);
-
   if (error) {
     console.log("SUPABASE ERROR:", error);
+    setLoading(false);
     setErrorMessage(error?.message || "Check-in failed. Please try again.");
     return;
   }
 
+  const emailResponse = await fetch("/api/send-boarding-pass", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fullName: generatedPass.fullName,
+      email: generatedPass.email,
+      flight: generatedPass.flight,
+      from: generatedPass.from,
+      to: generatedPass.to,
+      seat: generatedPass.seat,
+      gate: generatedPass.gate,
+      terminal: generatedPass.terminal,
+      boardingId: generatedPass.boardingId,
+    }),
+  });
+
+  const emailResult = await emailResponse.json();
+
+  if (emailResult.success) {
+    await supabase
+      .from("participants")
+      .update({
+        email_sent: true,
+        email_sent_at: new Date().toISOString(),
+        email_error: null,
+      })
+      .eq("ticket_code", generatedPass.ticketCode);
+  } else {
+    await supabase
+      .from("participants")
+      .update({
+        email_sent: false,
+        email_error: emailResult.error || "Email sending failed",
+      })
+      .eq("ticket_code", generatedPass.ticketCode);
+
+    console.log("EMAIL ERROR:", emailResult.error);
+  }
+
+  setLoading(false);
   setBoardingPass(generatedPass);
   setStage("generating");
 
@@ -274,46 +294,6 @@ export default function CheckInPage() {
     setStage("boarding-pass");
   }, 2400);
 }
-
-  return (
-    <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
-      <MobileShell>
-        <AnimatePresence mode="sync">
-          {stage === "splash" && <SplashScreen key="splash" onComplete={() => setStage("onboarding")} />}
-
-          {stage === "onboarding" && (
-  <OnboardingScreen
-    key={`onboarding-${slide}`}
-    slide={onboardingSlides[slide]}
-    slideNumber={slide}
-    totalSlides={onboardingSlides.length}
-    onNext={handleNextSlide}
-  />
-  )}
-          {stage === "form" && (
-            <PassengerForm
-              key="form"
-              formData={formData}
-              setFormData={setFormData}
-              onSubmit={handleSubmit}
-              loading={loading}
-              errorMessage={errorMessage}
-            />
-          )}
-
-          {stage === "generating" && <GeneratingScreen key="generating" />}
-
-          {stage === "boarding-pass" && boardingPass && (
-            <BoardingPassScreen key="boarding-pass" pass={boardingPass} onFinish={() => setStage("confirmation")} />
-          )}
-
-          {stage === "confirmation" && boardingPass && (
-            <ConfirmationScreen key="confirmation" email={boardingPass.email} />
-          )}
-        </AnimatePresence>
-      </MobileShell>
-    </main>
-  );
 }
 
 /*
