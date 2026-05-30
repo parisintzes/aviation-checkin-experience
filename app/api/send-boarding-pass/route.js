@@ -79,12 +79,23 @@ export async function POST(req) {
                       </td>
 
                       <td width="20%" align="center">
-                        <div style="width:48px;height:48px;border-radius:50%;border:1px solid rgba(215,162,71,0.42);background:rgba(215,162,71,0.06);position:relative;margin:0 auto;">
-                          <div style="position:absolute;left:11px;top:24px;width:26px;height:1px;background:#d7a247;transform:rotate(-18deg);"></div>
-                          <div style="position:absolute;left:29px;top:17px;width:9px;height:1px;background:#d7a247;transform:rotate(32deg);"></div>
-                          <div style="position:absolute;left:29px;top:30px;width:9px;height:1px;background:#d7a247;transform:rotate(-32deg);"></div>
-                        </div>
-                      </td>
+
+  <div style="
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    border:1px solid rgba(215,162,71,0.45);
+    background:rgba(215,162,71,0.08);
+    color:#d7a247;
+    font-size:24px;
+    line-height:48px;
+    text-align:center;
+    font-family:Arial,Helvetica,sans-serif;
+  ">
+    &#9992;
+  </div>
+
+</td>
 
                       <td width="40%" align="right">
                         <div style="font-size:46px;font-weight:700;letter-spacing:5px;line-height:1;color:#ffffff;">
@@ -207,33 +218,30 @@ export async function POST(req) {
                 </p>
               </div>
 
-              <div style="margin-top:34px;color:rgba(255,255,255,0.36);font-size:10px;letter-spacing:4px;text-transform:uppercase;">
-                OMMTo...New Horizons
-              </div>
+              <div style="
+  margin-top:34px;
+  color:rgba(255,255,255,0.36);
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:none;
+  font-weight:500;
+">
+  OMMTo...New Horizons
+</div>
 
 <div style="
-
   margin-top:18px;
-
-  font-size:10px;
-
-  line-height:1.8;
-
-  color:rgba(255,255,255,0.26);
-
-  text-align:center;
-
-  max-width:360px;
-
+  font-size:8px;
+  line-height:1.7;
+  color:rgba(255,255,255,0.22);
+  text-align:right;
+  max-width:300px;
   margin-left:auto;
-
-  margin-right:auto;
-
 ">
-
-  Passenger Information & Privacy Protocol<br/>
+  Passenger Information & Privacy Protocol<br/><br/>
 
   Η επεξεργασία των προσωπικών δεδομένων πραγματοποιείται αποκλειστικά για λειτουργικούς και οργανωτικούς σκοπούς της εμπειρίας check-in και της συμμετοχής στην εκδήλωση, σύμφωνα με τις αρχές του GDPR (EU 2016/679).
+</div>
 
 </div>
 
