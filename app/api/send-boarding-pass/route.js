@@ -20,10 +20,11 @@ export async function POST(req) {
 
     const firstName = fullName?.split(" ")?.[0] || fullName || "Passenger";
 
-    const barcodeBars = Array.from({ length: 48 })
+    const barcodeBars = Array.from({ length: 44 })
       .map((_, index) => {
-        const width = index % 7 === 0 ? 4 : index % 3 === 0 ? 3 : index % 2 === 0 ? 2 : 1;
-        const height = 30 + ((index * 19) % 42);
+        const width =
+          index % 7 === 0 ? 4 : index % 3 === 0 ? 3 : index % 2 === 0 ? 2 : 1;
+        const height = 28 + ((index * 19) % 40);
         const opacity = index % 5 === 0 ? 0.95 : 0.68;
 
         return `<span style="display:inline-block;width:${width}px;height:${height}px;background:#d7a247;margin:0 2px;opacity:${opacity};vertical-align:bottom;"></span>`;
@@ -36,112 +37,113 @@ export async function POST(req) {
       subject: `Your OMMT Boarding Pass • ${flight}`,
       html: `
         <div style="margin:0;padding:0;background:#02050c;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-          <div style="padding:54px 18px;background:radial-gradient(circle at 50% 0%,#10233c 0%,#02050c 48%,#010309 100%);">
+          <div style="padding:34px 10px;background:radial-gradient(circle at 50% 0%,#10233c 0%,#02050c 48%,#010309 100%);">
 
-            <div style="max-width:620px;margin:0 auto;text-align:center;">
-              <div style="margin-bottom:32px;">
-                <div style="font-size:11px;letter-spacing:7px;color:#d7a247;text-transform:uppercase;">
+            <div style="max-width:420px;margin:0 auto;text-align:center;">
+              <div style="margin-bottom:28px;">
+                <div style="font-size:11px;letter-spacing:6px;color:#d7a247;text-transform:uppercase;">
                   OMMT Airlines
                 </div>
-                <div style="margin-top:12px;font-size:10px;letter-spacing:5px;color:rgba(255,255,255,0.36);text-transform:uppercase;">
+                <div style="margin-top:12px;font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.36);text-transform:uppercase;">
                   Digital Aviation Experience
                 </div>
               </div>
 
-              <div style="border:1px solid rgba(215,162,71,0.28);border-radius:36px;background:linear-gradient(180deg,rgba(10,27,49,0.98),rgba(2,5,12,0.98));overflow:hidden;box-shadow:0 36px 90px rgba(0,0,0,0.55);text-align:left;">
+              <div style="border:1px solid rgba(215,162,71,0.28);border-radius:32px;background:linear-gradient(180deg,rgba(10,27,49,0.98),rgba(2,5,12,0.98));overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.55);text-align:left;">
 
-                <div style="padding:44px 38px 38px 38px;">
+                <div style="padding:34px 24px 32px 24px;">
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="left">
-                        <div style="color:#d7a247;font-size:10px;letter-spacing:5px;text-transform:uppercase;">
+                        <div style="color:#d7a247;font-size:9px;letter-spacing:4px;text-transform:uppercase;">
                           Boarding Pass
                         </div>
                       </td>
                       <td align="right">
-                        <div style="color:rgba(255,255,255,0.38);font-size:10px;letter-spacing:4px;text-transform:uppercase;">
+                        <div style="color:rgba(255,255,255,0.38);font-size:9px;letter-spacing:3px;text-transform:uppercase;">
                           OMMT / 1025
                         </div>
                       </td>
                     </tr>
                   </table>
 
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:42px;">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:38px;">
                     <tr>
                       <td width="40%" align="left">
-                        <div style="font-size:58px;font-weight:700;letter-spacing:7px;line-height:1;color:#ffffff;">
+                        <div style="font-size:46px;font-weight:700;letter-spacing:5px;line-height:1;color:#ffffff;">
                           ${from}
                         </div>
-                        <div style="margin-top:13px;color:rgba(255,255,255,0.48);font-size:10px;letter-spacing:4px;text-transform:uppercase;">
+                        <div style="margin-top:12px;color:rgba(255,255,255,0.48);font-size:9px;letter-spacing:3px;text-transform:uppercase;">
                           Thessaloniki
                         </div>
                       </td>
 
                       <td width="20%" align="center">
-                        <div style="width:52px;height:52px;border-radius:50%;border:1px solid rgba(215,162,71,0.38);background:rgba(215,162,71,0.08);">
-                          <div style="width:28px;height:1px;background:#d7a247;margin:25px auto 0 auto;transform:rotate(-22deg);"></div>
-                          <div style="width:9px;height:1px;background:#d7a247;margin:-4px 0 0 31px;transform:rotate(24deg);"></div>
+                        <div style="width:48px;height:48px;border-radius:50%;border:1px solid rgba(215,162,71,0.42);background:rgba(215,162,71,0.06);position:relative;margin:0 auto;">
+                          <div style="position:absolute;left:11px;top:24px;width:26px;height:1px;background:#d7a247;transform:rotate(-18deg);"></div>
+                          <div style="position:absolute;left:29px;top:17px;width:9px;height:1px;background:#d7a247;transform:rotate(32deg);"></div>
+                          <div style="position:absolute;left:29px;top:30px;width:9px;height:1px;background:#d7a247;transform:rotate(-32deg);"></div>
                         </div>
                       </td>
 
                       <td width="40%" align="right">
-                        <div style="font-size:58px;font-weight:700;letter-spacing:7px;line-height:1;color:#ffffff;">
+                        <div style="font-size:46px;font-weight:700;letter-spacing:5px;line-height:1;color:#ffffff;">
                           ${to}
                         </div>
-                        <div style="margin-top:13px;color:rgba(255,255,255,0.48);font-size:10px;letter-spacing:4px;text-transform:uppercase;">
+                        <div style="margin-top:12px;color:rgba(255,255,255,0.48);font-size:9px;letter-spacing:3px;text-transform:uppercase;">
                           Secret Destination
                         </div>
                       </td>
                     </tr>
                   </table>
 
-                  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent);margin:40px 0;"></div>
+                  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent);margin:34px 0;"></div>
 
                   <table width="100%" cellpadding="0" cellspacing="0" style="color:#ffffff;">
                     <tr>
-                      <td width="50%" style="padding-bottom:26px;">
-                        <div style="color:#d7a247;font-size:10px;letter-spacing:4px;text-transform:uppercase;">Passenger</div>
-                        <div style="margin-top:9px;font-size:15px;font-weight:700;letter-spacing:1px;">${fullName}</div>
+                      <td width="50%" style="padding-bottom:24px;">
+                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Passenger</div>
+                        <div style="margin-top:8px;font-size:14px;font-weight:700;letter-spacing:1px;">${fullName}</div>
                       </td>
-                      <td width="50%" style="padding-bottom:26px;">
-                        <div style="color:#d7a247;font-size:10px;letter-spacing:4px;text-transform:uppercase;">Flight</div>
-                        <div style="margin-top:9px;font-size:15px;font-weight:700;letter-spacing:1px;">${flight}</div>
+                      <td width="50%" style="padding-bottom:24px;">
+                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Flight</div>
+                        <div style="margin-top:8px;font-size:14px;font-weight:700;letter-spacing:1px;">${flight}</div>
                       </td>
                     </tr>
 
                     <tr>
-                      <td style="padding-bottom:26px;">
-                        <div style="color:#d7a247;font-size:10px;letter-spacing:4px;text-transform:uppercase;">Terminal</div>
-                        <div style="margin-top:9px;font-size:15px;font-weight:700;">${terminal}</div>
+                      <td style="padding-bottom:24px;">
+                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Terminal</div>
+                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${terminal}</div>
                       </td>
-                      <td style="padding-bottom:26px;">
-                        <div style="color:#d7a247;font-size:10px;letter-spacing:4px;text-transform:uppercase;">Gate</div>
-                        <div style="margin-top:9px;font-size:15px;font-weight:700;">${gate}</div>
+                      <td style="padding-bottom:24px;">
+                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Gate</div>
+                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${gate}</div>
                       </td>
                     </tr>
 
                     <tr>
                       <td>
-                        <div style="color:#d7a247;font-size:10px;letter-spacing:4px;text-transform:uppercase;">Seat</div>
-                        <div style="margin-top:9px;font-size:15px;font-weight:700;">${seat}</div>
+                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Seat</div>
+                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${seat}</div>
                       </td>
                       <td>
-                        <div style="color:#d7a247;font-size:10px;letter-spacing:4px;text-transform:uppercase;">Boarding ID</div>
-                        <div style="margin-top:9px;font-size:15px;font-weight:700;">${boardingId}</div>
+                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Boarding ID</div>
+                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${boardingId}</div>
                       </td>
                     </tr>
                   </table>
 
-                  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent);margin:40px 0;"></div>
+                  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent);margin:34px 0;"></div>
 
-                  <div style="font-size:30px;line-height:1.36;font-weight:300;letter-spacing:7px;color:#ffffff;">
+                  <div style="font-size:24px;line-height:1.4;font-weight:300;letter-spacing:5px;color:#ffffff;">
                     YOUR JOURNEY<br/>
                     STARTS <span style="color:#d7a247;">HERE.</span>
                   </div>
                 </div>
 
-                <div style="background:#01040b;padding:32px 38px;border-top:1px solid rgba(215,162,71,0.16);">
-                  <div style="height:76px;border-radius:19px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);text-align:center;padding-top:22px;">
+                <div style="background:#01040b;padding:28px 24px;border-top:1px solid rgba(215,162,71,0.16);">
+                  <div style="height:74px;border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);text-align:center;padding-top:22px;">
                     <div style="font-size:0;line-height:0;">
                       ${barcodeBars}
                     </div>
@@ -149,10 +151,10 @@ export async function POST(req) {
 
                   <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
                     <tr>
-                      <td align="left" style="color:rgba(255,255,255,0.38);font-size:9px;letter-spacing:4px;text-transform:uppercase;">
+                      <td align="left" style="color:rgba(255,255,255,0.38);font-size:8px;letter-spacing:3px;text-transform:uppercase;">
                         SEQ 00025
                       </td>
-                      <td align="right" style="color:rgba(255,255,255,0.38);font-size:9px;letter-spacing:4px;text-transform:uppercase;">
+                      <td align="right" style="color:rgba(255,255,255,0.38);font-size:8px;letter-spacing:3px;text-transform:uppercase;">
                         OMMT Secure Pass
                       </td>
                     </tr>
@@ -160,7 +162,7 @@ export async function POST(req) {
                 </div>
               </div>
 
-              <div style="max-width:560px;margin:38px auto 0 auto;text-align:left;">
+              <div style="max-width:400px;margin:36px auto 0 auto;text-align:left;">
                 <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.84);margin:0 0 22px 0;">
                   Αγαπητέ/ή <span style="color:#d7a247;">${firstName}</span>,
                 </p>
@@ -191,7 +193,7 @@ export async function POST(req) {
 
                 <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(215,162,71,0.35),transparent);margin:34px 0;"></div>
 
-                <p style="font-size:22px;line-height:1.6;letter-spacing:4px;color:#ffffff;font-weight:300;text-transform:uppercase;margin:0 0 30px 0;">
+                <p style="font-size:21px;line-height:1.6;letter-spacing:3px;color:#ffffff;font-weight:300;text-transform:uppercase;margin:0 0 30px 0;">
                   Some journeys begin<br/>
                   long before departure.
                 </p>
@@ -205,12 +207,41 @@ export async function POST(req) {
                 </p>
               </div>
 
-              <div style="margin-top:34px;color:rgba(255,255,255,0.34);font-size:10px;letter-spacing:5px;text-transform:uppercase;">
-                Board. Explore. Beyond.
+              <div style="margin-top:34px;color:rgba(255,255,255,0.36);font-size:10px;letter-spacing:4px;text-transform:uppercase;">
+                OMMTo...New Horizons
               </div>
-            </div>
-          </div>
-        </div>
+
+<div style="
+
+  margin-top:18px;
+
+  font-size:10px;
+
+  line-height:1.8;
+
+  color:rgba(255,255,255,0.26);
+
+  text-align:center;
+
+  max-width:360px;
+
+  margin-left:auto;
+
+  margin-right:auto;
+
+">
+
+  Passenger Information & Privacy Protocol<br/>
+
+  Η επεξεργασία των προσωπικών δεδομένων πραγματοποιείται αποκλειστικά για λειτουργικούς και οργανωτικούς σκοπούς της εμπειρίας check-in και της συμμετοχής στην εκδήλωση, σύμφωνα με τις αρχές του GDPR (EU 2016/679).
+
+</div>
+
+</div>
+
+</div>
+
+</div>
       `,
     });
 
