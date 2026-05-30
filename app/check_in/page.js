@@ -273,7 +273,6 @@ export default function CheckInPage() {
 
         {stage === "form" && (
           <PassengerForm
-            key="form"
             formData={formData}
             setFormData={setFormData}
             onSubmit={handleSubmit}
