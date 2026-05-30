@@ -303,6 +303,7 @@ export default function CheckInPage() {
     </MobileShell>
   </main>
 );
+}
 /*
   ============================================================
   SECTION 7 — MOBILE SHELL
