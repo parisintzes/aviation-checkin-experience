@@ -293,6 +293,7 @@ export default function CheckInPage() {
   setTimeout(() => {
     setStage("boarding-pass");
   }, 2400);
+  );
 }
 }
 
