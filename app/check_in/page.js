@@ -326,7 +326,7 @@ export default function CheckInPage() {
 
 function MobileShell({ children }) {
   return (
-    <section className="relative h-screen w-full max-w-[430px] mx-auto bg-[#06152a] overflow-hidden shadow-2xl">
+   <section className="relative min-h-[100svh] w-full max-w-[430px] mx-auto bg-[#06152a] overflow-hidden shadow-2xl">
       {children}
     </section>
   );
@@ -723,7 +723,7 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
       </motion.div>
 
       {/* Editorial content block */}
-      <div className="absolute bottom-36 left-7 right-7 z-20">
+      <div className="absolute bottom-32 left-6 right-6 z-20 max-h-[58vh] overflow-hidden">
         <motion.div
           initial={{ opacity: 0, y: 30, filter: "blur(12px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -737,7 +737,7 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
             {slide.eyebrow}
           </p>
 
-          <h1 className="max-w-[95%] text-[2.35rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white drop-shadow-[0_10px_34px_rgba(0,0,0,0.55)]">
+          <h1 className="max-w-[96%] text-[clamp(2rem,8vw,2.35rem)] font-semibold leading-[0.95] tracking-[-0.055em] text-white drop-shadow-[0_10px_34px_rgba(0,0,0,0.55)]">
             {slide.title}
           </h1>
 
@@ -748,7 +748,7 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
             transition={{ delay: 0.9, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
           />
 
-         <div className="mt-6 max-w-[82%] space-y-5">
+         <div className="mt-5 max-w-[92%] space-y-4">
   {slide.body.split("\n\n").map((paragraph, index) => (
     <p
       key={index}
@@ -818,7 +818,7 @@ function PassengerForm({
 }) {
   return (
     <motion.section
-      className="absolute inset-0 overflow-hidden px-7 py-8"
+      className="absolute inset-0 overflow-y-auto px-6 py-7"
       initial={{ opacity: 0, scale: 1.015, filter: "blur(8px)" }}
       animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
       exit={{ opacity: 0, scale: 0.99, filter: "blur(6px)" }}
@@ -852,7 +852,7 @@ function PassengerForm({
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="relative z-10 mt-9 space-y-5">
+      <form onSubmit={onSubmit} className="relative z-10 mt-7 space-y-4 pb-8">
         <label className="block rounded-[2rem] border border-white/12 bg-[#02050c]/38 p-5 backdrop-blur-2xl">
           <span className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[#d7a247]/90">
             <User className="h-4 w-4" /> Passenger Name
