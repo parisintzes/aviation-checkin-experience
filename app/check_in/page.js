@@ -165,9 +165,9 @@ export default function CheckInPage() {
   () => [
     {
       eyebrow: "WELCOME ABOARD",
-      title: "Marketing Made in Greece | On Air",
+      title: "Marketing Made in Greece - On Air",
       body:
-        "Καλωσορίσατε σε μία νέα experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΤο Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξή σας σε μέρος της εμπειρίας.",
+        "Καλωσορίσατε σε μία experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΗ Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξη σας σε μέρος της εμπειρίας.",
       button: "Begin Boarding",
     },
       {
@@ -181,7 +181,7 @@ export default function CheckInPage() {
         eyebrow: "EVENT ACCESS",
         title: "Your Boarding Pass Is Your Entry Point.",
         body:
-          "Η προσωπική σας κάρτα επιβίβασης επιβεβαιώνει τη συμμετοχή σας στην εμπειρία του Philoxenia 2026 — Marketing Made in Greece | On Air.\n\nΤο boarding pass θα αποσταλεί αυτόματα στη διεύθυνση email που θα δηλώσετε κατά τη διαδικασία check-in.",
+          "Η προσωπική σας κάρτα επιβίβασης επιβεβαιώνει τη συμμετοχή σας στην εμπειρία της Philoxenia 2026 — Marketing Made in Greece | On Air.\n\nΤο boarding pass θα αποσταλεί αυτόματα στη διεύθυνση email που θα δηλώσετε κατά τη διαδικασία check-in.",
         button: "Generate Boarding Pass",
       },
     ],
