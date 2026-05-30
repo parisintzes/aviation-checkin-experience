@@ -1046,7 +1046,7 @@ function BoardingPassScreen({ pass, onFinish }) {
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <div className="mt-10 grid grid-cols-[0.9fr_72px_0.9fr] items-center gap-3">
             <div>
               <p className="text-[3.15rem] font-semibold leading-none tracking-[0.08em] text-white">
                 {pass.from}
@@ -1056,13 +1056,13 @@ function BoardingPassScreen({ pass, onFinish }) {
               </p>
             </div>
 
-            <div className="flex items-center justify-center">
-  <div className="h-[1px] w-20 bg-[#d7a247]/80" />
-  <ArrowRight className="-ml-2 h-5 w-5 text-[#d7a247]" />
+           <div className="flex items-center justify-center">
+  <div className="h-[1px] w-12 bg-[#d7a247]/80" />
+  <ArrowRight className="-ml-2 h-4 w-4 text-[#d7a247]" />
 </div>
 
-            <div className="text-right">
-              <p className="text-[3.15rem] font-semibold leading-none tracking-[0.08em] text-white">
+            <div className="min-w-0 text-right">
+              <p className="text-[2.75rem] font-semibold leading-none tracking-[0.04em] text-white">
                 {pass.to}
               </p>
               <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-white/48">
