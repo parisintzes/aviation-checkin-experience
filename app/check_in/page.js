@@ -171,24 +171,24 @@ export default function CheckInPage() {
   const onboardingSlides = useMemo(
     () => [
       {
-        eyebrow: "DIGITAL AVIATION EXPERIENCE",
+        eyebrow: "WELCOME ABOARD",
         title: BRAND.eventTitle,
         body:
-          "Welcome to a cinematic mobile check-in experience designed exclusively for the event participants.",
+        “Μία immersive digital εμπειρία check-in, εμπνευσμένη από τον κόσμο της αεροπορίας, σχεδιασμένη να μετατρέψει την άφιξή σας στην αρχή του ταξιδιού.\n\nΗ προσωποποιημένη κάρτα επιβίβασής σας θα σας δώσει πρόσβαση στην εκδήλωση και θα ενεργοποιήσει τη συμμετοχή σας στο Secret Destination Giveaway Experience.\n\nΤο ταξίδι σας ξεκινά εδώ.”,
         button: "Begin Boarding",
       },
       {
         eyebrow: "SECRET DESTINATION GIVEAWAY",
         title: "One Boarding Pass. One Mystery Flight.",
         body:
-          "Generate your personal boarding pass to enter the giveaway for one flight ticket to a secret destination.",
+          “Η προσωπική σας κάρτα επιβίβασης ενεργοποιεί τη συμμετοχή σας στο Secret Destination Giveaway Experience.\n\nΈνας προορισμός. Μία πτήση. Μία εμπειρία που θα αποκαλυφθεί μετά την απογείωση.”,
         button: "Next",
       },
       {
         eyebrow: "EVENT ACCESS",
         title: "Your Boarding Pass Is Your Entry Point.",
         body:
-          "Your boarding pass confirms your participation in the talk and will be sent to the email address you provide.",
+          “Η προσωπική σας κάρτα επιβίβασης επιβεβαιώνει τη συμμετοχή σας στην εμπειρία του Philoxenia 2026 — Marketing Made in Greece | On Air.\n\nΤο boarding pass θα αποσταλεί αυτόματα στη διεύθυνση email που θα δηλώσετε κατά τη διαδικασία check-in.”,
         button: "Generate Boarding Pass",
       },
     ],
