@@ -676,17 +676,17 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
             : "/onboarding/onboarding-03.webp"
         }
         alt="Onboarding Background"
-        className="absolute inset-0 h-full w-full object-cover"
+       className="absolute inset-0 h-full w-full scale-[1.18] object-cover object-center"
         initial={{ scale: 1.04, opacity: 0.92 }}
-        animate={{
-          scale: [1.02, 1.045],
-          y: [0, -14],
-          opacity: 1,
-        }}
+       animate={{
+  scale: [1.18, 1.24],
+  y: [0, -22],
+  opacity: 1,
+}}
         transition={{
-          duration: 18,
-          ease: "linear",
-        }}
+  duration: 24,
+  ease: "easeOut",
+}}
       />
 
       {/* Premium cinematic overlays */}
