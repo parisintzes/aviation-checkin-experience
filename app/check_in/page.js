@@ -1046,30 +1046,30 @@ function BoardingPassScreen({ pass, onFinish }) {
             </p>
           </div>
 
-          <div className="mt-10 grid grid-cols-[0.9fr_72px_0.9fr] items-center gap-3">
-            <div>
-            <p className="text-[2.65rem] font-semibold leading-none tracking-[0.04em] text-white">
-  {pass.from}
-</p>
-              <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-white/48">
-                {pass.fromCity}
-              </p>
-            </div>
+         <div className="mt-10 grid grid-cols-[1fr_64px_1fr] items-start gap-3">
+  <div className="min-w-0">
+    <p className="text-[2.85rem] font-semibold leading-none tracking-[0.04em] text-white">
+      {pass.from}
+    </p>
+    <p className="mt-4 text-[10px] uppercase tracking-[0.26em] text-white/48">
+      {pass.fromCity}
+    </p>
+  </div>
 
-           <div className="flex items-center justify-center">
-  <div className="h-[1px] w-12 bg-[#d7a247]/80" />
-  <ArrowRight className="-ml-2 h-4 w-4 text-[#d7a247]" />
+  <div className="flex h-[2.85rem] items-center justify-center pt-[0.15rem]">
+    <div className="h-[1px] w-11 bg-[#d7a247]/85" />
+    <ArrowRight className="-ml-2 h-4 w-4 text-[#d7a247]" />
+  </div>
+
+  <div className="min-w-0 text-right">
+    <p className="text-[2.85rem] font-semibold leading-none tracking-[0.04em] text-white">
+      {pass.to}
+    </p>
+    <p className="mt-4 text-[10px] uppercase tracking-[0.24em] leading-[1.55] text-white/48">
+      {pass.toCity}
+    </p>
+  </div>
 </div>
-
-            <div className="min-w-0 text-right">
-              <p className="text-[2.65rem] font-semibold leading-none tracking-[0.04em] text-white">
-  {pass.from}
-</p>
-              <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-white/48">
-                {pass.toCity}
-              </p>
-            </div>
-          </div>
 
           <div className="mt-9 h-[1px] w-full bg-gradient-to-r from-transparent via-white/16 to-transparent" />
 
