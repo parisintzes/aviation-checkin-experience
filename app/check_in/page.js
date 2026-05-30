@@ -162,15 +162,14 @@ export default function CheckInPage() {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const onboardingSlides = useMemo(
-    () => [
-      {
-       {
-  eyebrow: "WELCOME ABOARD",
-  title: "Marketing Made in Greece | On Air",
-  body:
-    "Καλωσορίσατε σε μία νέα experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΤο Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξή σας σε μέρος της εμπειρίας.",
-  button: "Begin Boarding",
-},
+  () => [
+    {
+      eyebrow: "WELCOME ABOARD",
+      title: "Marketing Made in Greece | On Air",
+      body:
+        "Καλωσορίσατε σε μία νέα experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΤο Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξή σας σε μέρος της εμπειρίας.",
+      button: "Begin Boarding",
+    },
       {
         eyebrow: "SECRET DESTINATION GIVEAWAY",
         title: "One Boarding Pass. One Mystery Flight.",
