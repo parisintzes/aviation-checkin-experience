@@ -165,9 +165,10 @@ export default function CheckInPage() {
     () => [
       {
         eyebrow: "WELCOME ABOARD",
-        title: BRAND.eventTitle,
+        title: " Marketing Made in Greece | On Air.",
         body:
-          "Μία immersive digital εμπειρία check-in, εμπνευσμένη από τον κόσμο της αεροπορίας, σχεδιασμένη να μετατρέψει την άφιξή σας στην αρχή του ταξιδιού.\n\nΗ προσωποποιημένη κάρτα επιβίβασής σας θα σας δώσει πρόσβαση στην εκδήλωση και θα ενεργοποιήσει τη συμμετοχή σας στο Secret Destination Giveaway Experience.\n\nΤο ταξίδι σας ξεκινά εδώ.",
+          body:
+  "Καλωσορίσατε σε μία νέα experiential προσέγγιση του αεροπορικού και τουριστικού marketing, όπου η τεχνολογία, η εμπειρία και η αλληλεπίδραση συνδέονται σε ένα ενιαίο digital ταξίδι.\n\nΗ Philoxenia 2026 — Marketing Made in Greece | On Air μετατρέπει την άφιξή σας σε μέρος της εμπειρίας."
         button: "Begin Boarding",
       },
       {
@@ -1187,7 +1188,7 @@ function PrivacyModal({ onClose }) {
         className="max-h-[82vh] w-full max-w-[390px] overflow-y-auto rounded-[2rem] border border-[#d7a247]/30 bg-[#06152a]/95 p-6 text-white shadow-[0_25px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl"
       >
         <p className="text-[9px] uppercase tracking-[0.38em] text-[#d7a247]">
-          Passenger Information & Data Protection Notice
+          Passenger Information & Privacy Protocol
         </p>
 
         <h2 className="mt-4 text-[2rem] font-semibold leading-[1] tracking-[-0.04em] text-white">
