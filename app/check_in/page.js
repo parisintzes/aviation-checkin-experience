@@ -249,7 +249,7 @@ export default function CheckInPage() {
   }
 
   return (
-  <main className="min-h-screen w-full bg-[#020b18] text-white flex items-center justify-center overflow-hidden">
+  <main className="fixed inset-0 h-[100dvh] w-screen bg-[#02050c] text-white overflow-hidden">
     <MobileShell>
 
       {showPrivacyModal && (
@@ -326,7 +326,7 @@ export default function CheckInPage() {
 
 function MobileShell({ children }) {
   return (
-   <section className="relative min-h-[100svh] w-full max-w-[430px] mx-auto bg-[#06152a] overflow-hidden shadow-2xl">
+    <section className="relative h-[100dvh] w-screen max-w-none bg-[#02050c] overflow-hidden">
       {children}
     </section>
   );
@@ -676,11 +676,11 @@ function OnboardingScreen({ slide, slideNumber, totalSlides, onNext }) {
             : "/onboarding/onboarding-03.webp"
         }
         alt="Onboarding Background"
-       className="absolute inset-0 h-full w-full scale-[1.18] object-cover object-center"
+       className="absolute inset-0 h-[100dvh] w-screen scale-[1.3] object-cover object-center"
         initial={{ scale: 1.04, opacity: 0.92 }}
        animate={{
-  scale: [1.18, 1.24],
-  y: [0, -22],
+  scale: [1.3, 1.36],
+  y: [0, -18],
   opacity: 1,
 }}
         transition={{
