@@ -78,10 +78,7 @@ export async function POST(req) {
                         </div>
                       </td>
 
-                      <td width="20%" align="center">
-
- <td width="20%" align="center">
-
+                      <td width="20%" align="center" style="text-align:center;vertical-align:middle;">
   <div style="
     width:48px;
     height:48px;
@@ -93,10 +90,10 @@ export async function POST(req) {
     line-height:48px;
     text-align:center;
     font-family:Arial,Helvetica,sans-serif;
+    margin:0 auto;
   ">
     &#9992;
   </div>
-
 </td>
 
                       <td width="40%" align="right">
