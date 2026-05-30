@@ -1048,9 +1048,9 @@ function BoardingPassScreen({ pass, onFinish }) {
 
           <div className="mt-10 grid grid-cols-[0.9fr_72px_0.9fr] items-center gap-3">
             <div>
-              <p className="text-[3.15rem] font-semibold leading-none tracking-[0.08em] text-white">
-                {pass.from}
-              </p>
+            <p className="text-[2.65rem] font-semibold leading-none tracking-[0.04em] text-white">
+  {pass.from}
+</p>
               <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-white/48">
                 {pass.fromCity}
               </p>
@@ -1062,9 +1062,9 @@ function BoardingPassScreen({ pass, onFinish }) {
 </div>
 
             <div className="min-w-0 text-right">
-              <p className="text-[2.75rem] font-semibold leading-none tracking-[0.04em] text-white">
-                {pass.to}
-              </p>
+              <p className="text-[2.65rem] font-semibold leading-none tracking-[0.04em] text-white">
+  {pass.from}
+</p>
               <p className="mt-3 text-[10px] uppercase tracking-[0.24em] text-white/48">
                 {pass.toCity}
               </p>
