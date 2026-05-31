@@ -2,6 +2,28 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function createClassicBarcode() {
+  return Array.from({ length: 78 })
+    .map((_, index) => {
+      const width =
+        index % 13 === 0 ? 4 :
+        index % 7 === 0 ? 3 :
+        index % 3 === 0 ? 2 : 1;
+
+      return `<span style="display:inline-block;width:${width}px;height:72px;background:#050505;margin:0 1px;"></span>`;
+    })
+    .join("");
+}
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -18,238 +40,241 @@ export async function POST(req) {
       boardingId,
     } = body;
 
-    const firstName = fullName?.split(" ")?.[0] || fullName || "Passenger";
-
-    const barcodeBars = Array.from({ length: 44 })
-      .map((_, index) => {
-        const width =
-          index % 7 === 0 ? 4 : index % 3 === 0 ? 3 : index % 2 === 0 ? 2 : 1;
-        const height = 28 + ((index * 19) % 40);
-        const opacity = index % 5 === 0 ? 0.95 : 0.68;
-
-        return `<span style="display:inline-block;width:${width}px;height:${height}px;background:#d7a247;margin:0 2px;opacity:${opacity};vertical-align:bottom;"></span>`;
-      })
-      .join("");
+    const safeFullName = escapeHtml(fullName || "Passenger");
+    const safeEmail = escapeHtml(email || "");
+    const safeFlight = escapeHtml(flight || "OM 1025");
+    const safeFrom = escapeHtml(from || "SKG");
+    const safeTo = escapeHtml(to || "???");
+    const safeSeat = escapeHtml(seat || "TBA");
+    const safeGate = escapeHtml(gate || "TBA");
+    const safeTerminal = escapeHtml(terminal || "TBA");
+    const safeBoardingId = escapeHtml(boardingId || "OMMT-PASS");
+    const firstName = escapeHtml(fullName?.split(" ")?.[0] || "Passenger");
+    const barcodeBars = createClassicBarcode();
 
     const response = await resend.emails.send({
       from: "OMMT Airlines <boarding@ommtairlines.site>",
-      to: email,
-      subject: `Your OMMT Boarding Pass • ${flight}`,
+      to: safeEmail,
+      subject: `Your OMMT Boarding Pass • ${safeFlight}`,
       html: `
-        <div style="margin:0;padding:0;background:#02050c;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-          <div style="padding:34px 10px;background:radial-gradient(circle at 50% 0%,#10233c 0%,#02050c 48%,#010309 100%);">
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background:#02050c;font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+      Your digital boarding pass for Philoxenia 2026 — Marketing Made in Greece | On Air is ready.
+    </div>
 
-            <div style="max-width:420px;margin:0 auto;text-align:center;">
-              <div style="margin-bottom:28px;">
-                <div style="font-size:11px;letter-spacing:6px;color:#d7a247;text-transform:uppercase;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#02050c;">
+      <tr>
+        <td align="center" style="padding:36px 14px;background:radial-gradient(circle at 50% 0%,#17304d 0%,#071321 38%,#02050c 78%);">
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+            <tr>
+              <td align="center" style="padding-bottom:28px;">
+                <div style="font-size:12px;letter-spacing:7px;color:#d7a247;text-transform:uppercase;font-weight:700;">
                   OMMT Airlines
                 </div>
-                <div style="margin-top:12px;font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.36);text-transform:uppercase;">
+                <div style="margin-top:12px;font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.42);text-transform:uppercase;">
                   Digital Aviation Experience
                 </div>
-              </div>
+              </td>
+            </tr>
 
-              <div style="border:1px solid rgba(215,162,71,0.28);border-radius:32px;background:linear-gradient(180deg,rgba(10,27,49,0.98),rgba(2,5,12,0.98));overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.55);text-align:left;">
+            <tr>
+              <td style="padding:0 0 22px 0;">
+                <div style="border:1px solid rgba(215,162,71,0.28);border-radius:34px;background:linear-gradient(145deg,rgba(49,50,52,0.96),rgba(13,18,26,0.98) 62%,rgba(1,4,11,0.98));overflow:hidden;box-shadow:0 34px 90px rgba(0,0,0,0.62);">
 
-                <div style="padding:34px 24px 32px 24px;">
-                  <table width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td align="left">
-                        <div style="color:#d7a247;font-size:9px;letter-spacing:4px;text-transform:uppercase;">
-                          Boarding Pass
-                        </div>
-                      </td>
-                      <td align="right">
-                        <div style="color:rgba(255,255,255,0.38);font-size:9px;letter-spacing:3px;text-transform:uppercase;">
-                          OMMT / 1025
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
+                  <div style="padding:32px 24px 30px 24px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="left">
+                          <div style="font-size:10px;letter-spacing:5px;color:#d7a247;text-transform:uppercase;">
+                            Boarding Pass
+                          </div>
+                        </td>
+                        <td align="right">
+                          <div style="font-size:9px;letter-spacing:4px;color:rgba(255,255,255,0.42);text-transform:uppercase;">
+                            OMMT / 1025
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
 
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:38px;">
-                    <tr>
-                      <td width="40%" align="left">
-                        <div style="font-size:46px;font-weight:700;letter-spacing:5px;line-height:1;color:#ffffff;">
-                          ${from}
-                        </div>
-                        <div style="margin-top:12px;color:rgba(255,255,255,0.48);font-size:9px;letter-spacing:3px;text-transform:uppercase;">
-                          Thessaloniki
-                        </div>
-                      </td>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:42px;">
+                      <tr>
+                        <td width="38%" align="left" valign="top">
+                          <div style="font-size:50px;font-weight:800;letter-spacing:4px;line-height:1;color:#ffffff;">
+                            ${safeFrom}
+                          </div>
+                          <div style="margin-top:16px;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.46);text-transform:uppercase;">
+                            Thessaloniki
+                          </div>
+                        </td>
 
-                      <td width="20%" align="center" style="text-align:center;vertical-align:middle;">
-  <div style="
-    width:48px;
-    height:48px;
-    border-radius:50%;
-    border:1px solid rgba(215,162,71,0.45);
-    background:rgba(215,162,71,0.08);
-    color:#d7a247;
-    font-size:24px;
-    line-height:48px;
-    text-align:center;
-    font-family:Arial,Helvetica,sans-serif;
-    margin:0 auto;
-  ">
-    &#9992;
-  </div>
-</td>
+                        <td width="24%" align="center" valign="middle">
+                          <div style="height:50px;line-height:50px;text-align:center;">
+                            <span style="display:inline-block;width:56px;height:1px;background:#d7a247;vertical-align:middle;"></span>
+                            <span style="display:inline-block;color:#d7a247;font-size:30px;line-height:1;vertical-align:middle;margin-left:-6px;">&#8594;</span>
+                          </div>
+                        </td>
 
-                      <td width="40%" align="right">
-                        <div style="font-size:46px;font-weight:700;letter-spacing:5px;line-height:1;color:#ffffff;">
-                          ${to}
-                        </div>
-                        <div style="margin-top:12px;color:rgba(255,255,255,0.48);font-size:9px;letter-spacing:3px;text-transform:uppercase;">
-                          Secret Destination
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
+                        <td width="38%" align="right" valign="top">
+                          <div style="font-size:50px;font-weight:800;letter-spacing:4px;line-height:1;color:#ffffff;">
+                            ${safeTo}
+                          </div>
+                          <div style="margin-top:16px;font-size:10px;letter-spacing:4px;line-height:1.6;color:rgba(255,255,255,0.46);text-transform:uppercase;">
+                            Secret<br/>Destination
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
 
-                  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent);margin:34px 0;"></div>
+                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);margin:38px 0 30px 0;"></div>
 
-                  <table width="100%" cellpadding="0" cellspacing="0" style="color:#ffffff;">
-                    <tr>
-                      <td width="50%" style="padding-bottom:24px;">
-                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Passenger</div>
-                        <div style="margin-top:8px;font-size:14px;font-weight:700;letter-spacing:1px;">${fullName}</div>
-                      </td>
-                      <td width="50%" style="padding-bottom:24px;">
-                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Flight</div>
-                        <div style="margin-top:8px;font-size:14px;font-weight:700;letter-spacing:1px;">${flight}</div>
-                      </td>
-                    </tr>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="50%" style="padding-bottom:25px;">
+                          <div style="font-size:10px;letter-spacing:4px;color:#d7a247;text-transform:uppercase;">Passenger</div>
+                          <div style="margin-top:10px;font-size:15px;font-weight:800;letter-spacing:2px;color:#ffffff;text-transform:uppercase;">${safeFullName}</div>
+                        </td>
+                        <td width="50%" style="padding-bottom:25px;">
+                          <div style="font-size:10px;letter-spacing:4px;color:#d7a247;text-transform:uppercase;">Flight</div>
+                          <div style="margin-top:10px;font-size:15px;font-weight:800;letter-spacing:2px;color:#ffffff;">${safeFlight}</div>
+                        </td>
+                      </tr>
 
-                    <tr>
-                      <td style="padding-bottom:24px;">
-                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Terminal</div>
-                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${terminal}</div>
-                      </td>
-                      <td style="padding-bottom:24px;">
-                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Gate</div>
-                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${gate}</div>
-                      </td>
-                    </tr>
+                      <tr>
+                        <td style="padding-bottom:25px;">
+                          <div style="font-size:10px;letter-spacing:4px;color:#d7a247;text-transform:uppercase;">Terminal</div>
+                          <div style="margin-top:10px;font-size:15px;font-weight:800;color:#ffffff;">${safeTerminal}</div>
+                        </td>
+                        <td style="padding-bottom:25px;">
+                          <div style="font-size:10px;letter-spacing:4px;color:#d7a247;text-transform:uppercase;">Gate</div>
+                          <div style="margin-top:10px;font-size:15px;font-weight:800;color:#ffffff;">${safeGate}</div>
+                        </td>
+                      </tr>
 
-                    <tr>
-                      <td>
-                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Seat</div>
-                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${seat}</div>
-                      </td>
-                      <td>
-                        <div style="color:#d7a247;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Boarding ID</div>
-                        <div style="margin-top:8px;font-size:14px;font-weight:700;">${boardingId}</div>
-                      </td>
-                    </tr>
-                  </table>
+                      <tr>
+                        <td>
+                          <div style="font-size:10px;letter-spacing:4px;color:#d7a247;text-transform:uppercase;">Seat</div>
+                          <div style="margin-top:10px;font-size:15px;font-weight:800;color:#ffffff;">${safeSeat}</div>
+                        </td>
+                        <td>
+                          <div style="font-size:10px;letter-spacing:4px;color:#d7a247;text-transform:uppercase;">Boarding ID</div>
+                          <div style="margin-top:10px;font-size:15px;font-weight:800;color:#ffffff;">${safeBoardingId}</div>
+                        </td>
+                      </tr>
+                    </table>
 
-                  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.16),transparent);margin:34px 0;"></div>
+                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent);margin:38px 0 30px 0;"></div>
 
-                  <div style="font-size:24px;line-height:1.4;font-weight:300;letter-spacing:5px;color:#ffffff;">
-                    YOUR JOURNEY<br/>
-                    STARTS <span style="color:#d7a247;">HERE.</span>
-                  </div>
-                </div>
-
-                <div style="background:#01040b;padding:28px 24px;border-top:1px solid rgba(215,162,71,0.16);">
-                  <div style="height:74px;border-radius:18px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);text-align:center;padding-top:22px;">
-                    <div style="font-size:0;line-height:0;">
-                      ${barcodeBars}
+                    <div style="font-size:27px;line-height:1.45;letter-spacing:6px;font-weight:300;color:#ffffff;text-transform:uppercase;">
+                      Your Journey<br/>
+                      Starts <span style="color:#d7a247;">Here.</span>
                     </div>
                   </div>
 
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
-                    <tr>
-                      <td align="left" style="color:rgba(255,255,255,0.38);font-size:8px;letter-spacing:3px;text-transform:uppercase;">
-                        SEQ 00025
-                      </td>
-                      <td align="right" style="color:rgba(255,255,255,0.38);font-size:8px;letter-spacing:3px;text-transform:uppercase;">
-                        OMMT Secure Pass
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </div>
+                  <div style="background:#01040b;padding:28px 24px 30px 24px;border-top:1px solid rgba(215,162,71,0.16);">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
+                      <tr>
+                        <td align="left" style="font-size:9px;letter-spacing:4px;color:#d7a247;text-transform:uppercase;">
+                          Digital Boarding ID
+                        </td>
+                        <td align="right" style="font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.42);">
+                          ${safeBoardingId}
+                        </td>
+                      </tr>
+                    </table>
 
-              <div style="max-width:400px;margin:36px auto 0 auto;text-align:left;">
-                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.84);margin:0 0 22px 0;">
+                    <div style="background:#f7f7f2;border-radius:18px;text-align:center;padding:18px 10px 16px 10px;">
+                      <div style="font-size:0;line-height:0;white-space:nowrap;overflow:hidden;">
+                        ${barcodeBars}
+                      </div>
+                    </div>
+
+                    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
+                      <tr>
+                        <td align="left" style="font-size:8px;letter-spacing:4px;color:rgba(255,255,255,0.38);text-transform:uppercase;">
+                          SEQ 00025
+                        </td>
+                        <td align="right" style="font-size:8px;letter-spacing:4px;color:rgba(255,255,255,0.38);text-transform:uppercase;">
+                          OMMT Secure Pass
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:26px 10px 0 10px;text-align:left;">
+                <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.88);margin:0 0 18px 0;">
                   Αγαπητέ/ή <span style="color:#d7a247;">${firstName}</span>,
                 </p>
 
-                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 22px 0;">
+                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 18px 0;">
                   Σας καλωσορίζουμε στην εμπειρία <span style="color:#ffffff;">Philoxenia 2026 — Marketing Made in Greece | On Air.</span>
                 </p>
 
-                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 22px 0;">
-                  Η διαδικασία check-in ολοκληρώθηκε επιτυχώς και η προσωπική σας κάρτα επιβίβασης περιλαμβάνεται στο παρόν email.
+                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 18px 0;">
+                  Η προσωπική σας κάρτα επιβίβασης επιβεβαιώνει την πρόσβασή σας στην εκδήλωση και ενεργοποιεί τη συμμετοχή σας στο <span style="color:#ffffff;">Secret Destination Giveaway Experience.</span>
                 </p>
 
-                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 22px 0;">
-                  Το boarding pass περιλαμβάνει το μοναδικό σας <span style="color:#d7a247;">Boarding ID</span> και αποτελεί το επίσημο προσωπικό σας pass εισόδου στην εκδήλωση, καθώς και τη συμμετοχή σας στο <span style="color:#ffffff;">Secret Destination Giveaway Experience.</span>
+                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 26px 0;">
+                  Παρακαλούμε διατηρήστε το boarding pass διαθέσιμο μέχρι την ολοκλήρωση της εκδήλωσης και της επίσημης διαδικασίας κλήρωσης.
                 </p>
 
-                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 22px 0;">
-                  Η συγκεκριμένη πρωτοβουλία σχεδιάστηκε ως μία βιωματική εμπειρία εμπνευσμένη από το περιβάλλον της αεροπορίας, με στόχο τη σύνδεση του branding, της φιλοξενίας και της συναισθηματικής αλληλεπίδρασης μέσα από ένα immersive event concept.
-                </p>
+                <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(215,162,71,0.35),transparent);margin:32px 0;"></div>
 
-                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 22px 0;">
-                  Κάθε κάρτα επιβίβασης αντιστοιχεί σε μία μοναδική συμμετοχή και ενεργοποιεί την πρόσβασή σας στη συνολική εμπειρία της διοργάνωσης.
-                </p>
-
-                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.72);margin:0 0 34px 0;">
-                  Παρακαλούμε να διατηρήσετε το boarding pass διαθέσιμο μέχρι την ολοκλήρωση της εκδήλωσης και της επίσημης διαδικασίας κλήρωσης.
-                </p>
-
-                <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(215,162,71,0.35),transparent);margin:34px 0;"></div>
-
-                <p style="font-size:21px;line-height:1.6;letter-spacing:3px;color:#ffffff;font-weight:300;text-transform:uppercase;margin:0 0 30px 0;">
+                <p style="font-size:22px;line-height:1.55;letter-spacing:4px;color:#ffffff;font-weight:300;text-transform:uppercase;margin:0 0 28px 0;">
                   Some journeys begin<br/>
                   long before departure.
                 </p>
 
-                <p style="font-size:14px;line-height:2;color:rgba(255,255,255,0.46);margin:0;">
+                <p style="font-size:14px;line-height:2;color:rgba(255,255,255,0.48);margin:0;">
                   Με εκτίμηση,<br/>
-                  OMMT Airlines<br/><br/>
+                  <span style="color:rgba(255,255,255,0.72);">OMMT Airlines</span><br/><br/>
                   Department of Organisation Management, Marketing and Tourism<br/>
                   School of Economics and Management<br/>
                   International Hellenic University
                 </p>
-              </div>
+              </td>
+            </tr>
 
-              <div style="
-  margin-top:34px;
-  color:rgba(255,255,255,0.36);
-  font-size:10px;
-  letter-spacing:2px;
-  text-transform:none;
-  font-weight:500;
-">
-  OMMTo...New Horizons
-</div>
+            <tr>
+              <td align="center" style="padding:34px 18px 10px 18px;">
+                <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.36);">
+                  OMMTo... New Horizons
+                </div>
 
-<div style="
-  margin-top:18px;
-  font-size:8px;
-  line-height:1.7;
-  color:rgba(255,255,255,0.22);
-  text-align:left;
-  max-width:300px;
-  margin-right:auto;
-">
-  Passenger Information & Privacy Protocol<br/><br/>
+                <div style="margin-top:20px;font-size:8px;line-height:1.7;color:rgba(255,255,255,0.24);text-align:left;max-width:340px;">
+                  Passenger Information & Privacy Protocol<br/><br/>
+                  Η επεξεργασία των προσωπικών δεδομένων πραγματοποιείται αποκλειστικά για λειτουργικούς και οργανωτικούς σκοπούς της εμπειρίας check-in και της συμμετοχής στην εκδήλωση, σύμφωνα με τις αρχές του GDPR (EU 2016/679).
+                </div>
+              </td>
+            </tr>
+          </table>
 
-  Η επεξεργασία των προσωπικών δεδομένων πραγματοποιείται αποκλειστικά για λειτουργικούς και οργανωτικούς σκοπούς της εμπειρίας check-in και της συμμετοχής στην εκδήλωση, σύμφωνα με τις αρχές του GDPR (EU 2016/679).
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
       `,
+      text: `Your OMMT Boarding Pass is ready.
+
+Passenger: ${safeFullName}
+Flight: ${safeFlight}
+From: ${safeFrom}
+To: ${safeTo}
+Seat: ${safeSeat}
+Gate: ${safeGate}
+Terminal: ${safeTerminal}
+Boarding ID: ${safeBoardingId}
+
+Philoxenia 2026 — Marketing Made in Greece | On Air
+OMMT Airlines`,
     });
 
     return Response.json({
