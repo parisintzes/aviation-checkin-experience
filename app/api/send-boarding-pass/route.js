@@ -32,7 +32,7 @@ export async function POST(req) {
       .join("");
 
     const response = await resend.emails.send({
-      from: "OMMT Airlines <onboarding@resend.dev>",
+      from: "OMMT Airlines <boarding@ommtairlines.site>",
       to: email,
       subject: `Your OMMT Boarding Pass • ${flight}`,
       html: `
