@@ -111,38 +111,55 @@ export async function POST(req) {
                           </div>
                         </td>
 
-                        <td width="24%" align="center" valign="middle" style="padding-top:10px;">
-  <td width="24%" align="center" valign="middle">
-  <div style="
-    width:100%;
-    text-align:center;
-    white-space:nowrap;
-    font-size:0;
-    line-height:0;
-    margin-top:-6px;
-  ">
+                       <td
+  width="24%"
+  align="center"
+  valign="middle"
+  style="vertical-align:middle;"
+>
+  <table
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    align="center"
+    style="
+      margin:0 auto;
+      transform:translateY(-16px);
+    "
+  >
+    <tr>
+      <td
+        style="
+          font-size:0;
+          line-height:0;
+          white-space:nowrap;
+        "
+      >
 
-    <span style="
-      display:inline-block;
-      width:72px;
-      height:1px;
-      background:rgba(215,162,71,0.88);
-      vertical-align:middle;
-    "></span>
+        <span style="
+          display:inline-block;
+          width:58px;
+          height:1px;
+          background:#d7a247;
+          vertical-align:middle;
+          opacity:0.85;
+        "></span>
 
-    <span style="
-      display:inline-block;
-      color:#d7a247;
-      font-size:18px;
-      line-height:1;
-      vertical-align:middle;
-      margin-left:-2px;
-      font-weight:300;
-    ">
-      →
-    </span>
+        <span style="
+          display:inline-block;
+          color:#d7a247;
+          font-size:14px;
+          line-height:1;
+          vertical-align:middle;
+          margin-left:-1px;
+          font-weight:300;
+        ">
+          →
+        </span>
 
-  </div>
+      </td>
+    </tr>
+  </table>
 </td>
 
                         <td width="38%" align="right" valign="top">
