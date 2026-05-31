@@ -111,12 +111,19 @@ export async function POST(req) {
                           </div>
                         </td>
 
-                        <td width="24%" align="center" valign="middle">
-                          <div style="height:50px;line-height:50px;text-align:center;">
-                            <span style="display:inline-block;width:56px;height:1px;background:#d7a247;vertical-align:middle;"></span>
-                            <span style="display:inline-block;color:#d7a247;font-size:30px;line-height:1;vertical-align:middle;margin-left:-6px;">&#8594;</span>
-                          </div>
-                        </td>
+                        <td width="24%" align="center" valign="middle" style="white-space:nowrap;">
+  <div style="
+    color:#d7a247;
+    font-size:34px;
+    line-height:1;
+    letter-spacing:-3px;
+    white-space:nowrap;
+    text-align:center;
+    font-family:Arial,Helvetica,sans-serif;
+  ">
+    ─────→
+  </div>
+</td>
 
                         <td width="38%" align="right" valign="top">
                           <div style="font-size:50px;font-weight:800;letter-spacing:4px;line-height:1;color:#ffffff;">
