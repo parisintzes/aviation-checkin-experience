@@ -111,18 +111,25 @@ export async function POST(req) {
                           </div>
                         </td>
 
-                        <td width="24%" align="center" valign="middle" style="white-space:nowrap;">
-  <div style="
-    color:#d7a247;
-    font-size:34px;
-    line-height:1;
-    letter-spacing:-3px;
-    white-space:nowrap;
-    text-align:center;
-    font-family:Arial,Helvetica,sans-serif;
-  ">
-    ─────→
-  </div>
+                        <td width="24%" align="center" valign="middle" style="padding-top:10px;">
+  <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;">
+    <tr>
+      <td style="width:58px;height:2px;background:#d7a247;font-size:0;line-height:0;">
+        &nbsp;
+      </td>
+      <td style="
+        width:0;
+        height:0;
+        border-top:6px solid transparent;
+        border-bottom:6px solid transparent;
+        border-left:9px solid #d7a247;
+        font-size:0;
+        line-height:0;
+      ">
+        &nbsp;
+      </td>
+    </tr>
+  </table>
 </td>
 
                         <td width="38%" align="right" valign="top">
@@ -239,13 +246,31 @@ export async function POST(req) {
                   long before departure.
                 </p>
 
-                <p style="font-size:14px;line-height:2;color:rgba(255,255,255,0.48);margin:0;">
-                  Με εκτίμηση,<br/>
-                  <span style="color:rgba(255,255,255,0.72);">OMMT Airlines</span><br/><br/>
-                  Department of Organisation Management, Marketing and Tourism<br/>
-                  School of Economics and Management<br/>
-                  International Hellenic University
-                </p>
+                <p style="
+  font-size:11px;
+  line-height:2.1;
+  color:rgba(255,255,255,0.34);
+  margin:0;
+  letter-spacing:0.4px;
+  font-weight:300;
+">
+  Με εκτίμηση,<br/><br/>
+
+  <span style="
+    color:rgba(255,255,255,0.62);
+    letter-spacing:2px;
+    text-transform:uppercase;
+    font-size:10px;
+  ">
+    OMMT Airlines
+  </span>
+
+  <br/><br/>
+
+  Department of Organisation Management, Marketing and Tourism<br/>
+  School of Economics and Management<br/>
+  International Hellenic University
+</p>
               </td>
             </tr>
 
