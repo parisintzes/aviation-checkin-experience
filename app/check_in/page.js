@@ -884,21 +884,25 @@ function PassengerForm({
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="relative z-10 mt-7 space-y-4 pb-8">
-        <label className="block rounded-[2rem] border border-white/12 bg-[#02050c]/38 p-5 backdrop-blur-2xl">
-          <span className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[#d7a247]/90">
-            <User className="h-4 w-4" /> Passenger Name
-          </span>
+<form onSubmit={onSubmit} className="relative z-10 mt-7 space-y-4 pb-8">
+  <label className="block rounded-[2rem] border border-white/12 bg-[#02050c]/38 p-5 backdrop-blur-2xl">
+    <span className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[#d7a247]/90">
+      <User className="h-4 w-4" /> Passenger Name
+    </span>
 
-          <input
-            type="text"
-            required
-            value={formData.fullName}
-            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className="w-full bg-transparent text-[18px] text-white outline-none placeholder:text-white/28"
-            placeholder="Full name"
-          />
-        </label>
+    <input
+      type="text"
+      required
+      value={formData.fullName}
+      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+      className="w-full bg-transparent text-[18px] text-white outline-none placeholder:text-white/28"
+      placeholder="Full name"
+    />
+
+    <p className="mt-4 text-[10px] leading-5 tracking-[0.04em] text-white/38">
+      Παρακαλούμε συμπληρώστε το ονοματεπώνυμό σας με λατινικούς χαρακτήρες.
+    </p>
+  </label>
 
         <label className="block rounded-[2rem] border border-white/12 bg-[#02050c]/38 p-5 backdrop-blur-2xl">
           <span className="mb-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-[#d7a247]/90">
