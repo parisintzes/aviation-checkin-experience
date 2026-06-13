@@ -166,13 +166,13 @@ function HeroSection() {
       </p>
 
       <h1 className="max-w-[96%] text-[2.42rem] font-semibold leading-[0.95] tracking-[-0.06em] text-white">
-        Μεταδώστε την ερώτησή σας στο πάνελ.
+        Transmit Your Question.
       </h1>
 
       <div className="mt-7 h-[1px] w-20 bg-gradient-to-r from-[#d7a247] to-transparent" />
 
       <p className="mt-6 max-w-[94%] text-[13.5px] leading-7 text-white/62">
-        Η ερώτησή σας μεταδίδεται ανώνυμα στο κεντρικό σύστημα επικοινωνίας του
+        Η ερώτηση σας μεταδίδεται ανώνυμα στο κεντρικό σύστημα επικοινωνίας του
         OMMT Airlines και, εφόσον εγκριθεί, μπορεί να προβληθεί ζωντανά κατά τη
         διάρκεια του ταξιδιού. Για τη βέλτιστη διαχείριση των εισερχόμενων
         μεταδόσεων, παρακαλούμε να διατυπώσετε την ερώτησή σας στην ελληνική
@@ -227,7 +227,7 @@ function TransmissionForm({ question, setQuestion, loading, handleSubmit }) {
           rows={7}
           maxLength={420}
           className="min-h-[190px] w-full resize-none bg-transparent text-[17px] leading-7 text-white outline-none placeholder:text-white/28"
-          placeholder="Πληκτρολογήστε την ερώτησή σας..."
+          placeholder="Πληκτρολογήστε την ερώτηση σας..."
         />
 
         <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
