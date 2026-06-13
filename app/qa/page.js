@@ -74,8 +74,8 @@ export default function PassengerQAPage() {
   */
 
   return (
-    <main className="fixed inset-0 h-[100dvh] w-screen overflow-hidden bg-[#02050c] text-white">
-      <section className="relative mx-auto flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden bg-[#06152a]">
+   <main className="min-h-[100dvh] w-full overflow-x-hidden bg-[#02050c] text-white">
+  <section className="relative mx-auto flex min-h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden bg-[#06152a]">
         <AviationBackground />
 
         <div className="relative z-10 flex flex-1 flex-col px-7 pb-7 pt-8">
