@@ -1,26 +1,134 @@
 @import "tailwindcss";
 
+/*
+============================================================
+SECTION 1 — ROOT
+============================================================
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #02050c;
+  --foreground: #f7f1e6;
 }
+
+/*
+============================================================
+SECTION 2 — THEME VARIABLES
+============================================================
+*/
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/*
+============================================================
+SECTION 3 — HTML / BODY RESET
+Fixes Safari overscroll white background
+Fixes horizontal scrolling
+Creates aviation dark environment globally
+============================================================
+*/
+
+html {
+  background: #02050c;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
-  background: var(--background);
+  margin: 0;
+  padding: 0;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  background: #02050c;
   color: var(--foreground);
+
   font-family: Arial, Helvetica, sans-serif;
+
+  overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+============================================================
+SECTION 4 — NEXT ROOT
+Extra Safari protection
+============================================================
+*/
+
+body > div:first-child,
+#__next {
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  background: #02050c;
+}
+
+/*
+============================================================
+SECTION 5 — MEDIA ELEMENTS
+============================================================
+*/
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/*
+============================================================
+SECTION 6 — FORM ELEMENTS
+============================================================
+*/
+
+input,
+textarea,
+button,
+select {
+  font: inherit;
+}
+
+/*
+============================================================
+SECTION 7 — TEXTAREA SCROLLBAR
+Premium minimal scrollbar
+============================================================
+*/
+
+textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: rgba(215, 162, 71, 0.35);
+  border-radius: 999px;
+}
+
+/*
+============================================================
+SECTION 8 — SAFARI RUBBER BAND FIX
+Prevents white flash on pull down/up
+============================================================
+*/
+
+html,
+body {
+  overscroll-behavior: none;
 }
