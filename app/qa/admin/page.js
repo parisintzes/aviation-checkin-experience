@@ -1,13 +1,60 @@
 "use client";
 
+/*
+  ============================================================
+  SECTION 1 — IMPORTS
+  ============================================================
+*/
+
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, XCircle, RefreshCw, Radio } from "lucide-react";
+import { RefreshCw, Radio } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
+/*
+  ============================================================
+  SECTION 2 — ACCESS CODE CONFIGURATION
+  ============================================================
+*/
+
+const ADMIN_ACCESS_CODE = "MARSHALLS_OMMT2026";
+
+/*
+  ============================================================
+  SECTION 3 — MAIN ADMIN CONSOLE
+  ============================================================
+*/
+
 export default function ModeratorConsole() {
+  const [accessCode, setAccessCode] = useState("");
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [accessError, setAccessError] = useState("");
+
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  /*
+    ============================================================
+    SECTION 4 — ACCESS CODE HANDLER
+    ============================================================
+  */
+
+  function handleAccessSubmit(event) {
+    event.preventDefault();
+
+    if (accessCode.trim() === ADMIN_ACCESS_CODE) {
+      setIsAuthorized(true);
+      setAccessError("");
+    } else {
+      setAccessError("Access denied. Please check the ground crew code.");
+    }
+  }
+
+  /*
+    ============================================================
+    SECTION 5 — SUPABASE QUESTION ACTIONS
+    ============================================================
+  */
 
   async function fetchQuestions() {
     setLoading(true);
@@ -66,11 +113,19 @@ export default function ModeratorConsole() {
     fetchQuestions();
   }
 
+  /*
+    ============================================================
+    SECTION 6 — REALTIME LISTENER
+    ============================================================
+  */
+
   useEffect(() => {
+    if (!isAuthorized) return;
+
     fetchQuestions();
 
     const channel = supabase
-      .channel("questions-moderator")
+      .channel("questions-admin")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "questions" },
@@ -83,11 +138,85 @@ export default function ModeratorConsole() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [isAuthorized]);
+
+  /*
+    ============================================================
+    SECTION 7 — QUESTION GROUPS
+    ============================================================
+  */
 
   const pending = questions.filter((q) => q.status === "pending");
   const approved = questions.filter((q) => q.status === "approved");
   const rejected = questions.filter((q) => q.status === "rejected");
+
+  /*
+    ============================================================
+    SECTION 8 — ACCESS SCREEN
+    ============================================================
+  */
+
+  if (!isAuthorized) {
+    return (
+      <main className="min-h-screen overflow-hidden bg-[#02050c] text-white">
+        <div className="relative flex min-h-screen items-center justify-center px-6 py-10">
+          <Background />
+
+          <form
+            onSubmit={handleAccessSubmit}
+            className="relative z-10 w-full max-w-[460px] rounded-[2.4rem] border border-[#d7a247]/22 bg-white/[0.045] p-8 shadow-[0_34px_100px_rgba(0,0,0,0.58)] backdrop-blur-2xl"
+          >
+            <p className="text-[10px] uppercase tracking-[0.45em] text-[#d7a247]/90">
+              Ground Crew Terminal
+            </p>
+
+            <h1 className="mt-5 text-4xl font-semibold leading-[0.95] tracking-[-0.055em] text-white">
+              Restricted Operations Channel
+            </h1>
+
+            <p className="mt-5 text-sm leading-7 text-white/50">
+              Authorization is required to access the live communication control panel.
+            </p>
+
+            <label className="mt-8 block rounded-[1.6rem] border border-white/10 bg-[#02050c]/48 p-5">
+              <span className="mb-4 block text-[10px] uppercase tracking-[0.32em] text-[#d7a247]/85">
+                Access Code
+              </span>
+
+              <input
+                type="password"
+                value={accessCode}
+                onChange={(event) => setAccessCode(event.target.value)}
+                className="w-full bg-transparent text-[18px] text-white outline-none placeholder:text-white/25"
+                placeholder="Enter code"
+              />
+            </label>
+
+            {accessError && (
+              <p className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-4 text-sm text-red-100">
+                {accessError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="mt-7 w-full rounded-full border border-[#d7a247]/35 bg-[#02050c]/46 px-6 py-4 text-[10px] uppercase tracking-[0.34em] text-[#f7d27a] backdrop-blur-2xl"
+            >
+              Enter Admin Console
+            </button>
+
+            <BrandSignature />
+          </form>
+        </div>
+      </main>
+    );
+  }
+
+  /*
+    ============================================================
+    SECTION 9 — ADMIN CONSOLE SCREEN
+    ============================================================
+  */
 
   return (
     <main className="min-h-screen bg-[#02050c] text-white">
@@ -187,6 +316,12 @@ export default function ModeratorConsole() {
   );
 }
 
+/*
+  ============================================================
+  SECTION 10 — QUESTION COLUMN COMPONENT
+  ============================================================
+*/
+
 function QuestionColumn({ title, subtitle, count, questions, loading, actions }) {
   return (
     <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
@@ -207,9 +342,7 @@ function QuestionColumn({ title, subtitle, count, questions, loading, actions })
       </div>
 
       <div className="space-y-4">
-        {loading && (
-          <p className="text-sm text-white/40">Loading transmissions...</p>
-        )}
+        {loading && <p className="text-sm text-white/40">Loading transmissions...</p>}
 
         {!loading && questions.length === 0 && (
           <p className="text-sm leading-6 text-white/36">
@@ -238,15 +371,19 @@ function QuestionColumn({ title, subtitle, count, questions, loading, actions })
               {question.question}
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-              {actions(question)}
-            </div>
+            <div className="mt-5 flex flex-wrap gap-3">{actions(question)}</div>
           </motion.article>
         ))}
       </div>
     </div>
   );
 }
+
+/*
+  ============================================================
+  SECTION 11 — STATUS BADGE COMPONENT
+  ============================================================
+*/
 
 function StatusBadge({ status, isCurrent }) {
   if (isCurrent) {
@@ -280,6 +417,26 @@ function StatusBadge({ status, isCurrent }) {
   );
 }
 
+/*
+  ============================================================
+  SECTION 12 — BRAND SIGNATURE
+  ============================================================
+*/
+
+function BrandSignature() {
+  return (
+    <p className="mt-8 text-center text-[10px] tracking-[0.36em] text-white/30">
+      OMMT<span className="lowercase">o</span>...New Horizons
+    </p>
+  );
+}
+
+/*
+  ============================================================
+  SECTION 13 — BACKGROUND SYSTEM
+  ============================================================
+*/
+
 function Background() {
   return (
     <div className="absolute inset-0">
@@ -290,104 +447,3 @@ function Background() {
   );
 }
 
-/*
-============================================================
-OMMT AIRLINES — LIVE Q&A SYSTEM ARCHITECTURE
-============================================================
-
-Η λειτουργία του Live Q&A διαχωρίζεται σε τρία διαφορετικά
-περιβάλλοντα (routes), ώστε κάθε τμήμα του συστήματος να
-εξυπηρετεί έναν ξεκάθαρο λειτουργικό ρόλο.
-
-Η αρχιτεκτονική αυτή βελτιώνει:
-
-- Την εμπειρία χρήστη
-- Την ασφάλεια του περιεχομένου
-- Τη διαχειρισιμότητα του συστήματος
-- Τη μελλοντική επεκτασιμότητα
-
-------------------------------------------------------------
-ROUTE 1 — /qa
-PARTICIPANT ENVIRONMENT
-------------------------------------------------------------
-
-Περιβάλλον συμμετεχόντων.
-
-Οι επισκέπτες σαρώνουν το QR code και μεταφέρονται
-στη φόρμα υποβολής ερωτήσεων.
-
-Κύριες λειτουργίες:
-
-- Εισαγωγή ερώτησης
-- Αποστολή ερώτησης στη βάση δεδομένων
-- Mobile-first εμπειρία χρήσης
-
-------------------------------------------------------------
-ROUTE 2 — /qa/admin
-MODERATOR ENVIRONMENT
-------------------------------------------------------------
-
-Περιβάλλον διαχείρισης ερωτήσεων.
-
-Χρησιμοποιείται από τον moderator ή την οργανωτική
-ομάδα κατά τη διάρκεια της εκδήλωσης.
-
-Κύριες λειτουργίες:
-
-- Προβολή όλων των ερωτήσεων
-- Έγκριση ερωτήσεων
-- Απόρριψη ερωτήσεων
-- Απόκρυψη περιεχομένου
-- Διαχείριση ροής συζήτησης
-
-Καμία ερώτηση δεν εμφανίζεται δημόσια χωρίς έγκριση.
-
-------------------------------------------------------------
-ROUTE 3 — /qa/live
-PRESENTATION ENVIRONMENT
-------------------------------------------------------------
-
-Περιβάλλον προβολής συνεδρίου.
-
-Το συγκεκριμένο route προβάλλεται στις οθόνες
-της εκδήλωσης.
-
-Κύριες λειτουργίες:
-
-- Προβολή μόνο εγκεκριμένων ερωτήσεων
-- Real-time ενημέρωση
-- Καθαρό περιβάλλον παρουσίασης
-- Χωρίς δυνατότητες επεξεργασίας
-
-------------------------------------------------------------
-SYSTEM FLOW
-------------------------------------------------------------
-
-Participant
-      │
-      ▼
-   /qa
-      │
-      ▼
-  Supabase
-      │
-      ▼
- /qa/admin
-      │
-      ▼
- /qa/live
-      │
-      ▼
- Conference Screen
-
-------------------------------------------------------------
-OMMT AIRLINES PHILOSOPHY
-------------------------------------------------------------
-
-Το σύστημα σχεδιάστηκε με λογική αντίστοιχη των
-σύγχρονων conference platforms, προσφέροντας
-ασφαλή και επαγγελματική διαχείριση του live
-interaction μεταξύ κοινού και ομιλητών.
-
-============================================================
-*/
