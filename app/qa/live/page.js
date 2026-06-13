@@ -142,12 +142,8 @@ function QRBoardingScreen({ onBegin }) {
         Καλωσορίσατε στο αποκλειστικό κανάλι επικοινωνίας της OMMT Airlines.
         <br />
         <br />
-        Σαρώστε τον κωδικό για να μεταδώσετε την ερώτηση σας προς το πάνελ των
+        Σαρώστε το QR code για να μεταδώσετε την ερώτηση σας προς το πάνελ των
         προσκεκλημένων ομιλητών.
-        <br />
-        <br />
-        Οι μεταδόσεις αξιολογούνται από το πλήρωμα εδάφους και, εφόσον εγκριθούν,
-        προωθούνται στη ζωντανή συζήτηση του Marketing Made in Greece — On Air.
       </p>
 
       <motion.div
@@ -171,7 +167,9 @@ function QRBoardingScreen({ onBegin }) {
 
         <div className="mt-10 border-t border-white/10 pt-8">
           <p className="text-[10px] uppercase tracking-[0.36em] text-[#d7a247]/85">
-            Live Speaker Communication
+
+          Ground Crew Review Required
+
           </p>
 
           <p className="mt-3 text-[11px] uppercase tracking-[0.32em] text-white/36">
