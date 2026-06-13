@@ -77,14 +77,13 @@ export default function LiveQAPage() {
     <main className="min-h-screen overflow-hidden bg-[#02050c] text-white">
       <div className="relative flex min-h-screen items-center justify-center px-10 py-12">
         <AtmosphericBackground />
-
         <TopSystemBar />
 
         <AnimatePresence mode="wait">
           {!showLive ? (
             <QRBoardingScreen key="qr-screen" onBegin={() => setShowLive(true)} />
           ) : (
-            <CaptainCommunicationScreen
+            <LiveDiscussionScreen
               key="live-screen"
               currentTransmission={currentTransmission}
             />
@@ -132,7 +131,7 @@ function QRBoardingScreen({ onBegin }) {
       transition={{ duration: 1.35, ease: [0.22, 1, 0.36, 1] }}
     >
       <p className="mb-7 text-[12px] uppercase tracking-[0.55em] text-[#d7a247]/90">
-        Passenger Q&amp;A Boarding
+        Audience Communication Channel
       </p>
 
       <h1 className="mx-auto max-w-5xl text-[5.2rem] font-semibold leading-[0.9] tracking-[-0.065em] text-white">
@@ -140,32 +139,39 @@ function QRBoardingScreen({ onBegin }) {
       </h1>
 
       <p className="mx-auto mt-8 max-w-3xl text-xl leading-9 text-white/52">
-        You are entering a restricted communication channel designed for passenger
-        transmissions during the OMMT Airlines live experience.
+        Καλωσορίσατε στο αποκλειστικό κανάλι επικοινωνίας της OMMT Airlines.
+        <br />
+        <br />
+        Σαρώστε τον κωδικό για να μεταδώσετε την ερώτηση σας προς το πάνελ των
+        προσκεκλημένων ομιλητών.
+        <br />
+        <br />
+        Οι μεταδόσεις αξιολογούνται από το πλήρωμα εδάφους και, εφόσον εγκριθούν,
+        προωθούνται στη ζωντανή συζήτηση του Marketing Made in Greece — On Air.
       </p>
 
       <motion.div
-        className="mx-auto mt-14 max-w-[430px] overflow-hidden rounded-[2.8rem] border border-[#d7a247]/24 bg-white/[0.045] p-7 shadow-[0_34px_100px_rgba(0,0,0,0.58)] backdrop-blur-2xl"
+        className="mx-auto mt-14 max-w-[470px] overflow-hidden rounded-[2.8rem] border border-[#d7a247]/24 bg-white/[0.045] p-7 shadow-[0_34px_100px_rgba(0,0,0,0.58)] backdrop-blur-2xl"
         initial={{ opacity: 0, scale: 0.94, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 1.25, ease: [0.22, 1, 0.36, 1] }}
       >
         <div className="rounded-[2rem] border border-[#d7a247]/18 bg-[#02050c]/72 p-5">
-          <div className="rounded-[1.5rem] bg-[#f7f1e6] p-5">
+          <div className="flex items-center justify-center rounded-[1.5rem] bg-[#f7f1e6] p-7">
             <QRCode
               value={QA_SUBMISSION_URL}
-              size={260}
+              size={240}
               bgColor="#f7f1e6"
               fgColor="#02050c"
               level="H"
-              className="h-[260px] w-[260px]"
+              className="h-[240px] w-[240px]"
             />
           </div>
         </div>
 
-        <div className="mt-7 border-t border-white/10 pt-6">
+        <div className="mt-10 border-t border-white/10 pt-8">
           <p className="text-[10px] uppercase tracking-[0.36em] text-[#d7a247]/85">
-            Restricted Passenger Channel
+            Live Speaker Communication
           </p>
 
           <p className="mt-3 text-[11px] uppercase tracking-[0.32em] text-white/36">
@@ -178,24 +184,22 @@ function QRBoardingScreen({ onBegin }) {
         onClick={onBegin}
         className="mt-12 rounded-full border border-[#d7a247]/35 bg-[#02050c]/46 px-9 py-5 text-[11px] uppercase tracking-[0.34em] text-[#f7d27a] shadow-[0_18px_70px_rgba(0,0,0,0.45)] backdrop-blur-2xl transition duration-300 hover:border-[#d7a247]/60 hover:bg-[#d7a247]/10"
       >
-        Begin Live Transmission
+        Enter Live Discussion
       </button>
 
-      <p className="mt-10 text-[10px] uppercase tracking-[0.45em] text-white/30">
-        OMMTo...New Horizons
-      </p>
+      <BrandSignature />
     </motion.section>
   );
 }
 
 /*
   ============================================================
-  SECTION 8 — CAPTAIN'S COMMUNICATION SCREEN
+  SECTION 8 — LIVE DISCUSSION SCREEN
   Εδώ εμφανίζεται η live approved ερώτηση.
   ============================================================
 */
 
-function CaptainCommunicationScreen({ currentTransmission }) {
+function LiveDiscussionScreen({ currentTransmission }) {
   return (
     <motion.section
       className="relative z-10 w-full max-w-6xl"
@@ -206,11 +210,11 @@ function CaptainCommunicationScreen({ currentTransmission }) {
     >
       <div className="text-center">
         <p className="mb-7 text-[12px] uppercase tracking-[0.55em] text-[#d7a247]/90">
-          Captain&apos;s Communication
+          Live Discussion Channel
         </p>
 
         <h1 className="mx-auto max-w-5xl text-[5.4rem] font-semibold leading-[0.9] tracking-[-0.065em] text-white">
-          Now receiving passenger transmissions.
+          Now receiving audience transmissions.
         </h1>
       </div>
 
@@ -229,42 +233,40 @@ function CaptainCommunicationScreen({ currentTransmission }) {
             <div className="relative flex items-center justify-between border-b border-white/10 pb-8">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.42em] text-[#d7a247]/85">
-                  Passenger Transmission
+                  Audience Transmission
                 </p>
 
                 <p className="mt-3 text-[10px] uppercase tracking-[0.34em] text-white/38">
-                  Cabin Channel Live
+                  Live Speaker Channel
                 </p>
               </div>
 
               <div className="rounded-full border border-[#d7a247]/30 bg-[#d7a247]/10 px-5 py-3">
                 <p className="text-[10px] uppercase tracking-[0.34em] text-[#f7d27a]">
-                  {currentTransmission ? "Now On Air" : "Awaiting Clearance"}
+                  {currentTransmission ? "Live Discussion" : "Awaiting Review"}
                 </p>
               </div>
             </div>
 
             <div className="relative mt-12">
               <p className="text-[4rem] font-light leading-[1.08] tracking-[-0.055em] text-white">
-                {currentTransmission?.question || "Awaiting captain clearance."}
+                {currentTransmission?.question || "Awaiting review."}
               </p>
             </div>
 
             <div className="mt-14 flex items-center justify-between border-t border-white/10 pt-8">
               <p className="text-[10px] uppercase tracking-[0.36em] text-white/32">
-                Approved by admin
+                Cleared for Discussion
               </p>
 
-              <p className="text-[10px] uppercase tracking-[0.36em] text-white/32">
-                OMMTo...New Horizons
-              </p>
+              <BrandSignature small />
             </div>
           </div>
         </motion.div>
       </AnimatePresence>
 
       <p className="mt-12 text-center text-[11px] uppercase tracking-[0.45em] text-white/30">
-        Questions appear after captain clearance
+        Approved transmissions appear in the live discussion.
       </p>
     </motion.section>
   );
@@ -272,7 +274,28 @@ function CaptainCommunicationScreen({ currentTransmission }) {
 
 /*
   ============================================================
-  SECTION 9 — ATMOSPHERIC BACKGROUND SYSTEM
+  SECTION 9 — BRAND SIGNATURE
+  Κρατάει πάντα το μικρό "o" στο OMMTo.
+  ============================================================
+*/
+
+function BrandSignature({ small = false }) {
+  return (
+    <p
+      className={`${
+        small
+          ? "text-[10px] tracking-[0.36em] text-white/32"
+          : "mt-10 text-[10px] tracking-[0.45em] text-white/30"
+      }`}
+    >
+      OMMT<span className="lowercase">o</span>...New Horizons
+    </p>
+  );
+}
+
+/*
+  ============================================================
+  SECTION 10 — ATMOSPHERIC BACKGROUND SYSTEM
   Premium aviation atmosphere για όλη τη live εμπειρία.
   ============================================================
 */
