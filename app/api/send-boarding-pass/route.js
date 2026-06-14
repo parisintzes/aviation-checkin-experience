@@ -204,7 +204,7 @@ export async function POST(req) {
 
             <tr>
               <td style="padding:26px 10px 0 10px;text-align:left;">
-                <p style="font-size:16px;line-height:1.9;color:rgba(255,255,255,0.88);margin:0 0 18px 0;">
+                <p style="font-size:15px;line-height:1.9;color:rgba(255,255,255,0.88);margin:0 0 18px 0;">
                   Αγαπητέ/ή <span style="color:#d7a247;">${firstName}</span>,
                 </p>
 
@@ -222,10 +222,19 @@ export async function POST(req) {
 
                 <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(215,162,71,0.35),transparent);margin:32px 0;"></div>
 
-                <p style="font-size:22px;line-height:1.55;letter-spacing:4px;color:#ffffff;font-weight:300;text-transform:uppercase;margin:0 0 28px 0;">
-                  Some journeys begin<br/>
-                  long before departure.
-                </p>
+                <p style="
+  font-size:22px;
+  line-height:1.4;
+  letter-spacing:2.5px;
+  color:#ffffff;
+  font-weight:300;
+  margin:0 0 26px 0;
+">
+  <span style="white-space:nowrap;">
+    OMMTo<span style="color:#d7a247;">...</span>New horizons
+  </span>
+</p>
+
 
                 <p style="
   font-size:11px;
@@ -239,9 +248,9 @@ export async function POST(req) {
 
   <span style="
     color:rgba(255,255,255,0.62);
-    letter-spacing:2px;
+    letter-spacing:2.5px;
     text-transform:uppercase;
-    font-size:10px;
+    font-size:11px;
   ">
     OMMT Airlines
   </span>
@@ -257,11 +266,18 @@ export async function POST(req) {
 
             <tr>
               <td align="center" style="padding:34px 18px 10px 18px;">
-                <div style="font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.36);">
-                  OMMTo... New Horizons
-                </div>
+                <div style="
+  font-size:11px;
+  letter-spacing:3.5px;
+  color:rgba(215,162,71,0.55);
+  text-transform:uppercase;
+  font-weight:500;
+">
+  AVIATION. TOURISM. INNOVATION.
+</div>
 
-                <div style="margin-top:20px;font-size:8px;line-height:1.7;color:rgba(255,255,255,0.24);text-align:left;max-width:340px;">
+
+                <div style="margin-top:20px;font-size:9px;line-height:1.8;color:rgba(255,255,255,0.24);text-align:left;max-width:340px;">
                   Passenger Information & Privacy Protocol<br/><br/>
                   Η επεξεργασία των προσωπικών δεδομένων πραγματοποιείται αποκλειστικά για λειτουργικούς και οργανωτικούς σκοπούς της εμπειρίας check-in και της συμμετοχής στην εκδήλωση, σύμφωνα με τις αρχές του GDPR (EU 2016/679).
                 </div>
