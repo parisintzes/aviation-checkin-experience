@@ -308,13 +308,13 @@ function SuccessView({ onReset }) {
       </p>
 
       <h1 className="mt-5 max-w-[92%] text-[2.35rem] font-semibold leading-[0.95] tracking-[-0.055em] text-white">
-        Your transmission has been successfully received.
+        Your transmission has been received.
       </h1>
 
       <p className="mt-7 max-w-[88%] text-[14px] leading-7 text-white/62">
-        Η μετάδοση σας βρίσκεται σε αναμονή αξιολόγησης από το πλήρωμα εδάφους.
-        Εφόσον εγκριθεί, μπορεί να προωθηθεί στη ζωντανή συζήτηση και να
-        προβληθεί στην κεντρική οθόνη επικοινωνίας.
+       Η μετάδοσή σας βρίσκεται σε αναμονή αξιολόγησης 
+       από το πλήρωμα εδάφους. Εφόσον εγκριθεί,
+       θα παρουσιαστεί στη ζωντανή συζήτηση.
       </p>
 
       <button
