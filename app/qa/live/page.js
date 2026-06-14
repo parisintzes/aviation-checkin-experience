@@ -67,32 +67,25 @@ export default function LiveQAPage() {
     };
   }, []);
 
-  /*
-    ============================================================
-    SECTION 5 — PAGE STRUCTURE
-    ============================================================
-  */
+ return (
+  <main className="min-h-screen overflow-x-hidden overflow-y-auto bg-[#02050c] text-white">
+    <div className="relative flex min-h-screen items-center justify-center px-10 py-24">
+      <AtmosphericBackground />
+      <TopSystemBar />
 
-  return (
-    <main className="min-h-screen overflow-hidden bg-[#02050c] text-white">
-      <div className="relative flex min-h-screen items-center justify-center px-10 py-12">
-        <AtmosphericBackground />
-        <TopSystemBar />
-
-        <AnimatePresence mode="wait">
-          {!showLive ? (
-            <QRBoardingScreen key="qr-screen" onBegin={() => setShowLive(true)} />
-          ) : (
-            <LiveDiscussionScreen
-              key="live-screen"
-              currentTransmission={currentTransmission}
-            />
-          )}
-        </AnimatePresence>
-      </div>
-    </main>
-  );
-}
+      <AnimatePresence mode="wait">
+        {!showLive ? (
+          <QRBoardingScreen key="qr-screen" onBegin={() => setShowLive(true)} />
+        ) : (
+          <LiveDiscussionScreen
+            key="live-screen"
+            currentTransmission={currentTransmission}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  </main>
+);
 
 /*
   ============================================================
