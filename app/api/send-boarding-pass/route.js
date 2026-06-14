@@ -258,7 +258,7 @@ export async function POST(req) {
   <br/><br/>
 
   Department of Organisation Management, Marketing and Tourism<br/>
-  School of Economics and Management<br/>
+  School of Economics and Business Administration<br/>
   International Hellenic University
 </p>
               </td>
