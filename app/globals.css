@@ -91,14 +91,18 @@ svg {
 /*
 ============================================================
 SECTION 6 — FORM ELEMENTS
+Keep controls clean without overriding button typography
 ============================================================
 */
 
 input,
 textarea,
-button,
 select {
   font: inherit;
+}
+
+button {
+  font-family: inherit;
 }
 
 /*
