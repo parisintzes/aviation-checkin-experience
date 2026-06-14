@@ -86,6 +86,7 @@ export default function LiveQAPage() {
     </div>
   </main>
 );
+}
 
 /*
   ============================================================
@@ -304,7 +305,7 @@ function AtmosphericBackground() {
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <motion.div
+            <motion.div
         className="absolute left-[-18%] bottom-[-18%] h-[520px] w-[520px] rounded-full bg-[#0b3a63]/24 blur-3xl"
         animate={{ opacity: [0.18, 0.34, 0.18], scale: [1, 1.06, 1] }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
