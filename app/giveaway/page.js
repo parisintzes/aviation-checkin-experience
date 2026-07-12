@@ -647,37 +647,24 @@ async function runPassengerSelection({
 
     const selectedAt = new Date().toISOString();
 
-    const { data: savedWinner, error: winnerUpdateError } =
-      await supabase
-        .from("participants")
-        .update({
-          giveaway_winner: true,
-          giveaway_selected_at: selectedAt,
-        })
-        .eq("id", winner.id)
-        .eq("giveaway_eligible", true)
-        .select(`
-          id,
-          full_name,
-          email,
-          ticket_code,
-          flight,
-          seat,
-          gate,
-          terminal,
-          status,
-          created_at,
-          giveaway_eligible,
-          giveaway_winner,
-          giveaway_selected_at
-        `)
-        .single();
+const { error: winnerUpdateError } = await supabase
+  .from("participants")
+  .update({
+    giveaway_winner: true,
+    giveaway_selected_at: selectedAt,
+  })
+  .eq("id", winner.id)
+  .eq("giveaway_eligible", true);
 
-    if (winnerUpdateError) {
-      throw winnerUpdateError;
-    }
+if (winnerUpdateError) {
+  throw winnerUpdateError;
+}
 
-    setSelectedPassenger(savedWinner || winner);
+setSelectedPassenger({
+  ...winner,
+  giveaway_winner: true,
+  giveaway_selected_at: selectedAt,
+});
 
     await wait(900);
 
