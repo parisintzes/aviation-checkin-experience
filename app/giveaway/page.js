@@ -634,16 +634,17 @@ async function runPassengerSelection({
      * is being operated at a time.
      */
     const { error: resetWinnerError } = await supabase
-      .from("participants")
-      .update({
-        giveaway_winner: false,
-        giveaway_selected_at: null,
-      })
-      .eq("giveaway_winner", true);
+  .from("participants")
+  .update({
+    giveaway_winner: false,
+    giveaway_selected_at: null,
+  })
+  .eq("giveaway_winner", true)
+  .neq("id", winner.id);
 
-    if (resetWinnerError) {
-      throw resetWinnerError;
-    }
+if (resetWinnerError) {
+  throw resetWinnerError;
+}
 
     const selectedAt = new Date().toISOString();
 
