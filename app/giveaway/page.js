@@ -463,31 +463,28 @@ async function loadPassengerManifest({
 
   try {
     const { data, error } = await supabase
-      .from("participants")
-      .select(`
-        id,
-        full_name,
-        email,
-        ticket_code,
-        flight,
-        seat,
-        gate,
-        terminal,
-        status,
-        created_at,
-        giveaway_eligible,
-        giveaway_winner,
-        giveaway_selected_at
-      `)
-      .eq("giveaway_eligible", true)
-      .in("status", [
-        "checked_in",
-        "confirmed",
-        "completed",
-      ])
-      .order("created_at", {
-        ascending: true,
-      });
+  .from("participants")
+  .select(`
+    id,
+    full_name,
+    email,
+    ticket_code,
+    flight,
+    seat,
+    gate,
+    terminal,
+    status,
+    created_at,
+    giveaway_eligible,
+    giveaway_winner,
+    giveaway_selected_at
+  `)
+  .eq("giveaway_eligible", true)
+  .not("ticket_code", "is", null)
+  .not("full_name", "is", null)
+  .order("created_at", {
+    ascending: true,
+  });
 
     if (error) {
       throw error;
