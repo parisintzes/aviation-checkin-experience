@@ -1,13 +1,14 @@
 "use client";
 
-// ============================================================
-// SECTION 1 — Imports
-// ============================================================
+// ============================================================================
+// SECTION 1 — IMPORTS
+// ============================================================================
 
 import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -15,155 +16,194 @@ import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 
 
-// ============================================================
-// SECTION 2 — Configuration
-// ============================================================
+// ============================================================================
+// SECTION 2 — CONFIGURATION
+// ============================================================================
 
-const EXPERIENCE_STAGES = {
+const STAGES = {
   INITIAL: "initial",
-  LOADING_MANIFEST: "loading_manifest",
+  MANIFEST_LOADING: "manifest_loading",
   MANIFEST_READY: "manifest_ready",
   FINAL_BOARDING: "final_boarding",
-  VERIFYING_MANIFEST: "verifying_manifest",
-  MANIFEST_VERIFIED: "manifest_verified",
+  VERIFYING: "verifying",
+  VERIFIED: "verified",
   CLEARANCE: "clearance",
   DESTINATION_LOCKED: "destination_locked",
-  SELECTING_PASSENGER: "selecting_passenger",
+  SELECTING: "selecting",
   PASSENGER_SELECTED: "passenger_selected",
   WINNER_REVEALED: "winner_revealed",
   CLOSING: "closing",
 };
 
 const STAGE_ORDER = [
-  EXPERIENCE_STAGES.INITIAL,
-  EXPERIENCE_STAGES.LOADING_MANIFEST,
-  EXPERIENCE_STAGES.MANIFEST_READY,
-  EXPERIENCE_STAGES.FINAL_BOARDING,
-  EXPERIENCE_STAGES.VERIFYING_MANIFEST,
-  EXPERIENCE_STAGES.MANIFEST_VERIFIED,
-  EXPERIENCE_STAGES.CLEARANCE,
-  EXPERIENCE_STAGES.DESTINATION_LOCKED,
-  EXPERIENCE_STAGES.SELECTING_PASSENGER,
-  EXPERIENCE_STAGES.PASSENGER_SELECTED,
-  EXPERIENCE_STAGES.WINNER_REVEALED,
-  EXPERIENCE_STAGES.CLOSING,
+  STAGES.INITIAL,
+  STAGES.MANIFEST_LOADING,
+  STAGES.MANIFEST_READY,
+  STAGES.FINAL_BOARDING,
+  STAGES.VERIFYING,
+  STAGES.VERIFIED,
+  STAGES.CLEARANCE,
+  STAGES.DESTINATION_LOCKED,
+  STAGES.SELECTING,
+  STAGES.PASSENGER_SELECTED,
+  STAGES.WINNER_REVEALED,
+  STAGES.CLOSING,
 ];
 
-const STAGE_METADATA = {
-  [EXPERIENCE_STAGES.INITIAL]: {
+const STAGE_CONTENT = {
+  [STAGES.INITIAL]: {
+    chapter: "ACT III",
     eyebrow: "Secret Destination Experience",
-    title: "Final Boarding Procedure",
+    primary: "Final Boarding",
+    secondary: "Procedure",
     description:
       "The final chapter of today’s journey is ready to begin.",
-    status: "Awaiting Ground Operations",
+    systemStatus: "Awaiting Ground Operations",
     progress: 0,
+    atmosphere: "idle",
   },
 
-  [EXPERIENCE_STAGES.LOADING_MANIFEST]: {
+  [STAGES.MANIFEST_LOADING]: {
+    chapter: "PROCEDURE 01",
     eyebrow: "Passenger Manifest",
-    title: "Manifest Loading",
+    primary: "Manifest",
+    secondary: "Loading",
     description:
-      "Retrieving eligible passengers from the final boarding records.",
-    status: "Secure Data Transfer",
+      "Retrieving eligible passengers from the secured check-in records.",
+    systemStatus: "Secure Data Transfer",
     progress: 12,
+    atmosphere: "data",
   },
 
-  [EXPERIENCE_STAGES.MANIFEST_READY]: {
+  [STAGES.MANIFEST_READY]: {
+    chapter: "PROCEDURE 02",
     eyebrow: "Passenger Manifest",
-    title: "Manifest Received",
+    primary: "Manifest",
+    secondary: "Received",
     description:
-      "The passenger manifest has been successfully transferred to Ground Operations.",
-    status: "Manifest Available",
+      "Passenger records have been transferred to Ground Operations.",
+    systemStatus: "Manifest Available",
     progress: 24,
+    atmosphere: "data",
   },
 
-  [EXPERIENCE_STAGES.FINAL_BOARDING]: {
+  [STAGES.FINAL_BOARDING]: {
+    chapter: "PROCEDURE 03",
     eyebrow: "Final Boarding Procedure",
-    title: "Final Boarding",
+    primary: "Final",
+    secondary: "Boarding",
     description:
-      "All eligible passengers are being prepared for the closing departure sequence.",
-    status: "Boarding in Progress",
+      "Eligible passengers are entering the final departure sequence.",
+    systemStatus: "Boarding in Progress",
     progress: 36,
+    atmosphere: "boarding",
   },
 
-  [EXPERIENCE_STAGES.VERIFYING_MANIFEST]: {
+  [STAGES.VERIFYING]: {
+    chapter: "PROCEDURE 04",
     eyebrow: "Eligibility Verification",
-    title: "Verifying Passenger Records",
+    primary: "Manifest",
+    secondary: "Verification",
     description:
-      "Check-in status, ticket credentials and giveaway eligibility are being confirmed.",
-    status: "Verification in Progress",
+      "Check-in credentials and giveaway eligibility are being confirmed.",
+    systemStatus: "Verification in Progress",
     progress: 48,
+    atmosphere: "scan",
   },
 
-  [EXPERIENCE_STAGES.MANIFEST_VERIFIED]: {
+  [STAGES.VERIFIED]: {
+    chapter: "PROCEDURE 05",
     eyebrow: "Eligibility Verification",
-    title: "Manifest Verified",
+    primary: "Manifest",
+    secondary: "Verified",
     description:
       "All passenger records have passed the final eligibility procedure.",
-    status: "Verification Complete",
+    systemStatus: "Verification Complete",
     progress: 58,
+    atmosphere: "verified",
   },
 
-  [EXPERIENCE_STAGES.CLEARANCE]: {
+  [STAGES.CLEARANCE]: {
+    chapter: "PROCEDURE 06",
     eyebrow: "Ground Operations Clearance",
-    title: "Departure Clearance",
+    primary: "Departure",
+    secondary: "Clearance",
     description:
-      "Ground Operations is authorising the final Secret Destination procedure.",
-    status: "Clearance Confirmed",
+      "Ground Operations has authorised the Secret Destination procedure.",
+    systemStatus: "Clearance Confirmed",
     progress: 68,
+    atmosphere: "clearance",
   },
 
-  [EXPERIENCE_STAGES.DESTINATION_LOCKED]: {
+  [STAGES.DESTINATION_LOCKED]: {
+    chapter: "PROCEDURE 07",
     eyebrow: "Secret Destination",
-    title: "Destination Locked",
+    primary: "Destination",
+    secondary: "Locked",
     description:
       "The destination has been secured. Passenger selection may now begin.",
-    status: "Destination Confidential",
+    systemStatus: "Destination Confidential",
     progress: 78,
+    atmosphere: "locked",
   },
 
-  [EXPERIENCE_STAGES.SELECTING_PASSENGER]: {
+  [STAGES.SELECTING]: {
+    chapter: "PROCEDURE 08",
     eyebrow: "Passenger Selection Sequence",
-    title: "Selecting Passenger",
+    primary: "Selection",
+    secondary: "In Progress",
     description:
-      "The final passenger is being selected from the verified manifest.",
-    status: "Selection in Progress",
+      "The verified manifest is being processed through the final selection sequence.",
+    systemStatus: "Secure Selection Active",
     progress: 88,
+    atmosphere: "selection",
   },
 
-  [EXPERIENCE_STAGES.PASSENGER_SELECTED]: {
+  [STAGES.PASSENGER_SELECTED]: {
+    chapter: "FINAL CLEARANCE",
     eyebrow: "Passenger Selection Sequence",
-    title: "Passenger Selected",
+    primary: "Passenger",
+    secondary: "Selected",
     description:
-      "A passenger has been securely selected. Identity remains protected until final reveal.",
-    status: "Identity Secured",
+      "Identity secured. Awaiting public announcement clearance.",
+    systemStatus: "Identity Secured",
     progress: 94,
+    atmosphere: "silence",
   },
 
-  [EXPERIENCE_STAGES.WINNER_REVEALED]: {
-    eyebrow: "Secret Destination Clearance",
-    title: "Your Next Journey Begins Now",
+  [STAGES.WINNER_REVEALED]: {
+    chapter: "SECRET DESTINATION CLEARANCE",
+    eyebrow: "Passenger Cleared",
+    primary: "Your Next Journey",
+    secondary: "Begins Now",
     description:
-      "The final passenger has received clearance for the Secret Destination Experience.",
-    status: "Passenger Cleared",
+      "One passenger has received clearance for the Secret Destination Experience.",
+    systemStatus: "Passenger Cleared",
     progress: 100,
+    atmosphere: "reveal",
   },
 
-  [EXPERIENCE_STAGES.CLOSING]: {
+  [STAGES.CLOSING]: {
+    chapter: "NEW HORIZONS",
     eyebrow: "OMMTo Airlines",
-    title: "One Journey Ends. Another Begins.",
+    primary: "One Journey Ends.",
+    secondary: "Another Begins.",
     description:
       "Thank you for travelling with us through New Horizons.",
-    status: "Experience Complete",
+    systemStatus: "Experience Complete",
     progress: 100,
+    atmosphere: "closing",
   },
 };
+
+const SELECTION_DURATION = 7200;
+const SELECTION_TICK = 120;
 
 const MOTION = {
   screen: {
     initial: {
       opacity: 0,
-      filter: "blur(10px)",
+      filter: "blur(18px)",
       scale: 0.985,
     },
     animate: {
@@ -171,14 +211,14 @@ const MOTION = {
       filter: "blur(0px)",
       scale: 1,
       transition: {
-        duration: 1.1,
+        duration: 1.15,
         ease: [0.22, 1, 0.36, 1],
       },
     },
     exit: {
       opacity: 0,
-      filter: "blur(8px)",
-      scale: 1.01,
+      filter: "blur(12px)",
+      scale: 1.012,
       transition: {
         duration: 0.65,
         ease: [0.4, 0, 1, 1],
@@ -189,7 +229,7 @@ const MOTION = {
   fadeUp: {
     initial: {
       opacity: 0,
-      y: 24,
+      y: 28,
     },
     animate: {
       opacity: 1,
@@ -204,67 +244,67 @@ const MOTION = {
   stagger: {
     animate: {
       transition: {
-        staggerChildren: 0.12,
+        staggerChildren: 0.13,
       },
     },
   },
 };
 
-const SELECTION_DURATION = 7000;
-
-const formatPassengerCount = (count) =>
-  new Intl.NumberFormat("en-US", {
-    minimumIntegerDigits: 2,
-  }).format(count);
-
-const getSecureRandomIndex = (arrayLength) => {
-  if (!arrayLength || arrayLength < 1) {
-    return null;
-  }
-
-  const randomValues = new Uint32Array(1);
-  window.crypto.getRandomValues(randomValues);
-
-  return randomValues[0] % arrayLength;
-};
-
-const wait = (milliseconds) =>
+const delay = (milliseconds) =>
   new Promise((resolve) => {
     window.setTimeout(resolve, milliseconds);
   });
 
+const formatCount = (value) =>
+  new Intl.NumberFormat("en-US", {
+    minimumIntegerDigits: 2,
+  }).format(value || 0);
 
-// ============================================================
-// SECTION 3 — Main Giveaway Page
-// ============================================================
+const secureRandomIndex = (length) => {
+  if (!length || length <= 0) {
+    return null;
+  }
+
+  const maximumUint32 = 0xffffffff;
+  const acceptableLimit =
+    maximumUint32 - ((maximumUint32 + 1) % length);
+
+  const randomValues = new Uint32Array(1);
+
+  do {
+    window.crypto.getRandomValues(randomValues);
+  } while (randomValues[0] > acceptableLimit);
+
+  return randomValues[0] % length;
+};
+
+
+// ============================================================================
+// SECTION 3 — MAIN GIVEAWAY PAGE
+// ============================================================================
 
 export default function GiveawayPage() {
-  const [stage, setStage] = useState(EXPERIENCE_STAGES.INITIAL);
+  const [stage, setStage] = useState(STAGES.INITIAL);
   const [passengers, setPassengers] = useState([]);
   const [selectedPassenger, setSelectedPassenger] = useState(null);
+  const [selectionPreview, setSelectionPreview] = useState(null);
 
   const [operationsOpen, setOperationsOpen] = useState(false);
-  const [manifestLoadedAt, setManifestLoadedAt] = useState(null);
-
   const [isProcessing, setIsProcessing] = useState(false);
+  const [manifestLoadedAt, setManifestLoadedAt] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectionDisplay, setSelectionDisplay] = useState(null);
 
-  const currentStage = STAGE_METADATA[stage];
-  const currentStageIndex = STAGE_ORDER.indexOf(stage);
+  const selectionIntervalRef = useRef(null);
 
-  const eligiblePassengerCount = passengers.length;
+  const stageContent = STAGE_CONTENT[stage];
+  const stageIndex = STAGE_ORDER.indexOf(stage);
 
-  const isManifestLoaded = eligiblePassengerCount > 0;
-
-  const canSelectPassenger =
-    stage === EXPERIENCE_STAGES.DESTINATION_LOCKED &&
-    isManifestLoaded &&
-    !isProcessing;
+  const passengerCount = passengers.length;
+  const manifestLoaded = passengerCount > 0;
 
   const formattedManifestTime = useMemo(() => {
     if (!manifestLoadedAt) {
-      return "Not loaded";
+      return "NOT LOADED";
     }
 
     return new Intl.DateTimeFormat("en-GB", {
@@ -275,52 +315,37 @@ export default function GiveawayPage() {
     }).format(manifestLoadedAt);
   }, [manifestLoadedAt]);
 
-  useEffect(() => {
-    const handleKeyboardControls = (event) => {
-      const pressedKey = event.key.toLowerCase();
+  const canSelectPassenger =
+    stage === STAGES.DESTINATION_LOCKED &&
+    manifestLoaded &&
+    !isProcessing;
 
-      if (pressedKey === "o") {
-        setOperationsOpen((current) => !current);
-      }
-
-      if (pressedKey === "escape") {
-        setOperationsOpen(false);
-      }
-
-      if (pressedKey === "f") {
-        toggleFullscreen();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyboardControls);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyboardControls);
-    };
-  }, []);
-
-  const transitionToStage = useCallback(
-    async (nextStage, delay = 0) => {
+  const transitionTo = useCallback(
+    async (nextStage, waitingTime = 0) => {
       if (isProcessing) {
         return;
       }
 
       setErrorMessage("");
 
-      if (delay > 0) {
-        setIsProcessing(true);
-        await wait(delay);
+      if (waitingTime <= 0) {
         setStage(nextStage);
-        setIsProcessing(false);
         return;
       }
 
-      setStage(nextStage);
+      setIsProcessing(true);
+
+      try {
+        await delay(waitingTime);
+        setStage(nextStage);
+      } finally {
+        setIsProcessing(false);
+      }
     },
     [isProcessing]
   );
 
-  const toggleFullscreen = async () => {
+  const toggleFullscreen = useCallback(async () => {
     try {
       if (!document.fullscreenElement) {
         await document.documentElement.requestFullscreen();
@@ -330,29 +355,65 @@ export default function GiveawayPage() {
     } catch (error) {
       console.error("Fullscreen error:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const keyboardHandler = (event) => {
+      const key = event.key.toLowerCase();
+
+      if (key === "o") {
+        setOperationsOpen((currentValue) => !currentValue);
+      }
+
+      if (key === "escape") {
+        setOperationsOpen(false);
+      }
+
+      if (key === "f") {
+        toggleFullscreen();
+      }
+    };
+
+    window.addEventListener("keydown", keyboardHandler);
+
+    return () => {
+      window.removeEventListener("keydown", keyboardHandler);
+    };
+  }, [toggleFullscreen]);
+
+  useEffect(() => {
+    return () => {
+      if (selectionIntervalRef.current) {
+        window.clearInterval(selectionIntervalRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#020812] text-[#f6f0e5] selection:bg-[#c9a96e]/30">
-      <AtmosphericBackground stage={stage} />
+    <main className="relative min-h-screen overflow-hidden bg-[#020711] text-[#f4f1ea] selection:bg-[#c7a86c]/30">
+      <AtmosphericBackground
+        stage={stage}
+        atmosphere={stageContent.atmosphere}
+        passengers={passengers}
+      />
 
       <div className="relative z-20 flex min-h-screen flex-col">
         <PublicHeader
           stage={stage}
-          currentStageIndex={currentStageIndex}
-          passengerCount={eligiblePassengerCount}
+          stageIndex={stageIndex}
+          passengerCount={passengerCount}
         />
 
-        <div className="flex flex-1 items-center justify-center px-5 py-20 sm:px-8 lg:px-12">
-          <div className="mx-auto w-full max-w-[1500px]">
+        <div className="flex flex-1 items-center justify-center px-5 pb-24 pt-28 sm:px-9 sm:pb-28 sm:pt-32 lg:px-14">
+          <div className="mx-auto w-full max-w-[1680px]">
             <AnimatePresence mode="wait">
-              <StageScreen
+              <ExperienceStage
                 key={stage}
                 stage={stage}
-                metadata={currentStage}
-                passengerCount={eligiblePassengerCount}
+                content={stageContent}
+                passengerCount={passengerCount}
+                selectionPreview={selectionPreview}
                 selectedPassenger={selectedPassenger}
-                selectionDisplay={selectionDisplay}
                 errorMessage={errorMessage}
               />
             </AnimatePresence>
@@ -361,40 +422,40 @@ export default function GiveawayPage() {
 
         <BrandSignature
           stage={stage}
-          status={currentStage.status}
-          progress={currentStage.progress}
+          status={stageContent.systemStatus}
+          progress={stageContent.progress}
         />
       </div>
 
-      <OperationsControls
-        isOpen={operationsOpen}
-        setIsOpen={setOperationsOpen}
+      <OperationsConsole
+        open={operationsOpen}
+        setOpen={setOperationsOpen}
         stage={stage}
-        currentStageIndex={currentStageIndex}
-        passengers={passengers}
-        passengerCount={eligiblePassengerCount}
+        stageIndex={stageIndex}
+        passengerCount={passengerCount}
+        manifestLoaded={manifestLoaded}
         manifestLoadedAt={formattedManifestTime}
-        selectedPassenger={selectedPassenger}
-        isManifestLoaded={isManifestLoaded}
         isProcessing={isProcessing}
-        canSelectPassenger={canSelectPassenger}
+        selectedPassenger={selectedPassenger}
         errorMessage={errorMessage}
+        canSelectPassenger={canSelectPassenger}
+        onFullscreen={toggleFullscreen}
         onLoadManifest={() =>
-          loadPassengerManifest({
+          loadManifest({
             setStage,
             setPassengers,
-            setManifestLoadedAt,
             setSelectedPassenger,
-            setSelectionDisplay,
+            setSelectionPreview,
+            setManifestLoadedAt,
             setErrorMessage,
             setIsProcessing,
           })
         }
         onBeginBoarding={() =>
-          transitionToStage(EXPERIENCE_STAGES.FINAL_BOARDING)
+          transitionTo(STAGES.FINAL_BOARDING)
         }
         onVerifyManifest={() =>
-          verifyPassengerManifest({
+          verifyManifest({
             passengers,
             setPassengers,
             setStage,
@@ -402,89 +463,90 @@ export default function GiveawayPage() {
             setIsProcessing,
           })
         }
-        onGroundClearance={() =>
-          transitionToStage(EXPERIENCE_STAGES.CLEARANCE)
+        onConfirmClearance={() =>
+          transitionTo(STAGES.CLEARANCE)
         }
         onLockDestination={() =>
-          transitionToStage(EXPERIENCE_STAGES.DESTINATION_LOCKED)
+          transitionTo(STAGES.DESTINATION_LOCKED)
         }
         onSelectPassenger={() =>
-          runPassengerSelection({
+          selectPassenger({
             passengers,
+            selectionIntervalRef,
             setStage,
+            setSelectionPreview,
             setSelectedPassenger,
-            setSelectionDisplay,
             setErrorMessage,
             setIsProcessing,
           })
         }
         onRevealWinner={() =>
-          transitionToStage(EXPERIENCE_STAGES.WINNER_REVEALED)
+          transitionTo(STAGES.WINNER_REVEALED)
         }
         onClosing={() =>
-          transitionToStage(EXPERIENCE_STAGES.CLOSING)
+          transitionTo(STAGES.CLOSING)
         }
         onReset={() =>
           resetExperience({
+            selectionIntervalRef,
             setStage,
             setPassengers,
             setSelectedPassenger,
-            setSelectionDisplay,
+            setSelectionPreview,
             setManifestLoadedAt,
             setErrorMessage,
             setIsProcessing,
           })
         }
-        onFullscreen={toggleFullscreen}
       />
     </main>
   );
 }
 
 
-// ============================================================
-// SECTION 4 — Supabase Passenger Manifest
-// ============================================================
+// ============================================================================
+// SECTION 4 — SUPABASE PASSENGER MANIFEST
+// ============================================================================
 
-async function loadPassengerManifest({
+async function loadManifest({
   setStage,
   setPassengers,
-  setManifestLoadedAt,
   setSelectedPassenger,
-  setSelectionDisplay,
+  setSelectionPreview,
+  setManifestLoadedAt,
   setErrorMessage,
   setIsProcessing,
 }) {
   setIsProcessing(true);
   setErrorMessage("");
   setSelectedPassenger(null);
-  setSelectionDisplay(null);
-  setStage(EXPERIENCE_STAGES.LOADING_MANIFEST);
+  setSelectionPreview(null);
+  setStage(STAGES.MANIFEST_LOADING);
 
   try {
     const { data, error } = await supabase
-  .from("participants")
-  .select(`
-    id,
-    full_name,
-    email,
-    ticket_code,
-    flight,
-    seat,
-    gate,
-    terminal,
-    status,
-    created_at,
-    giveaway_eligible,
-    giveaway_winner,
-    giveaway_selected_at
-  `)
-  .eq("giveaway_eligible", true)
-  .not("ticket_code", "is", null)
-  .not("full_name", "is", null)
-  .order("created_at", {
-    ascending: true,
-  });
+      .from("participants")
+      .select(`
+        id,
+        full_name,
+        email,
+        ticket_code,
+        flight,
+        seat,
+        gate,
+        terminal,
+        status,
+        created_at,
+        giveaway_eligible,
+        giveaway_winner,
+        giveaway_selected_at
+      `)
+      .eq("giveaway_eligible", true)
+      .not("full_name", "is", null)
+      .not("ticket_code", "is", null)
+      .order("created_at", {
+        ascending: true,
+      });
 
     if (error) {
       throw error;
@@ -492,39 +554,39 @@ async function loadPassengerManifest({
 
     const validPassengers = (data || []).filter(
       (passenger) =>
-        passenger.id &&
-        passenger.full_name &&
-        passenger.ticket_code
+        passenger?.id &&
+        passenger?.full_name?.trim() &&
+        passenger?.ticket_code?.trim() &&
+        passenger?.giveaway_eligible === true
     );
 
     if (validPassengers.length === 0) {
       throw new Error(
-        "No eligible checked-in passengers were found in the manifest."
+        "No eligible checked-in passengers were found."
       );
     }
 
     setPassengers(validPassengers);
     setManifestLoadedAt(new Date());
 
-    await wait(1400);
+    await delay(1800);
 
-    setStage(EXPERIENCE_STAGES.MANIFEST_READY);
+    setStage(STAGES.MANIFEST_READY);
   } catch (error) {
     console.error("Manifest loading error:", error);
 
     setPassengers([]);
+    setStage(STAGES.INITIAL);
     setErrorMessage(
       error?.message ||
-        "The passenger manifest could not be loaded."
+        "Passenger manifest could not be loaded."
     );
-
-    setStage(EXPERIENCE_STAGES.INITIAL);
   } finally {
     setIsProcessing(false);
   }
 }
 
-async function verifyPassengerManifest({
+async function verifyManifest({
   passengers,
   setPassengers,
   setStage,
@@ -533,59 +595,59 @@ async function verifyPassengerManifest({
 }) {
   if (!passengers.length) {
     setErrorMessage(
-      "Load the passenger manifest before beginning verification."
+      "Load the passenger manifest before verification."
     );
     return;
   }
 
   setIsProcessing(true);
   setErrorMessage("");
-  setStage(EXPERIENCE_STAGES.VERIFYING_MANIFEST);
+  setStage(STAGES.VERIFYING);
 
   try {
-    await wait(2200);
+    await delay(2400);
 
     const verifiedPassengers = passengers.filter(
       (passenger) =>
-        passenger.giveaway_eligible === true &&
-        passenger.id &&
-        passenger.full_name &&
-        passenger.ticket_code &&
-        passenger.status
+        passenger?.id &&
+        passenger?.full_name?.trim() &&
+        passenger?.ticket_code?.trim() &&
+        passenger?.giveaway_eligible === true
     );
 
     if (verifiedPassengers.length === 0) {
       throw new Error(
-        "No passenger records passed the eligibility verification."
+        "No passenger records passed verification."
       );
     }
 
     setPassengers(verifiedPassengers);
-    setStage(EXPERIENCE_STAGES.MANIFEST_VERIFIED);
+    setStage(STAGES.VERIFIED);
   } catch (error) {
     console.error("Manifest verification error:", error);
 
     setErrorMessage(
       error?.message ||
-        "Passenger manifest verification could not be completed."
+        "Manifest verification could not be completed."
     );
 
-    setStage(EXPERIENCE_STAGES.MANIFEST_READY);
+    setStage(STAGES.MANIFEST_READY);
   } finally {
     setIsProcessing(false);
   }
 }
 
 
-// ============================================================
-// SECTION 5 — Experience State Machine
-// ============================================================
+// ============================================================================
+// SECTION 5 — EXPERIENCE STATE MACHINE
+// ============================================================================
 
-async function runPassengerSelection({
+async function selectPassenger({
   passengers,
+  selectionIntervalRef,
   setStage,
+  setSelectionPreview,
   setSelectedPassenger,
-  setSelectionDisplay,
   setErrorMessage,
   setIsProcessing,
 }) {
@@ -599,185 +661,186 @@ async function runPassengerSelection({
   setIsProcessing(true);
   setErrorMessage("");
   setSelectedPassenger(null);
-  setStage(EXPERIENCE_STAGES.SELECTING_PASSENGER);
-
-  let selectionInterval;
+  setSelectionPreview(null);
+  setStage(STAGES.SELECTING);
 
   try {
-    selectionInterval = window.setInterval(() => {
-      const temporaryIndex = getSecureRandomIndex(passengers.length);
+    selectionIntervalRef.current = window.setInterval(() => {
+      const previewIndex = secureRandomIndex(passengers.length);
 
-      if (temporaryIndex !== null) {
-        setSelectionDisplay(passengers[temporaryIndex]);
+      if (previewIndex !== null) {
+        setSelectionPreview(passengers[previewIndex]);
       }
-    }, 110);
+    }, SELECTION_TICK);
 
-    await wait(SELECTION_DURATION);
+    await delay(SELECTION_DURATION);
 
-    window.clearInterval(selectionInterval);
+    window.clearInterval(selectionIntervalRef.current);
+    selectionIntervalRef.current = null;
 
-    const winnerIndex = getSecureRandomIndex(passengers.length);
+    const winnerIndex = secureRandomIndex(passengers.length);
 
     if (winnerIndex === null) {
       throw new Error(
-        "A passenger could not be selected from the manifest."
+        "A passenger could not be selected."
       );
     }
 
     const winner = passengers[winnerIndex];
 
-    setSelectionDisplay(winner);
+    setSelectionPreview(winner);
 
-    /*
-     * Reset any previously selected winner.
-     * This assumes only one active giveaway ceremony
-     * is being operated at a time.
-     */
-    const { error: resetWinnerError } = await supabase
-  .from("participants")
-  .update({
-    giveaway_winner: false,
-    giveaway_selected_at: null,
-  })
-  .eq("giveaway_winner", true)
-  .neq("id", winner.id);
+    const { error: previousWinnerError } = await supabase
+      .from("participants")
+      .update({
+        giveaway_winner: false,
+        giveaway_selected_at: null,
+      })
+      .eq("giveaway_winner", true)
+      .neq("id", winner.id);
 
-if (resetWinnerError) {
-  throw resetWinnerError;
-}
+    if (previousWinnerError) {
+      throw previousWinnerError;
+    }
 
     const selectedAt = new Date().toISOString();
 
-const { error: winnerUpdateError } = await supabase
-  .from("participants")
-  .update({
-    giveaway_winner: true,
-    giveaway_selected_at: selectedAt,
-  })
-  .eq("id", winner.id)
-  .eq("giveaway_eligible", true);
+    const { error: winnerUpdateError } = await supabase
+      .from("participants")
+      .update({
+        giveaway_winner: true,
+        giveaway_selected_at: selectedAt,
+      })
+      .eq("id", winner.id)
+      .eq("giveaway_eligible", true);
 
-if (winnerUpdateError) {
-  throw winnerUpdateError;
-}
+    if (winnerUpdateError) {
+      throw winnerUpdateError;
+    }
 
-setSelectedPassenger({
-  ...winner,
-  giveaway_winner: true,
-  giveaway_selected_at: selectedAt,
-});
+    setSelectedPassenger({
+      ...winner,
+      giveaway_winner: true,
+      giveaway_selected_at: selectedAt,
+    });
 
-    await wait(900);
+    await delay(1300);
 
-    setStage(EXPERIENCE_STAGES.PASSENGER_SELECTED);
+    setStage(STAGES.PASSENGER_SELECTED);
   } catch (error) {
-    if (selectionInterval) {
-      window.clearInterval(selectionInterval);
+    if (selectionIntervalRef.current) {
+      window.clearInterval(selectionIntervalRef.current);
+      selectionIntervalRef.current = null;
     }
 
     console.error("Passenger selection error:", error);
 
-    setSelectionDisplay(null);
+    setSelectionPreview(null);
     setErrorMessage(
       error?.message ||
-        "The passenger selection sequence could not be completed."
+        "Passenger selection could not be completed."
     );
 
-    setStage(EXPERIENCE_STAGES.DESTINATION_LOCKED);
+    setStage(STAGES.DESTINATION_LOCKED);
   } finally {
     setIsProcessing(false);
   }
 }
 
 function resetExperience({
+  selectionIntervalRef,
   setStage,
   setPassengers,
   setSelectedPassenger,
-  setSelectionDisplay,
+  setSelectionPreview,
   setManifestLoadedAt,
   setErrorMessage,
   setIsProcessing,
 }) {
-  setStage(EXPERIENCE_STAGES.INITIAL);
+  if (selectionIntervalRef.current) {
+    window.clearInterval(selectionIntervalRef.current);
+    selectionIntervalRef.current = null;
+  }
+
+  setStage(STAGES.INITIAL);
   setPassengers([]);
   setSelectedPassenger(null);
-  setSelectionDisplay(null);
+  setSelectionPreview(null);
   setManifestLoadedAt(null);
   setErrorMessage("");
   setIsProcessing(false);
 }
 
 
-// ============================================================
-// SECTION 6 — Stage Screens
-// ============================================================
+// ============================================================================
+// SECTION 6 — STAGE SCREENS
+// ============================================================================
 
-function StageScreen({
+function ExperienceStage({
   stage,
-  metadata,
+  content,
   passengerCount,
+  selectionPreview,
   selectedPassenger,
-  selectionDisplay,
   errorMessage,
 }) {
-  if (stage === EXPERIENCE_STAGES.SELECTING_PASSENGER) {
+  if (stage === STAGES.SELECTING) {
     return (
-      <PassengerSelectionScreen
-        metadata={metadata}
-        passenger={selectionDisplay}
+      <PassengerSelectionStage
+        content={content}
+        passenger={selectionPreview}
         passengerCount={passengerCount}
       />
     );
   }
 
-  if (stage === EXPERIENCE_STAGES.PASSENGER_SELECTED) {
+  if (stage === STAGES.PASSENGER_SELECTED) {
     return (
-      <PassengerSelectedScreen metadata={metadata} />
+      <PassengerSelectedStage content={content} />
     );
   }
 
-  if (stage === EXPERIENCE_STAGES.WINNER_REVEALED) {
+  if (stage === STAGES.WINNER_REVEALED) {
     return (
-      <WinnerReveal
-        metadata={metadata}
+      <WinnerRevealStage
+        content={content}
         passenger={selectedPassenger}
       />
     );
   }
 
-  if (stage === EXPERIENCE_STAGES.CLOSING) {
-    return <ClosingScreen metadata={metadata} />;
+  if (stage === STAGES.CLOSING) {
+    return <ClosingStage content={content} />;
   }
 
   return (
-    <DefaultStageScreen
+    <OperationsStage
       stage={stage}
-      metadata={metadata}
+      content={content}
       passengerCount={passengerCount}
       errorMessage={errorMessage}
     />
   );
 }
 
-function DefaultStageScreen({
+function OperationsStage({
   stage,
-  metadata,
+  content,
   passengerCount,
   errorMessage,
 }) {
   const showManifestCount = [
-    EXPERIENCE_STAGES.MANIFEST_READY,
-    EXPERIENCE_STAGES.FINAL_BOARDING,
-    EXPERIENCE_STAGES.VERIFYING_MANIFEST,
-    EXPERIENCE_STAGES.MANIFEST_VERIFIED,
-    EXPERIENCE_STAGES.CLEARANCE,
-    EXPERIENCE_STAGES.DESTINATION_LOCKED,
+    STAGES.MANIFEST_READY,
+    STAGES.FINAL_BOARDING,
+    STAGES.VERIFYING,
+    STAGES.VERIFIED,
+    STAGES.CLEARANCE,
+    STAGES.DESTINATION_LOCKED,
   ].includes(stage);
 
-  const isProcessingStage = [
-    EXPERIENCE_STAGES.LOADING_MANIFEST,
-    EXPERIENCE_STAGES.VERIFYING_MANIFEST,
-    EXPERIENCE_STAGES.CLEARANCE,
+  const processingStage = [
+    STAGES.MANIFEST_LOADING,
+    STAGES.VERIFYING,
   ].includes(stage);
 
   return (
@@ -786,68 +849,82 @@ function DefaultStageScreen({
       initial="initial"
       animate="animate"
       exit="exit"
-      className="relative mx-auto flex min-h-[560px] max-w-[1220px] items-center justify-center"
+      className="relative flex min-h-[610px] items-center justify-center"
     >
-      <div className="absolute inset-0 rounded-[2.25rem] border border-white/[0.07] bg-white/[0.025] shadow-[0_45px_140px_rgba(0,0,0,0.42)] backdrop-blur-[3px]" />
-
-      <div className="absolute inset-[1px] rounded-[2.2rem] bg-gradient-to-b from-white/[0.025] via-transparent to-[#b89355]/[0.025]" />
+      <StageCoordinates />
 
       <motion.div
         variants={MOTION.stagger}
         initial="initial"
         animate="animate"
-        className="relative z-10 flex w-full flex-col items-center px-7 py-16 text-center sm:px-12 lg:px-20"
+        className="relative z-10 flex w-full max-w-[1350px] flex-col items-center px-4 text-center"
       >
         <motion.div
           variants={MOTION.fadeUp}
-          className="mb-10 flex items-center gap-4"
+          className="mb-7 flex items-center gap-5 sm:mb-9"
         >
-          <span className="h-px w-10 bg-[#c5a56b]/50 sm:w-16" />
+          <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#c8aa70]/50 sm:w-24" />
 
-          <p className="text-[10px] font-medium uppercase tracking-[0.38em] text-[#cfb47f] sm:text-xs">
-            {metadata.eyebrow}
-          </p>
+          <div>
+            <p className="text-[8px] font-medium uppercase tracking-[0.42em] text-white/30 sm:text-[9px]">
+              {content.chapter}
+            </p>
 
-          <span className="h-px w-10 bg-[#c5a56b]/50 sm:w-16" />
+            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.38em] text-[#cbb07c] sm:text-xs">
+              {content.eyebrow}
+            </p>
+          </div>
+
+          <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#c8aa70]/50 sm:w-24" />
         </motion.div>
 
         <motion.h1
           variants={MOTION.fadeUp}
-          className="max-w-5xl font-serif text-[clamp(3rem,7vw,7.5rem)] font-light leading-[0.93] tracking-[-0.045em] text-[#f8f3ea]"
+          className="max-w-[1400px] text-[clamp(3.2rem,8.6vw,9.7rem)] font-extralight leading-[0.83] tracking-[-0.068em] text-[#f4f3ef]"
         >
-          {metadata.title}
+          <span className="block">{content.primary}</span>
+
+          <span className="block text-white/72">
+            {content.secondary}
+          </span>
         </motion.h1>
 
         <motion.p
           variants={MOTION.fadeUp}
-          className="mt-8 max-w-2xl text-sm font-light leading-7 tracking-[0.035em] text-[#d5d9de]/70 sm:text-base sm:leading-8"
+          className="mt-8 max-w-2xl text-sm font-light leading-7 tracking-[0.03em] text-white/45 sm:mt-10 sm:text-base sm:leading-8"
         >
-          {metadata.description}
+          {content.description}
         </motion.p>
 
         {showManifestCount && (
           <motion.div
             variants={MOTION.fadeUp}
-            className="mt-14"
+            className="mt-12 sm:mt-14"
           >
-            <p className="text-[10px] uppercase tracking-[0.35em] text-white/35">
-              Eligible passengers
-            </p>
+            <div className="flex items-center justify-center gap-4">
+              <span className="h-px w-12 bg-white/10" />
 
-            <div className="mt-3 font-mono text-5xl font-light tracking-[-0.05em] text-[#eee5d5] sm:text-7xl">
-              {formatPassengerCount(passengerCount)}
+              <p className="text-[9px] uppercase tracking-[0.42em] text-white/30">
+                Verified Passenger Manifest
+              </p>
+
+              <span className="h-px w-12 bg-white/10" />
             </div>
+
+            <p className="mt-5 font-mono text-5xl font-light tracking-[-0.055em] text-[#e5dccb] sm:text-7xl">
+              {formatCount(passengerCount)}
+            </p>
           </motion.div>
         )}
 
-        {isProcessingStage && (
+        {processingStage && (
           <motion.div
             variants={MOTION.fadeUp}
-            className="mt-12 flex items-center gap-3"
+            className="mt-12 flex items-center gap-4"
           >
-            <LoadingSignal />
+            <ProcessingIndicator />
 
-            <span className="text-[10px] uppercase tracking-[0.28em] text-white/40">
+            <span className="text-[9px] uppercase tracking-[0.34em] text-white/30">
               Procedure active
             </span>
           </motion.div>
@@ -857,83 +934,79 @@ function DefaultStageScreen({
           <motion.div
             initial={{
               opacity: 0,
-              y: 10,
+              y: 12,
             }}
             animate={{
               opacity: 1,
               y: 0,
             }}
-            className="mt-10 max-w-xl rounded-full border border-red-300/15 bg-red-400/[0.05] px-6 py-3 text-xs tracking-[0.04em] text-red-100/70"
+            className="mt-10 max-w-2xl border-l border-red-300/35 bg-red-300/[0.035] px-5 py-3 text-left"
           >
-            {errorMessage}
+            <p className="text-[8px] uppercase tracking-[0.3em] text-red-200/45">
+              Ground Operations Notice
+            </p>
+
+            <p className="mt-2 text-xs tracking-[0.035em] text-red-100/65">
+              {errorMessage}
+            </p>
           </motion.div>
         )}
       </motion.div>
-
-      <CornerReference reference="SDX / 03" />
     </motion.section>
   );
 }
 
-function PassengerSelectionScreen({
-  metadata,
+function PassengerSelectionStage({
+  content,
   passenger,
   passengerCount,
 }) {
+  const reference = passenger?.ticket_code || "AV-••••••";
+  const seat = passenger?.seat || "—";
+  const gate = passenger?.gate || "—";
+  const flight = passenger?.flight || "OM 1025";
+
   return (
     <motion.section
       variants={MOTION.screen}
       initial="initial"
       animate="animate"
       exit="exit"
-      className="relative mx-auto flex min-h-[600px] max-w-[1280px] items-center justify-center"
+      className="relative flex min-h-[650px] items-center justify-center"
     >
-      <div className="absolute inset-0 overflow-hidden rounded-[2.25rem] border border-[#c6a56a]/15 bg-[#06101f]/60 shadow-[0_45px_160px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-        <motion.div
-          className="absolute left-0 top-0 h-px w-full bg-gradient-to-r from-transparent via-[#d3b77f]/80 to-transparent"
-          animate={{
-            opacity: [0.25, 1, 0.25],
-          }}
-          transition={{
-            duration: 2.2,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
+      <StageCoordinates />
 
-        <motion.div
-          className="absolute inset-y-0 w-[45%] bg-gradient-to-r from-transparent via-white/[0.025] to-transparent"
-          animate={{
-            x: ["-150%", "350%"],
-          }}
-          transition={{
-            duration: 3.5,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-      </div>
-
-      <div className="relative z-10 flex w-full flex-col items-center px-7 py-16 text-center sm:px-12">
-        <p className="text-[10px] font-medium uppercase tracking-[0.38em] text-[#cfb47f] sm:text-xs">
-          {metadata.eyebrow}
+      <div className="relative z-10 flex w-full max-w-[1420px] flex-col items-center px-4 text-center">
+        <p className="text-[9px] uppercase tracking-[0.44em] text-[#cbb07c] sm:text-xs">
+          {content.eyebrow}
         </p>
 
-        <h1 className="mt-8 font-serif text-[clamp(3.4rem,8vw,8rem)] font-light leading-[0.9] tracking-[-0.055em] text-[#faf5ed]">
-          {metadata.title}
+        <h1 className="mt-7 text-[clamp(3.4rem,8.5vw,9.3rem)] font-extralight leading-[0.84] tracking-[-0.07em] text-[#f4f3ef]">
+          Selection
+          <span className="block text-white/65">
+            In Progress
+          </span>
         </h1>
 
-        <div className="mt-14 w-full max-w-3xl border-y border-white/[0.08] py-8">
+        <div className="relative mt-12 w-full max-w-5xl border-y border-white/[0.075] py-8 sm:mt-16 sm:py-10">
+          <motion.div
+            className="absolute inset-y-0 w-[34%] bg-gradient-to-r from-transparent via-[#d0b276]/[0.08] to-transparent"
+            animate={{
+              x: ["-140%", "390%"],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear",
+            }}
+          />
+
           <AnimatePresence mode="wait">
             <motion.div
-              key={
-                passenger?.id ||
-                passenger?.ticket_code ||
-                "initial-selection"
-              }
+              key={`${reference}-${seat}-${gate}`}
               initial={{
                 opacity: 0,
-                y: 12,
+                y: 14,
                 filter: "blur(8px)",
               }}
               animate={{
@@ -943,113 +1016,167 @@ function PassengerSelectionScreen({
               }}
               exit={{
                 opacity: 0,
-                y: -12,
+                y: -14,
                 filter: "blur(8px)",
               }}
               transition={{
-                duration: 0.18,
+                duration: 0.16,
               }}
-              className="flex flex-col items-center"
+              className="relative grid grid-cols-2 gap-6 sm:grid-cols-4"
             >
-              <span className="text-[10px] uppercase tracking-[0.3em] text-white/35">
-                Passenger reference
-              </span>
+              <SelectionMetric
+                label="Ticket"
+                value={reference}
+              />
 
-              <span className="mt-4 font-mono text-2xl tracking-[0.22em] text-[#e3d2b3] sm:text-4xl">
-                {passenger?.ticket_code || "AV-••••••"}
-              </span>
+              <SelectionMetric
+                label="Flight"
+                value={flight}
+              />
+
+              <SelectionMetric
+                label="Seat"
+                value={seat}
+              />
+
+              <SelectionMetric
+                label="Gate"
+                value={gate}
+              />
             </motion.div>
           </AnimatePresence>
         </div>
 
         <div className="mt-10 flex items-center gap-4">
-          <LoadingSignal />
+          <ProcessingIndicator />
 
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
-            {formatPassengerCount(passengerCount)} verified records
+          <span className="text-[9px] uppercase tracking-[0.34em] text-white/30">
+            Processing {formatCount(passengerCount)} verified records
           </span>
         </div>
       </div>
-
-      <CornerReference reference="SECURE SELECTION" />
     </motion.section>
   );
 }
 
-function PassengerSelectedScreen({ metadata }) {
+function SelectionMetric({ label, value }) {
+  return (
+    <div>
+      <p className="text-[8px] uppercase tracking-[0.34em] text-white/25">
+        {label}
+      </p>
+
+      <p className="mt-3 truncate font-mono text-sm tracking-[0.15em] text-[#dfcfaf]/75 sm:text-lg">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function PassengerSelectedStage({ content }) {
   return (
     <motion.section
       variants={MOTION.screen}
       initial="initial"
       animate="animate"
       exit="exit"
-      className="relative mx-auto flex min-h-[590px] max-w-[1240px] items-center justify-center"
+      className="relative flex min-h-[650px] items-center justify-center"
     >
-      <div className="absolute inset-0 rounded-[2.25rem] border border-[#c6a56a]/20 bg-gradient-to-b from-[#0a1728]/80 to-[#030914]/85 shadow-[0_45px_160px_rgba(0,0,0,0.5)] backdrop-blur-xl" />
+      <StageCoordinates />
 
-      <motion.div
-        initial={{
-          scaleX: 0,
-        }}
-        animate={{
-          scaleX: 1,
-        }}
-        transition={{
-          duration: 1.5,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        className="absolute left-[8%] right-[8%] top-1/2 h-px origin-center bg-gradient-to-r from-transparent via-[#ceb17a]/60 to-transparent"
-      />
-
-      <div className="relative z-10 flex flex-col items-center px-8 text-center">
+      <div className="relative z-10 flex flex-col items-center px-4 text-center">
         <motion.div
           initial={{
             opacity: 0,
-            scale: 0.7,
+            scale: 0.6,
           }}
           animate={{
             opacity: 1,
             scale: 1,
           }}
           transition={{
-            delay: 0.25,
-            duration: 1.2,
+            duration: 1.1,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mb-9 flex h-20 w-20 items-center justify-center rounded-full border border-[#d1b579]/35 bg-[#d1b579]/[0.06]"
+          className="relative mb-12 flex h-20 w-20 items-center justify-center"
         >
-          <CheckmarkIcon />
+          <motion.span
+            initial={{
+              scale: 0.7,
+              opacity: 0,
+            }}
+            animate={{
+              scale: 1.7,
+              opacity: 0,
+            }}
+            transition={{
+              duration: 2.2,
+              repeat: Infinity,
+            }}
+            className="absolute inset-0 rounded-full border border-[#c8aa70]/25"
+          />
+
+          <span className="absolute inset-0 rounded-full border border-[#c8aa70]/30" />
+
+          <CheckIcon />
         </motion.div>
 
         <motion.p
-          variants={MOTION.fadeUp}
-          initial="initial"
-          animate="animate"
-          className="text-[10px] uppercase tracking-[0.4em] text-[#cfb47f] sm:text-xs"
-        >
-          {metadata.eyebrow}
-        </motion.p>
-
-        <motion.h1
           initial={{
             opacity: 0,
-            y: 30,
+            y: 15,
           }}
           animate={{
             opacity: 1,
             y: 0,
           }}
           transition={{
+            delay: 0.25,
+            duration: 0.8,
+          }}
+          className="text-[9px] uppercase tracking-[0.46em] text-[#cbb07c] sm:text-xs"
+        >
+          Identity Secured
+        </motion.p>
+
+        <motion.h1
+          initial={{
+            opacity: 0,
+            y: 35,
+            filter: "blur(10px)",
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            filter: "blur(0px)",
+          }}
+          transition={{
             delay: 0.45,
-            duration: 1.1,
+            duration: 1.25,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-7 font-serif text-[clamp(4rem,9vw,9rem)] font-light leading-[0.88] tracking-[-0.055em] text-[#faf5ed]"
+          className="mt-7 text-[clamp(4rem,10vw,10.8rem)] font-extralight leading-[0.82] tracking-[-0.075em] text-[#f5f4f0]"
         >
           Passenger
-          <br />
-          Selected
+          <span className="block text-white/65">
+            Selected
+          </span>
         </motion.h1>
+
+        <motion.div
+          initial={{
+            scaleX: 0,
+          }}
+          animate={{
+            scaleX: 1,
+          }}
+          transition={{
+            delay: 0.9,
+            duration: 1.6,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="mt-10 h-px w-56 origin-center bg-gradient-to-r from-transparent via-[#c8aa70]/65 to-transparent sm:w-96"
+        />
 
         <motion.p
           initial={{
@@ -1059,47 +1186,456 @@ function PassengerSelectedScreen({ metadata }) {
             opacity: 1,
           }}
           transition={{
-            delay: 1,
+            delay: 1.25,
             duration: 1,
           }}
-          className="mt-8 max-w-xl text-sm font-light leading-7 tracking-[0.04em] text-white/50"
+          className="mt-8 text-xs uppercase tracking-[0.3em] text-white/30"
         >
-          Identity secured. Awaiting final clearance for public
-          announcement.
+          Awaiting public reveal clearance
         </motion.p>
       </div>
-
-      <CornerReference reference="IDENTITY SECURED" />
     </motion.section>
   );
 }
 
-function ClosingScreen({ metadata }) {
+
+// ============================================================================
+// SECTION 7 — OPERATIONS CONTROLS
+// ============================================================================
+
+function OperationsConsole({
+  open,
+  setOpen,
+  stage,
+  stageIndex,
+  passengerCount,
+  manifestLoaded,
+  manifestLoadedAt,
+  isProcessing,
+  selectedPassenger,
+  errorMessage,
+  canSelectPassenger,
+  onFullscreen,
+  onLoadManifest,
+  onBeginBoarding,
+  onVerifyManifest,
+  onConfirmClearance,
+  onLockDestination,
+  onSelectPassenger,
+  onRevealWinner,
+  onClosing,
+  onReset,
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Open Ground Operations"
+        className={`fixed bottom-5 right-5 z-40 flex items-center gap-3 rounded-full border border-[#c6a86c]/20 bg-[#06101d]/85 px-5 py-3 text-[8px] uppercase tracking-[0.3em] text-[#d4bd8e]/65 shadow-[0_18px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl transition duration-500 hover:border-[#c6a86c]/40 hover:text-[#ead8b5] ${
+          open
+            ? "pointer-events-none translate-y-4 opacity-0"
+            : "translate-y-0 opacity-100"
+        }`}
+      >
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c8aa70]/35" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c8aa70]/80" />
+        </span>
+
+        Ground Operations
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.aside
+            initial={{
+              opacity: 0,
+              y: 35,
+              scale: 0.985,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              y: 25,
+              scale: 0.985,
+            }}
+            transition={{
+              duration: 0.45,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="fixed bottom-3 left-3 right-3 z-50 mx-auto max-h-[calc(100vh-1.5rem)] max-w-[1220px] overflow-y-auto border border-white/[0.09] bg-[#050d18]/95 shadow-[0_35px_140px_rgba(0,0,0,0.82)] backdrop-blur-2xl sm:bottom-6 sm:left-6 sm:right-6"
+          >
+            <div className="flex items-start justify-between gap-8 border-b border-white/[0.07] px-5 py-5 sm:px-7">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#c8aa70]" />
+
+                  <p className="text-[9px] uppercase tracking-[0.34em] text-[#d3bb8b]">
+                    Ground Operations
+                  </p>
+                </div>
+
+                <p className="mt-2 text-[10px] uppercase tracking-[0.19em] text-white/25">
+                  Secret Destination Ceremonial Control System
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onFullscreen}
+                  className="border border-white/[0.07] px-4 py-2 text-[8px] uppercase tracking-[0.25em] text-white/35 transition hover:border-[#c8aa70]/30 hover:text-[#ddc89e]"
+                >
+                  Fullscreen
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close operations console"
+                  className="flex h-9 w-9 items-center justify-center border border-white/[0.07] text-lg font-light text-white/35 transition hover:border-white/20 hover:text-white/75"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[0.72fr_1.28fr]">
+              <ConsoleStatus
+                stage={stage}
+                stageIndex={stageIndex}
+                passengerCount={passengerCount}
+                manifestLoadedAt={manifestLoadedAt}
+                selectedPassenger={selectedPassenger}
+                isProcessing={isProcessing}
+                errorMessage={errorMessage}
+              />
+
+              <div className="border border-white/[0.065] bg-white/[0.018] p-4 sm:p-5">
+                <div className="mb-4">
+                  <p className="text-[8px] uppercase tracking-[0.3em] text-white/30">
+                    Ceremony sequence
+                  </p>
+
+                  <p className="mt-2 text-xs font-light text-white/25">
+                    Execute the procedures in numerical order.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  <ConsoleButton
+                    number="01"
+                    label="Load Manifest"
+                    active={stage === STAGES.MANIFEST_LOADING}
+                    disabled={isProcessing}
+                    onClick={onLoadManifest}
+                  />
+
+                  <ConsoleButton
+                    number="02"
+                    label="Begin Final Boarding"
+                    active={stage === STAGES.FINAL_BOARDING}
+                    disabled={!manifestLoaded || isProcessing}
+                    onClick={onBeginBoarding}
+                  />
+
+                  <ConsoleButton
+                    number="03"
+                    label="Verify Manifest"
+                    active={stage === STAGES.VERIFYING}
+                    disabled={!manifestLoaded || isProcessing}
+                    onClick={onVerifyManifest}
+                  />
+
+                  <ConsoleButton
+                    number="04"
+                    label="Confirm Clearance"
+                    active={stage === STAGES.CLEARANCE}
+                    disabled={
+                      stage !== STAGES.VERIFIED ||
+                      isProcessing
+                    }
+                    onClick={onConfirmClearance}
+                  />
+
+                  <ConsoleButton
+                    number="05"
+                    label="Lock Destination"
+                    active={stage === STAGES.DESTINATION_LOCKED}
+                    disabled={
+                      stage !== STAGES.CLEARANCE ||
+                      isProcessing
+                    }
+                    onClick={onLockDestination}
+                  />
+
+                  <ConsoleButton
+                    number="06"
+                    label="Select Passenger"
+                    active={stage === STAGES.SELECTING}
+                    disabled={!canSelectPassenger}
+                    important
+                    onClick={onSelectPassenger}
+                  />
+
+                  <ConsoleButton
+                    number="07"
+                    label="Reveal Passenger"
+                    active={stage === STAGES.WINNER_REVEALED}
+                    disabled={
+                      stage !== STAGES.PASSENGER_SELECTED ||
+                      !selectedPassenger ||
+                      isProcessing
+                    }
+                    important
+                    onClick={onRevealWinner}
+                  />
+
+                  <ConsoleButton
+                    number="08"
+                    label="Closing Ceremony"
+                    active={stage === STAGES.CLOSING}
+                    disabled={
+                      stage !== STAGES.WINNER_REVEALED ||
+                      isProcessing
+                    }
+                    onClick={onClosing}
+                  />
+
+                  <ConsoleButton
+                    number="00"
+                    label="Reset Experience"
+                    disabled={isProcessing}
+                    danger
+                    onClick={onReset}
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function ConsoleStatus({
+  stage,
+  stageIndex,
+  passengerCount,
+  manifestLoadedAt,
+  selectedPassenger,
+  isProcessing,
+  errorMessage,
+}) {
+  const content = STAGE_CONTENT[stage];
+
+  return (
+    <div className="border border-white/[0.065] bg-white/[0.018] p-5">
+      <p className="text-[8px] uppercase tracking-[0.3em] text-white/30">
+        Live procedure status
+      </p>
+
+      <div className="mt-5 border-b border-white/[0.065] pb-5">
+        <p className="text-xl font-light tracking-[-0.035em] text-[#eeeae2]">
+          {content.primary} {content.secondary}
+        </p>
+
+        <div className="mt-3 flex items-center gap-2">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              errorMessage
+                ? "bg-red-300"
+                : isProcessing
+                  ? "animate-pulse bg-[#c8aa70]"
+                  : "bg-emerald-300/70"
+            }`}
+          />
+
+          <span className="text-[8px] uppercase tracking-[0.27em] text-white/30">
+            {errorMessage
+              ? "Attention required"
+              : isProcessing
+                ? "Procedure processing"
+                : content.systemStatus}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-5">
+        <StatusMetric
+          label="Sequence"
+          value={`${String(stageIndex + 1).padStart(
+            2,
+            "0"
+          )} / ${String(STAGE_ORDER.length).padStart(
+            2,
+            "0"
+          )}`}
+        />
+
+        <StatusMetric
+          label="Manifest"
+          value={
+            passengerCount
+              ? formatCount(passengerCount)
+              : "—"
+          }
+        />
+
+        <StatusMetric
+          label="Loaded"
+          value={manifestLoadedAt}
+        />
+
+        <StatusMetric
+          label="Destination"
+          value={
+            stageIndex >=
+            STAGE_ORDER.indexOf(STAGES.DESTINATION_LOCKED)
+              ? "LOCKED"
+              : "PENDING"
+          }
+        />
+      </div>
+
+      <div className="mt-5 border-l border-[#c8aa70]/25 bg-[#c8aa70]/[0.025] px-4 py-3">
+        <p className="text-[8px] uppercase tracking-[0.26em] text-[#cdb583]/50">
+          Selected reference
+        </p>
+
+        <p className="mt-2 truncate font-mono text-[10px] tracking-[0.13em] text-white/40">
+          {selectedPassenger?.ticket_code ||
+            "IDENTITY NOT ASSIGNED"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StatusMetric({ label, value }) {
+  return (
+    <div>
+      <p className="text-[8px] uppercase tracking-[0.25em] text-white/20">
+        {label}
+      </p>
+
+      <p className="mt-2 truncate font-mono text-[10px] tracking-[0.1em] text-white/48">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ConsoleButton({
+  number,
+  label,
+  active,
+  disabled,
+  important,
+  danger,
+  onClick,
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={`relative min-h-[78px] overflow-hidden border px-4 py-3 text-left transition duration-300 ${
+        disabled
+          ? "cursor-not-allowed border-white/[0.035] bg-white/[0.01] opacity-30"
+          : danger
+            ? "border-red-300/10 bg-red-400/[0.02] hover:border-red-300/25 hover:bg-red-400/[0.045]"
+            : important
+              ? "border-[#c8aa70]/22 bg-[#c8aa70]/[0.045] hover:border-[#c8aa70]/48 hover:bg-[#c8aa70]/[0.08]"
+              : "border-white/[0.065] bg-white/[0.015] hover:border-white/[0.16] hover:bg-white/[0.035]"
+      } ${
+        active
+          ? "border-[#d0b377]/60 bg-[#c8aa70]/[0.085]"
+          : ""
+      }`}
+    >
+      {active && (
+        <motion.span
+          layoutId="active-console-procedure"
+          className="absolute inset-y-0 left-0 w-px bg-[#dfc58f]"
+        />
+      )}
+
+      <span className="font-mono text-[8px] tracking-[0.2em] text-white/20">
+        {number}
+      </span>
+
+      <span
+        className={`mt-3 block text-[9px] uppercase tracking-[0.2em] ${
+          danger
+            ? "text-red-100/45"
+            : important
+              ? "text-[#dec99f]/70"
+              : "text-white/43"
+        }`}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+
+// ============================================================================
+// SECTION 8 — WINNER REVEAL
+// ============================================================================
+
+function WinnerRevealStage({ content, passenger }) {
+  const passengerName =
+    passenger?.full_name || "Selected Passenger";
+
   return (
     <motion.section
       variants={MOTION.screen}
       initial="initial"
       animate="animate"
       exit="exit"
-      className="relative mx-auto flex min-h-[610px] max-w-[1280px] items-center justify-center"
+      className="relative flex min-h-[700px] items-center justify-center"
     >
-      <div className="absolute inset-0 rounded-[2.25rem] border border-white/[0.07] bg-[#07111e]/50 backdrop-blur-xl" />
+      <StageCoordinates />
 
-      <div className="relative z-10 flex flex-col items-center px-7 text-center">
+      <motion.div
+        initial={{
+          opacity: 0,
+          scaleX: 0,
+        }}
+        animate={{
+          opacity: 1,
+          scaleX: 1,
+        }}
+        transition={{
+          duration: 1.8,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+        className="absolute left-[8%] right-[8%] top-1/2 h-px origin-center bg-gradient-to-r from-transparent via-[#d5b878]/45 to-transparent"
+      />
+
+      <div className="relative z-10 flex w-full max-w-[1500px] flex-col items-center px-4 text-center">
         <motion.div
           initial={{
             opacity: 0,
-            scale: 0.85,
+            scale: 0.75,
           }}
           animate={{
             opacity: 1,
             scale: 1,
           }}
           transition={{
-            duration: 1.5,
+            duration: 1.15,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mb-12 flex h-28 w-28 items-center justify-center rounded-full border border-[#c9a96e]/20"
+          className="mb-9 flex h-20 w-20 items-center justify-center"
         >
           <OrbitMark />
         </motion.div>
@@ -1114,10 +1650,183 @@ function ClosingScreen({ metadata }) {
             y: 0,
           }}
           transition={{
-            delay: 0.35,
+            delay: 0.3,
+            duration: 0.8,
+          }}
+          className="text-[9px] uppercase tracking-[0.48em] text-[#d0b57d] sm:text-xs"
+        >
+          {content.eyebrow}
+        </motion.p>
+
+        <motion.p
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          transition={{
+            delay: 0.75,
+            duration: 0.8,
+          }}
+          className="mt-8 font-mono text-xs tracking-[0.28em] text-white/35 sm:text-sm"
+        >
+          {passenger?.ticket_code || "AV-••••••"}
+        </motion.p>
+
+        <motion.h1
+          initial={{
+            opacity: 0,
+            y: 45,
+            filter: "blur(16px)",
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            filter: "blur(0px)",
+          }}
+          transition={{
+            delay: 1.15,
+            duration: 1.5,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="mt-8 max-w-[1450px] font-serif text-[clamp(4rem,10vw,11rem)] font-light leading-[0.85] tracking-[-0.065em] text-[#f7f1e7]"
+        >
+          {passengerName}
+        </motion.h1>
+
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 18,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            delay: 1.8,
             duration: 0.9,
           }}
-          className="text-[10px] uppercase tracking-[0.42em] text-[#cfb47f] sm:text-xs"
+          className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-4"
+        >
+          <WinnerMetric
+            label="Flight"
+            value={passenger?.flight || "OM 1025"}
+          />
+
+          <WinnerDivider />
+
+          <WinnerMetric
+            label="Seat"
+            value={passenger?.seat || "—"}
+          />
+
+          <WinnerDivider />
+
+          <WinnerMetric
+            label="Gate"
+            value={passenger?.gate || "—"}
+          />
+
+          <WinnerDivider />
+
+          <WinnerMetric
+            label="Terminal"
+            value={passenger?.terminal || "—"}
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{
+            opacity: 0,
+          }}
+          animate={{
+            opacity: 1,
+          }}
+          transition={{
+            delay: 2.35,
+            duration: 1,
+          }}
+          className="mt-14"
+        >
+          <p className="text-xs font-light uppercase tracking-[0.33em] text-[#ded1ba]/55 sm:text-sm">
+            Your next journey begins now.
+          </p>
+
+          <p className="mt-5 text-lg font-light tracking-[-0.025em] text-[#f0e9dc] sm:text-2xl">
+            Secret Destination Experience
+          </p>
+        </motion.div>
+      </div>
+    </motion.section>
+  );
+}
+
+function WinnerMetric({ label, value }) {
+  return (
+    <div className="min-w-[90px]">
+      <p className="text-[8px] uppercase tracking-[0.3em] text-white/25">
+        {label}
+      </p>
+
+      <p className="mt-2 font-mono text-xs tracking-[0.16em] text-[#e0cfad]/70">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function WinnerDivider() {
+  return (
+    <span className="hidden h-8 w-px bg-white/10 sm:block" />
+  );
+}
+
+function ClosingStage({ content }) {
+  return (
+    <motion.section
+      variants={MOTION.screen}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="relative flex min-h-[680px] items-center justify-center"
+    >
+      <StageCoordinates />
+
+      <div className="relative z-10 flex max-w-[1450px] flex-col items-center px-4 text-center">
+        <motion.div
+          initial={{
+            opacity: 0,
+            scale: 0.7,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          transition={{
+            duration: 1.3,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="mb-11"
+        >
+          <OrbitMark large />
+        </motion.div>
+
+        <motion.p
+          initial={{
+            opacity: 0,
+            y: 15,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            delay: 0.35,
+            duration: 0.8,
+          }}
+          className="text-[9px] uppercase tracking-[0.48em] text-[#cfb47d] sm:text-xs"
         >
           Secret Destination Experience
         </motion.p>
@@ -1125,20 +1834,28 @@ function ClosingScreen({ metadata }) {
         <motion.h1
           initial={{
             opacity: 0,
-            y: 30,
+            y: 40,
+            filter: "blur(14px)",
           }}
           animate={{
             opacity: 1,
             y: 0,
+            filter: "blur(0px)",
           }}
           transition={{
-            delay: 0.55,
-            duration: 1.2,
+            delay: 0.65,
+            duration: 1.4,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-8 max-w-6xl font-serif text-[clamp(3.5rem,8vw,8rem)] font-light leading-[0.92] tracking-[-0.055em] text-[#faf5ed]"
+          className="mt-8 text-[clamp(3.6rem,9vw,9.8rem)] font-extralight leading-[0.84] tracking-[-0.075em] text-[#f5f3ed]"
         >
-          {metadata.title}
+          <span className="block">
+            {content.primary}
+          </span>
+
+          <span className="block text-white/65">
+            {content.secondary}
+          </span>
         </motion.h1>
 
         <motion.p
@@ -1149,12 +1866,12 @@ function ClosingScreen({ metadata }) {
             opacity: 1,
           }}
           transition={{
-            delay: 1.15,
+            delay: 1.4,
             duration: 1,
           }}
-          className="mt-10 text-sm font-light tracking-[0.08em] text-white/45 sm:text-base"
+          className="mt-9 text-sm font-light tracking-[0.06em] text-white/38 sm:text-base"
         >
-          {metadata.description}
+          {content.description}
         </motion.p>
 
         <motion.div
@@ -1165,15 +1882,19 @@ function ClosingScreen({ metadata }) {
             opacity: 1,
           }}
           transition={{
-            delay: 1.7,
-            duration: 1.1,
+            delay: 2,
+            duration: 1.2,
           }}
           className="mt-16"
         >
-          <p className="font-serif text-2xl font-light tracking-[-0.02em] text-[#e7ddcc] sm:text-3xl">
+          <p className="text-xl font-light tracking-[-0.035em] text-[#eee7db] sm:text-3xl">
             OMMT
             <span className="lowercase">o</span>
             ...New Horizons
+          </p>
+
+          <p className="mt-3 text-[8px] uppercase tracking-[0.4em] text-white/24">
+            Aviation · Tourism · Innovation
           </p>
         </motion.div>
       </div>
@@ -1181,34 +1902,34 @@ function ClosingScreen({ metadata }) {
   );
 }
 
+
+// ============================================================================
+// SECTION 9 — BRAND SIGNATURE
+// ============================================================================
+
 function PublicHeader({
   stage,
-  currentStageIndex,
+  stageIndex,
   passengerCount,
 }) {
-  const sequenceNumber = Math.max(
-    1,
-    currentStageIndex + 1
-  );
-
   return (
     <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-6 py-6 sm:px-9 sm:py-8 lg:px-12">
       <div>
-        <p className="font-serif text-xl font-light tracking-[-0.02em] text-[#f4eee4] sm:text-2xl">
+        <p className="text-lg font-light tracking-[-0.04em] text-[#f2eee7] sm:text-2xl">
           OMMT
           <span className="lowercase">o</span>
           ...New Horizons
         </p>
 
-        <p className="mt-1.5 text-[8px] uppercase tracking-[0.32em] text-white/30 sm:text-[9px]">
+        <p className="mt-2 text-[7px] uppercase tracking-[0.39em] text-white/22 sm:text-[8px]">
           Aviation · Tourism · Innovation
         </p>
       </div>
 
-      <div className="hidden items-center gap-8 text-right sm:flex">
+      <div className="hidden items-start gap-8 sm:flex lg:gap-11">
         <HeaderMetric
           label="Sequence"
-          value={`${String(sequenceNumber).padStart(
+          value={`${String(stageIndex + 1).padStart(
             2,
             "0"
           )} / ${String(STAGE_ORDER.length).padStart(
@@ -1220,8 +1941,8 @@ function PublicHeader({
         <HeaderMetric
           label="Manifest"
           value={
-            passengerCount > 0
-              ? formatPassengerCount(passengerCount)
+            passengerCount
+              ? formatCount(passengerCount)
               : "—"
           }
         />
@@ -1229,7 +1950,7 @@ function PublicHeader({
         <HeaderMetric
           label="Status"
           value={
-            stage === EXPERIENCE_STAGES.CLOSING
+            stage === STAGES.CLOSING
               ? "COMPLETE"
               : "ACTIVE"
           }
@@ -1241,726 +1962,64 @@ function PublicHeader({
 
 function HeaderMetric({ label, value }) {
   return (
-    <div>
-      <p className="text-[8px] uppercase tracking-[0.3em] text-white/25">
+    <div className="text-right">
+      <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
         {label}
       </p>
 
-      <p className="mt-1.5 font-mono text-[10px] tracking-[0.16em] text-white/55">
+      <p className="mt-2 font-mono text-[8px] tracking-[0.18em] text-white/38">
         {value}
       </p>
     </div>
   );
 }
 
-function LoadingSignal() {
-  return (
-    <span className="flex items-center gap-1.5">
-      {[0, 1, 2].map((item) => (
-        <motion.span
-          key={item}
-          className="h-1 w-1 rounded-full bg-[#d1b579]"
-          animate={{
-            opacity: [0.25, 1, 0.25],
-            scale: [0.8, 1.2, 0.8],
-          }}
-          transition={{
-            duration: 1.4,
-            repeat: Infinity,
-            delay: item * 0.18,
-          }}
-        />
-      ))}
-    </span>
-  );
-}
-
-function CornerReference({ reference }) {
-  return (
-    <div className="absolute bottom-7 right-8 hidden items-center gap-3 lg:flex">
-      <span className="h-px w-8 bg-white/10" />
-
-      <span className="font-mono text-[8px] uppercase tracking-[0.25em] text-white/25">
-        {reference}
-      </span>
-    </div>
-  );
-}
-
-
-// ============================================================
-// SECTION 7 — Operations Controls
-// ============================================================
-
-function OperationsControls({
-  isOpen,
-  setIsOpen,
-  stage,
-  currentStageIndex,
-  passengers,
-  passengerCount,
-  manifestLoadedAt,
-  selectedPassenger,
-  isManifestLoaded,
-  isProcessing,
-  canSelectPassenger,
-  errorMessage,
-  onLoadManifest,
-  onBeginBoarding,
-  onVerifyManifest,
-  onGroundClearance,
-  onLockDestination,
-  onSelectPassenger,
-  onRevealWinner,
-  onClosing,
-  onReset,
-  onFullscreen,
-}) {
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        aria-label="Open Ground Operations"
-        className={`fixed bottom-6 right-6 z-40 flex items-center gap-3 rounded-full border border-white/[0.08] bg-[#07111f]/80 px-4 py-3 text-[9px] uppercase tracking-[0.25em] text-white/45 shadow-2xl backdrop-blur-xl transition duration-500 hover:border-[#c6a56a]/25 hover:text-[#e2cfaa] ${
-          isOpen
-            ? "pointer-events-none translate-y-3 opacity-0"
-            : "translate-y-0 opacity-100"
-        }`}
-      >
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c9a96e]/30" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c9a96e]/70" />
-        </span>
-
-        Ground Operations
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.aside
-            initial={{
-              opacity: 0,
-              y: 30,
-              scale: 0.985,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              y: 20,
-              scale: 0.985,
-            }}
-            transition={{
-              duration: 0.45,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="fixed bottom-4 left-4 right-4 z-50 mx-auto max-h-[calc(100vh-2rem)] max-w-[1180px] overflow-y-auto rounded-[1.75rem] border border-white/[0.09] bg-[#06101d]/95 shadow-[0_30px_120px_rgba(0,0,0,0.75)] backdrop-blur-2xl sm:bottom-6 sm:left-6 sm:right-6"
-          >
-            <div className="border-b border-white/[0.07] px-5 py-5 sm:px-7">
-              <div className="flex items-start justify-between gap-6">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <span className="h-2 w-2 rounded-full bg-[#c9a96e]" />
-
-                    <p className="text-[10px] uppercase tracking-[0.32em] text-[#d5bd8b]">
-                      Ground Operations Console
-                    </p>
-                  </div>
-
-                  <p className="mt-2 max-w-xl text-xs leading-5 text-white/35">
-                    Secret Destination ceremonial controls.
-                    Press O to open or close this console.
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/[0.08] text-lg font-light text-white/40 transition hover:border-white/20 hover:text-white/80"
-                  aria-label="Close operations controls"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[0.78fr_1.22fr]">
-              <OperationsStatusPanel
-                stage={stage}
-                currentStageIndex={currentStageIndex}
-                passengerCount={passengerCount}
-                manifestLoadedAt={manifestLoadedAt}
-                selectedPassenger={selectedPassenger}
-                isProcessing={isProcessing}
-                errorMessage={errorMessage}
-              />
-
-              <div className="rounded-[1.4rem] border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[9px] uppercase tracking-[0.28em] text-white/35">
-                      Ceremony controls
-                    </p>
-
-                    <p className="mt-1.5 text-xs text-white/25">
-                      Execute each procedure in sequence.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={onFullscreen}
-                    className="rounded-full border border-white/[0.08] px-4 py-2 text-[8px] uppercase tracking-[0.24em] text-white/40 transition hover:border-[#c6a56a]/25 hover:text-[#dfc99e]"
-                  >
-                    Fullscreen
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                  <OperationButton
-                    number="01"
-                    label="Load Manifest"
-                    onClick={onLoadManifest}
-                    disabled={isProcessing}
-                    active={
-                      stage ===
-                      EXPERIENCE_STAGES.LOADING_MANIFEST
-                    }
-                  />
-
-                  <OperationButton
-                    number="02"
-                    label="Begin Final Boarding"
-                    onClick={onBeginBoarding}
-                    disabled={
-                      !isManifestLoaded || isProcessing
-                    }
-                    active={
-                      stage ===
-                      EXPERIENCE_STAGES.FINAL_BOARDING
-                    }
-                  />
-
-                  <OperationButton
-                    number="03"
-                    label="Verify Manifest"
-                    onClick={onVerifyManifest}
-                    disabled={
-                      !isManifestLoaded || isProcessing
-                    }
-                    active={
-                      stage ===
-                      EXPERIENCE_STAGES.VERIFYING_MANIFEST
-                    }
-                  />
-
-                  <OperationButton
-                    number="04"
-                    label="Confirm Clearance"
-                    onClick={onGroundClearance}
-                    disabled={
-                      stage !==
-                        EXPERIENCE_STAGES.MANIFEST_VERIFIED ||
-                      isProcessing
-                    }
-                    active={
-                      stage === EXPERIENCE_STAGES.CLEARANCE
-                    }
-                  />
-
-                  <OperationButton
-                    number="05"
-                    label="Lock Destination"
-                    onClick={onLockDestination}
-                    disabled={
-                      stage !== EXPERIENCE_STAGES.CLEARANCE ||
-                      isProcessing
-                    }
-                    active={
-                      stage ===
-                      EXPERIENCE_STAGES.DESTINATION_LOCKED
-                    }
-                  />
-
-                  <OperationButton
-                    number="06"
-                    label="Select Passenger"
-                    onClick={onSelectPassenger}
-                    disabled={!canSelectPassenger}
-                    active={
-                      stage ===
-                      EXPERIENCE_STAGES.SELECTING_PASSENGER
-                    }
-                    important
-                  />
-
-                  <OperationButton
-                    number="07"
-                    label="Reveal Winner"
-                    onClick={onRevealWinner}
-                    disabled={
-                      stage !==
-                        EXPERIENCE_STAGES.PASSENGER_SELECTED ||
-                      !selectedPassenger ||
-                      isProcessing
-                    }
-                    active={
-                      stage ===
-                      EXPERIENCE_STAGES.WINNER_REVEALED
-                    }
-                    important
-                  />
-
-                  <OperationButton
-                    number="08"
-                    label="Closing Message"
-                    onClick={onClosing}
-                    disabled={
-                      stage !==
-                        EXPERIENCE_STAGES.WINNER_REVEALED ||
-                      isProcessing
-                    }
-                    active={
-                      stage === EXPERIENCE_STAGES.CLOSING
-                    }
-                  />
-
-                  <OperationButton
-                    number="00"
-                    label="Reset Experience"
-                    onClick={onReset}
-                    disabled={isProcessing}
-                    danger
-                  />
-                </div>
-
-                <div className="mt-4 rounded-xl border border-white/[0.05] bg-black/10 px-4 py-3">
-                  <p className="text-[8px] uppercase tracking-[0.25em] text-white/25">
-                    Manifest integrity
-                  </p>
-
-                  <p className="mt-1.5 text-[10px] leading-5 text-white/35">
-                    {passengers.length > 0
-                      ? `${passengers.length} eligible passenger records are currently held in the local ceremony manifest.`
-                      : "No passenger records are currently held in the ceremony manifest."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
-
-function OperationsStatusPanel({
-  stage,
-  currentStageIndex,
-  passengerCount,
-  manifestLoadedAt,
-  selectedPassenger,
-  isProcessing,
-  errorMessage,
-}) {
-  const status = STAGE_METADATA[stage];
-
-  return (
-    <div className="rounded-[1.4rem] border border-white/[0.07] bg-white/[0.025] p-5">
-      <p className="text-[9px] uppercase tracking-[0.28em] text-white/35">
-        Live procedure status
-      </p>
-
-      <div className="mt-5 border-b border-white/[0.06] pb-5">
-        <p className="font-serif text-2xl font-light tracking-[-0.025em] text-[#f1eadf]">
-          {status.title}
-        </p>
-
-        <div className="mt-3 flex items-center gap-2">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              errorMessage
-                ? "bg-red-300"
-                : isProcessing
-                  ? "animate-pulse bg-[#d2b67d]"
-                  : "bg-emerald-300/70"
-            }`}
-          />
-
-          <span className="text-[8px] uppercase tracking-[0.25em] text-white/35">
-            {errorMessage
-              ? "Procedure attention required"
-              : isProcessing
-                ? "Procedure processing"
-                : status.status}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-5">
-        <StatusItem
-          label="Sequence"
-          value={`${String(
-            currentStageIndex + 1
-          ).padStart(2, "0")} / ${String(
-            STAGE_ORDER.length
-          ).padStart(2, "0")}`}
-        />
-
-        <StatusItem
-          label="Passengers"
-          value={
-            passengerCount
-              ? formatPassengerCount(passengerCount)
-              : "—"
-          }
-        />
-
-        <StatusItem
-          label="Manifest loaded"
-          value={manifestLoadedAt}
-        />
-
-        <StatusItem
-          label="Destination"
-          value={
-            stage === EXPERIENCE_STAGES.DESTINATION_LOCKED ||
-            currentStageIndex >
-              STAGE_ORDER.indexOf(
-                EXPERIENCE_STAGES.DESTINATION_LOCKED
-              )
-              ? "LOCKED"
-              : "PENDING"
-          }
-        />
-      </div>
-
-      <div className="mt-5 rounded-xl border border-[#c6a56a]/10 bg-[#c6a56a]/[0.03] px-4 py-3">
-        <p className="text-[8px] uppercase tracking-[0.25em] text-[#cdb583]/60">
-          Selected passenger
-        </p>
-
-        <p className="mt-2 truncate font-mono text-[10px] tracking-[0.12em] text-white/45">
-          {selectedPassenger?.ticket_code ||
-            "IDENTITY NOT YET ASSIGNED"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function StatusItem({ label, value }) {
-  return (
-    <div>
-      <p className="text-[8px] uppercase tracking-[0.24em] text-white/20">
-        {label}
-      </p>
-
-      <p className="mt-1.5 truncate font-mono text-[10px] tracking-[0.08em] text-white/50">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function OperationButton({
-  number,
-  label,
-  onClick,
-  disabled,
-  active,
-  important,
-  danger,
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`group relative min-h-[76px] overflow-hidden rounded-xl border px-4 py-3 text-left transition duration-300 ${
-        disabled
-          ? "cursor-not-allowed border-white/[0.04] bg-white/[0.015] opacity-35"
-          : danger
-            ? "border-red-300/10 bg-red-400/[0.025] hover:border-red-300/25 hover:bg-red-400/[0.05]"
-            : important
-              ? "border-[#c6a56a]/20 bg-[#c6a56a]/[0.045] hover:border-[#d2b579]/45 hover:bg-[#c6a56a]/[0.08]"
-              : "border-white/[0.07] bg-white/[0.02] hover:border-white/[0.16] hover:bg-white/[0.045]"
-      } ${active ? "border-[#d2b579]/55 bg-[#c6a56a]/[0.09]" : ""}`}
-    >
-      {active && (
-        <motion.span
-          layoutId="active-operation"
-          className="absolute inset-y-0 left-0 w-px bg-[#d8bd87]"
-        />
-      )}
-
-      <span className="font-mono text-[8px] tracking-[0.2em] text-white/20">
-        {number}
-      </span>
-
-      <span
-        className={`mt-3 block text-[9px] uppercase tracking-[0.18em] ${
-          danger
-            ? "text-red-100/50"
-            : important
-              ? "text-[#e1cca3]/70"
-              : "text-white/45"
-        }`}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}
-
-
-// ============================================================
-// SECTION 8 — Winner Reveal
-// ============================================================
-
-function WinnerReveal({ metadata, passenger }) {
-  const winnerName =
-    passenger?.full_name || "Selected Passenger";
-
-  const winnerTicket =
-    passenger?.ticket_code || "AV-••••••";
-
-  return (
-    <motion.section
-      variants={MOTION.screen}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="relative mx-auto flex min-h-[650px] max-w-[1380px] items-center justify-center"
-    >
-      <div className="absolute inset-0 overflow-hidden rounded-[2.5rem] border border-[#d2b579]/25 bg-gradient-to-b from-[#0b192b]/90 via-[#06101e]/90 to-[#020812]/95 shadow-[0_50px_180px_rgba(0,0,0,0.62)] backdrop-blur-xl">
-        <motion.div
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: [0.08, 0.24, 0.12],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="absolute left-1/2 top-[-40%] h-[110%] w-[70%] -translate-x-1/2 rounded-full bg-[#c9a96e]/20 blur-[140px]"
-        />
-
-        <motion.div
-          initial={{
-            scaleX: 0,
-          }}
-          animate={{
-            scaleX: 1,
-          }}
-          transition={{
-            delay: 0.1,
-            duration: 2,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="absolute left-[10%] right-[10%] top-0 h-px origin-center bg-gradient-to-r from-transparent via-[#e1c68e]/90 to-transparent"
-        />
-      </div>
-
-      <div className="relative z-10 flex w-full flex-col items-center px-7 py-16 text-center sm:px-12 lg:px-20">
-        <motion.div
-          initial={{
-            opacity: 0,
-            scale: 0.8,
-            rotate: -8,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-            rotate: 0,
-          }}
-          transition={{
-            duration: 1.4,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="mb-10 flex h-24 w-24 items-center justify-center rounded-full border border-[#d5b97f]/30 bg-[#d5b97f]/[0.06]"
-        >
-          <OrbitMark />
-        </motion.div>
-
-        <motion.p
-          initial={{
-            opacity: 0,
-            y: 15,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.35,
-            duration: 0.9,
-          }}
-          className="text-[10px] uppercase tracking-[0.42em] text-[#d4ba87] sm:text-xs"
-        >
-          Passenger Cleared
-        </motion.p>
-
-        <motion.h1
-          initial={{
-            opacity: 0,
-            y: 30,
-            filter: "blur(8px)",
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            filter: "blur(0px)",
-          }}
-          transition={{
-            delay: 0.6,
-            duration: 1.25,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="mt-8 max-w-6xl font-serif text-[clamp(3.8rem,8vw,8.5rem)] font-light leading-[0.88] tracking-[-0.06em] text-[#fbf6ed]"
-        >
-          {winnerName}
-        </motion.h1>
-
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 15,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 1.05,
-            duration: 0.9,
-          }}
-          className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:gap-8"
-        >
-          <WinnerDetail
-            label="Ticket"
-            value={winnerTicket}
-          />
-
-          <span className="hidden h-8 w-px bg-white/10 sm:block" />
-
-          <WinnerDetail
-            label="Flight"
-            value={passenger?.flight || "OM 1025"}
-          />
-
-          <span className="hidden h-8 w-px bg-white/10 sm:block" />
-
-          <WinnerDetail
-            label="Seat"
-            value={passenger?.seat || "—"}
-          />
-        </motion.div>
-
-        <motion.div
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: 1,
-          }}
-          transition={{
-            delay: 1.55,
-            duration: 1.1,
-          }}
-          className="mt-14"
-        >
-          <p className="text-sm font-light uppercase tracking-[0.28em] text-[#ded3c1]/65 sm:text-base">
-            Your next journey begins now.
-          </p>
-
-          <p className="mt-5 font-serif text-2xl font-light tracking-[-0.02em] text-[#f3eadc] sm:text-3xl">
-            Secret Destination Experience
-          </p>
-        </motion.div>
-      </div>
-
-      <CornerReference reference="FINAL CLEARANCE" />
-    </motion.section>
-  );
-}
-
-function WinnerDetail({ label, value }) {
-  return (
-    <div className="min-w-[110px]">
-      <p className="text-[8px] uppercase tracking-[0.3em] text-white/25">
-        {label}
-      </p>
-
-      <p className="mt-2 font-mono text-xs tracking-[0.17em] text-[#e2d3b7]/80">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-
-// ============================================================
-// SECTION 9 — Brand Signature
-// ============================================================
-
-function BrandSignature({
-  stage,
-  status,
-  progress,
-}) {
+function BrandSignature({ stage, status, progress }) {
   return (
     <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-6 pb-6 sm:px-9 sm:pb-8 lg:px-12">
-      <div className="mx-auto flex max-w-[1500px] items-end justify-between gap-8">
+      <div className="mx-auto flex max-w-[1680px] items-end justify-between gap-8">
         <div className="hidden sm:block">
-          <p className="text-[8px] uppercase tracking-[0.3em] text-white/20">
+          <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
             Marketing Made in Greece — On Air
           </p>
 
-          <p className="mt-1.5 text-[8px] uppercase tracking-[0.26em] text-white/15">
+          <p className="mt-2 text-[7px] uppercase tracking-[0.3em] text-white/13">
             Philoxenia 2026
           </p>
         </div>
 
-        <div className="w-full max-w-md sm:w-[340px]">
-          <div className="mb-2 flex items-center justify-between gap-5">
-            <span className="truncate text-[8px] uppercase tracking-[0.25em] text-white/25">
+        <div className="w-full max-w-md sm:w-[360px]">
+          <div className="mb-2 flex items-center justify-between gap-6">
+            <span className="truncate text-[7px] uppercase tracking-[0.3em] text-white/23">
               {status}
             </span>
 
-            <span className="font-mono text-[8px] tracking-[0.15em] text-white/25">
+            <span className="font-mono text-[7px] tracking-[0.17em] text-white/23">
               {String(progress).padStart(3, "0")}%
             </span>
           </div>
 
-          <div className="h-px overflow-hidden bg-white/[0.07]">
+          <div className="h-px overflow-hidden bg-white/[0.06]">
             <motion.div
               animate={{
                 width: `${progress}%`,
               }}
               transition={{
-                duration: 1.1,
+                duration: 1.15,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="h-full bg-gradient-to-r from-[#866b3f] via-[#c9a96e] to-[#e0c995]"
+              className="h-full bg-gradient-to-r from-[#715a35] via-[#c6a86c] to-[#e1ca98]"
             />
           </div>
         </div>
 
         <div className="hidden text-right lg:block">
-          <p className="text-[8px] uppercase tracking-[0.3em] text-white/20">
+          <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
             Secret Destination
           </p>
 
-          <p className="mt-1.5 font-mono text-[8px] tracking-[0.18em] text-white/15">
-            {stage === EXPERIENCE_STAGES.CLOSING
+          <p className="mt-2 font-mono text-[7px] tracking-[0.2em] text-white/13">
+            {stage === STAGES.CLOSING
               ? "JOURNEY COMPLETE"
               : "CONFIDENTIAL"}
           </p>
@@ -1970,43 +2029,365 @@ function BrandSignature({
   );
 }
 
-function OrbitMark() {
+
+// ============================================================================
+// SECTION 10 — ATMOSPHERIC BACKGROUND
+// ============================================================================
+
+function AtmosphericBackground({
+  stage,
+  atmosphere,
+  passengers,
+}) {
+  const intense = [
+    "locked",
+    "selection",
+    "reveal",
+    "closing",
+  ].includes(atmosphere);
+
   return (
-    <div className="relative h-11 w-11">
-      <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d2b579]" />
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#06111f_0%,#020812_58%,#01040a_100%)]" />
+
+      <motion.div
+        animate={{
+          opacity: intense ? 0.42 : 0.24,
+          scale: intense ? 1.08 : 1,
+          x:
+            atmosphere === "selection"
+              ? ["-4%", "4%", "-4%"]
+              : "0%",
+        }}
+        transition={{
+          opacity: {
+            duration: 2,
+          },
+          scale: {
+            duration: 2,
+          },
+          x: {
+            duration: 12,
+            repeat: Infinity,
+            ease: "easeInOut",
+          },
+        }}
+        className="absolute left-1/2 top-[-33%] h-[95%] w-[75%] -translate-x-1/2 rounded-full bg-[#174474]/38 blur-[170px]"
+      />
+
+      <motion.div
+        animate={{
+          opacity:
+            atmosphere === "reveal" ||
+            atmosphere === "closing"
+              ? 0.3
+              : atmosphere === "locked"
+                ? 0.18
+                : 0.08,
+        }}
+        transition={{
+          duration: 2.3,
+        }}
+        className="absolute bottom-[-42%] left-[6%] h-[75%] w-[70%] rounded-full bg-[#b38b4b]/32 blur-[190px]"
+      />
+
+      <GridLayer />
+
+      <ManifestDataStream
+        passengers={passengers}
+        visible={[
+          STAGES.MANIFEST_LOADING,
+          STAGES.MANIFEST_READY,
+          STAGES.FINAL_BOARDING,
+          STAGES.VERIFYING,
+          STAGES.SELECTING,
+        ].includes(stage)}
+      />
+
+      <RadarLayer
+        visible={[
+          STAGES.VERIFYING,
+          STAGES.VERIFIED,
+          STAGES.CLEARANCE,
+          STAGES.DESTINATION_LOCKED,
+        ].includes(stage)}
+      />
+
+      <RunwayLayer />
+
+      <MovingReflection />
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_28%,rgba(0,0,0,0.68)_100%)]" />
+
+      <NoiseLayer />
+    </div>
+  );
+}
+
+function GridLayer() {
+  return (
+    <div
+      className="absolute inset-0 opacity-[0.045]"
+      style={{
+        backgroundImage:
+          "linear-gradient(rgba(255,255,255,0.33) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.33) 1px, transparent 1px)",
+        backgroundSize: "74px 74px",
+        maskImage:
+          "linear-gradient(to bottom, transparent, black 15%, black 80%, transparent)",
+        WebkitMaskImage:
+          "linear-gradient(to bottom, transparent, black 15%, black 80%, transparent)",
+      }}
+    />
+  );
+}
+
+function ManifestDataStream({ passengers, visible }) {
+  const fallbackReferences = [
+    "OM1025",
+    "AV-183742",
+    "BOARDING",
+    "MANIFEST",
+    "VERIFIED",
+    "GATE 08",
+    "TERMINAL 02",
+    "CLEARANCE",
+  ];
+
+  const passengerReferences = passengers
+    .slice(0, 8)
+    .map((passenger) => passenger.ticket_code)
+    .filter(Boolean);
+
+  const references =
+    passengerReferences.length > 0
+      ? passengerReferences
+      : fallbackReferences;
+
+  return (
+    <motion.div
+      animate={{
+        opacity: visible ? 1 : 0.25,
+      }}
+      transition={{
+        duration: 1.5,
+      }}
+      className="absolute inset-y-[18%] left-[2%] hidden w-40 overflow-hidden lg:block"
+    >
+      <motion.div
+        animate={{
+          y: ["0%", "-45%"],
+        }}
+        transition={{
+          duration: 22,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="space-y-7"
+      >
+        {[...references, ...references, ...references].map(
+          (reference, index) => (
+            <p
+              key={`${reference}-${index}`}
+              className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/[0.055]"
+            >
+              {reference}
+            </p>
+          )
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function RadarLayer({ visible }) {
+  return (
+    <motion.div
+      animate={{
+        opacity: visible ? 0.12 : 0.025,
+      }}
+      transition={{
+        duration: 1.8,
+      }}
+      className="absolute right-[-13%] top-[12%] hidden h-[620px] w-[620px] rounded-full border border-[#b9d0e9]/20 lg:block"
+    >
+      <span className="absolute inset-[18%] rounded-full border border-[#b9d0e9]/15" />
+      <span className="absolute inset-[36%] rounded-full border border-[#b9d0e9]/15" />
+
+      <span className="absolute left-1/2 top-0 h-full w-px bg-[#b9d0e9]/10" />
+      <span className="absolute left-0 top-1/2 h-px w-full bg-[#b9d0e9]/10" />
+
+      <motion.div
+        animate={{
+          rotate: 360,
+        }}
+        transition={{
+          duration: 18,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="absolute inset-0 rounded-full"
+        style={{
+          background:
+            "conic-gradient(from 0deg, transparent 0deg, transparent 322deg, rgba(170,205,236,0.16) 350deg, transparent 360deg)",
+        }}
+      />
+    </motion.div>
+  );
+}
+
+function RunwayLayer() {
+  return (
+    <div className="absolute bottom-[8%] left-1/2 w-[70%] -translate-x-1/2 opacity-30">
+      <div className="relative h-12">
+        {Array.from({ length: 13 }).map((_, index) => (
+          <motion.span
+            key={index}
+            animate={{
+              opacity: [0.1, 0.75, 0.1],
+            }}
+            transition={{
+              duration: 3.8,
+              repeat: Infinity,
+              delay: index * 0.18,
+            }}
+            className="absolute bottom-0 h-[2px] w-[2px] rounded-full bg-[#dfc48e]"
+            style={{
+              left: `${(index / 12) * 100}%`,
+            }}
+          />
+        ))}
+
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.055] to-transparent" />
+      </div>
+    </div>
+  );
+}
+
+function MovingReflection() {
+  return (
+    <motion.div
+      animate={{
+        x: ["-40%", "160%"],
+        opacity: [0, 0.16, 0],
+      }}
+      transition={{
+        duration: 16,
+        repeat: Infinity,
+        repeatDelay: 3,
+        ease: "linear",
+      }}
+      className="absolute top-[20%] h-px w-[32%] bg-gradient-to-r from-transparent via-[#d7bc83]/70 to-transparent"
+    />
+  );
+}
+
+function NoiseLayer() {
+  return (
+    <div className="absolute inset-0 opacity-[0.023] mix-blend-soft-light">
+      <div
+        className="h-full w-full"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.75'/%3E%3C/svg%3E\")",
+        }}
+      />
+    </div>
+  );
+}
+
+function StageCoordinates() {
+  return (
+    <>
+      <div className="absolute left-0 top-1/2 hidden -translate-y-1/2 items-center gap-3 lg:flex">
+        <span className="font-mono text-[7px] tracking-[0.2em] text-white/12">
+          40.6401° N
+        </span>
+
+        <span className="h-px w-12 bg-white/[0.07]" />
+      </div>
+
+      <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-3 lg:flex">
+        <span className="h-px w-12 bg-white/[0.07]" />
+
+        <span className="font-mono text-[7px] tracking-[0.2em] text-white/12">
+          22.9444° E
+        </span>
+      </div>
+    </>
+  );
+}
+
+function ProcessingIndicator() {
+  return (
+    <span className="flex items-center gap-1.5">
+      {[0, 1, 2].map((item) => (
+        <motion.span
+          key={item}
+          animate={{
+            opacity: [0.2, 1, 0.2],
+            scale: [0.75, 1.15, 0.75],
+          }}
+          transition={{
+            duration: 1.4,
+            repeat: Infinity,
+            delay: item * 0.2,
+          }}
+          className="h-1 w-1 rounded-full bg-[#c9ab70]"
+        />
+      ))}
+    </span>
+  );
+}
+
+function OrbitMark({ large = false }) {
+  const sizeClass = large ? "h-20 w-20" : "h-12 w-12";
+
+  return (
+    <div className={`relative ${sizeClass}`}>
+      <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d1b477]" />
 
       <motion.span
         animate={{
           rotate: 360,
         }}
         transition={{
-          duration: 12,
+          duration: 14,
           repeat: Infinity,
           ease: "linear",
         }}
-        className="absolute inset-0 rounded-[50%] border border-[#d2b579]/45"
+        className="absolute inset-0 rounded-full border border-[#d1b477]/40"
       >
-        <span className="absolute left-1/2 top-[-2px] h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#ead8b4]" />
+        <span className="absolute left-1/2 top-[-2px] h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#ead7af]" />
       </motion.span>
 
-      <span className="absolute inset-[8px] rotate-45 rounded-[50%] border border-[#d2b579]/20" />
+      <motion.span
+        animate={{
+          rotate: -360,
+        }}
+        transition={{
+          duration: 22,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        className="absolute inset-[18%] rotate-45 rounded-full border border-[#d1b477]/18"
+      />
     </div>
   );
 }
 
-function CheckmarkIcon() {
+function CheckIcon() {
   return (
     <svg
-      width="30"
-      height="30"
+      width="27"
+      height="27"
       viewBox="0 0 30 30"
       fill="none"
       aria-hidden="true"
     >
       <motion.path
         d="M7 15.5L12.3 20.5L23 9.5"
-        stroke="#D8BF8D"
-        strokeWidth="1.5"
+        stroke="#D8BE88"
+        strokeWidth="1.4"
         strokeLinecap="round"
         strokeLinejoin="round"
         initial={{
@@ -2018,89 +2399,11 @@ function CheckmarkIcon() {
           opacity: 1,
         }}
         transition={{
-          delay: 0.55,
+          delay: 0.45,
           duration: 1.1,
           ease: [0.22, 1, 0.36, 1],
         }}
       />
     </svg>
-  );
-}
-
-
-// ============================================================
-// SECTION 10 — Atmospheric Background
-// ============================================================
-
-function AtmosphericBackground({ stage }) {
-  const revealActive = [
-    EXPERIENCE_STAGES.PASSENGER_SELECTED,
-    EXPERIENCE_STAGES.WINNER_REVEALED,
-    EXPERIENCE_STAGES.CLOSING,
-  ].includes(stage);
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(23,52,87,0.5),transparent_42%),linear-gradient(180deg,#06101f_0%,#020812_62%,#01050b_100%)]" />
-
-      <motion.div
-        animate={{
-          opacity: revealActive ? 0.32 : 0.16,
-          scale: revealActive ? 1.08 : 1,
-        }}
-        transition={{
-          duration: 2,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        className="absolute left-1/2 top-[-25%] h-[85%] w-[70%] -translate-x-1/2 rounded-full bg-[#234d7c]/35 blur-[150px]"
-      />
-
-      <motion.div
-        animate={{
-          opacity: revealActive ? 0.22 : 0.08,
-        }}
-        transition={{
-          duration: 2.5,
-        }}
-        className="absolute bottom-[-35%] left-[12%] h-[70%] w-[55%] rounded-full bg-[#b18a4d]/30 blur-[170px]"
-      />
-
-      <div
-        className="absolute inset-0 opacity-[0.035]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
-          maskImage:
-            "linear-gradient(to bottom, transparent, black 18%, black 75%, transparent)",
-        }}
-      />
-
-      <motion.div
-        animate={{
-          x: ["-20%", "120%"],
-          opacity: [0, 0.18, 0],
-        }}
-        transition={{
-          duration: 18,
-          repeat: Infinity,
-          ease: "linear",
-          repeatDelay: 3,
-        }}
-        className="absolute top-[22%] h-px w-[35%] bg-gradient-to-r from-transparent via-[#d4b579]/70 to-transparent"
-      />
-
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_35%,rgba(0,0,0,0.55)_100%)]" />
-
-      <div className="absolute inset-0 opacity-[0.025] mix-blend-soft-light">
-        <div
-          className="h-full w-full"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E\")",
-          }}
-        />
-      </div>
-    </div>
   );
 }
