@@ -7,8 +7,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
-  useRef,
   useState,
 } from "react";
 
@@ -19,6 +17,8 @@ import { supabase } from "@/lib/supabaseClient";
 // ============================================================================
 // SECTION 2 — CONFIGURATION
 // ============================================================================
+
+const EXPERIENCE_ID = "main";
 
 const STAGES = {
   INITIAL: "initial",
@@ -196,9 +196,6 @@ const STAGE_CONTENT = {
   },
 };
 
-const SELECTION_DURATION = 7200;
-const SELECTION_TICK = 120;
-
 const MOTION = {
   screen: {
     initial: {
@@ -206,6 +203,7 @@ const MOTION = {
       filter: "blur(18px)",
       scale: 0.985,
     },
+
     animate: {
       opacity: 1,
       filter: "blur(0px)",
@@ -215,6 +213,7 @@ const MOTION = {
         ease: [0.22, 1, 0.36, 1],
       },
     },
+
     exit: {
       opacity: 0,
       filter: "blur(12px)",
@@ -231,6 +230,7 @@ const MOTION = {
       opacity: 0,
       y: 28,
     },
+
     animate: {
       opacity: 1,
       y: 0,
@@ -250,166 +250,281 @@ const MOTION = {
   },
 };
 
-const delay = (milliseconds) =>
-  new Promise((resolve) => {
-    window.setTimeout(resolve, milliseconds);
-  });
-
 const formatCount = (value) =>
   new Intl.NumberFormat("en-US", {
     minimumIntegerDigits: 2,
   }).format(value || 0);
 
-const secureRandomIndex = (length) => {
-  if (!length || length <= 0) {
-    return null;
-  }
-
-  const maximumUint32 = 0xffffffff;
-  const acceptableLimit =
-    maximumUint32 - ((maximumUint32 + 1) % length);
-
-  const randomValues = new Uint32Array(1);
-
-  do {
-    window.crypto.getRandomValues(randomValues);
-  } while (randomValues[0] > acceptableLimit);
-
-  return randomValues[0] % length;
-};
-
 
 // ============================================================================
-// SECTION 3 — MAIN GIVEAWAY PAGE
+// SECTION 3 — MAIN PUBLIC GIVEAWAY PAGE
 // ============================================================================
 
 export default function GiveawayPage() {
-  const [stage, setStage] = useState(STAGES.INITIAL);
+  const [experience, setExperience] = useState(null);
   const [passengers, setPassengers] = useState([]);
-  const [selectedPassenger, setSelectedPassenger] = useState(null);
-  const [selectionPreview, setSelectionPreview] = useState(null);
+  const [selectedPassenger, setSelectedPassenger] =
+    useState(null);
 
-  const [operationsOpen, setOperationsOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [manifestLoadedAt, setManifestLoadedAt] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] =
+    useState("connecting");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const selectionIntervalRef = useRef(null);
+  const stage = experience?.stage || STAGES.INITIAL;
 
-  const stageContent = STAGE_CONTENT[stage];
-  const stageIndex = STAGE_ORDER.indexOf(stage);
+  const safeStage = STAGE_CONTENT[stage]
+    ? stage
+    : STAGES.INITIAL;
 
-  const passengerCount = passengers.length;
-  const manifestLoaded = passengerCount > 0;
+  const stageContent = STAGE_CONTENT[safeStage];
 
-  const formattedManifestTime = useMemo(() => {
-    if (!manifestLoadedAt) {
-      return "NOT LOADED";
-    }
-
-    return new Intl.DateTimeFormat("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).format(manifestLoadedAt);
-  }, [manifestLoadedAt]);
-
-  const canSelectPassenger =
-    stage === STAGES.DESTINATION_LOCKED &&
-    manifestLoaded &&
-    !isProcessing;
-
-  const transitionTo = useCallback(
-    async (nextStage, waitingTime = 0) => {
-      if (isProcessing) {
-        return;
-      }
-
-      setErrorMessage("");
-
-      if (waitingTime <= 0) {
-        setStage(nextStage);
-        return;
-      }
-
-      setIsProcessing(true);
-
-      try {
-        await delay(waitingTime);
-        setStage(nextStage);
-      } finally {
-        setIsProcessing(false);
-      }
-    },
-    [isProcessing]
+  const stageIndex = Math.max(
+    0,
+    STAGE_ORDER.indexOf(safeStage)
   );
 
-  const toggleFullscreen = useCallback(async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
+  const passengerCount =
+    experience?.manifest_count || passengers.length || 0;
+
+  const selectionPreview =
+    experience?.selection_preview || null;
+
+  const loadSelectedPassenger = useCallback(
+    async (passengerId) => {
+      if (!passengerId) {
+        setSelectedPassenger(null);
+        return;
       }
+
+      try {
+        const { data, error } = await supabase
+          .from("participants")
+          .select(`
+            id,
+            full_name,
+            email,
+            ticket_code,
+            flight,
+            seat,
+            gate,
+            terminal,
+            status,
+            created_at,
+            giveaway_eligible,
+            giveaway_winner,
+            giveaway_selected_at
+          `)
+          .eq("id", passengerId)
+          .maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        setSelectedPassenger(data || null);
+      } catch (error) {
+        console.error(
+          "Selected passenger loading error:",
+          error
+        );
+
+        setErrorMessage(
+          "The selected passenger could not be loaded."
+        );
+      }
+    },
+    []
+  );
+
+  const loadPassengerReferences = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("participants")
+        .select(`
+          id,
+          ticket_code,
+          flight,
+          seat,
+          gate
+        `)
+        .eq("giveaway_eligible", true)
+        .not("ticket_code", "is", null)
+        .order("created_at", {
+          ascending: true,
+        })
+        .limit(12);
+
+      if (error) {
+        throw error;
+      }
+
+      setPassengers(data || []);
     } catch (error) {
-      console.error("Fullscreen error:", error);
+      console.error(
+        "Passenger reference loading error:",
+        error
+      );
+
+      /*
+       * Δεν εμφανίζουμε public error για τα atmospheric
+       * references, επειδή δεν επηρεάζουν τη λειτουργία
+       * της τελετής.
+       */
     }
   }, []);
 
+  const applyExperienceState = useCallback(
+    async (nextExperience) => {
+      if (!nextExperience) {
+        return;
+      }
+
+      setExperience(nextExperience);
+      setErrorMessage("");
+
+      if (nextExperience.selected_passenger_id) {
+        await loadSelectedPassenger(
+          nextExperience.selected_passenger_id
+        );
+      } else {
+        setSelectedPassenger(null);
+      }
+    },
+    [loadSelectedPassenger]
+  );
+
+  const loadInitialExperience = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const { data, error } = await supabase
+        .from("giveaway_experience")
+        .select("*")
+        .eq("id", EXPERIENCE_ID)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error(
+          "The giveaway experience state has not been initialized."
+        );
+      }
+
+      await applyExperienceState(data);
+      await loadPassengerReferences();
+    } catch (error) {
+      console.error(
+        "Public giveaway loading error:",
+        error
+      );
+
+      setErrorMessage(
+        error?.message ||
+          "The Secret Destination Experience could not be loaded."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [applyExperienceState, loadPassengerReferences]);
+
   useEffect(() => {
-    const keyboardHandler = (event) => {
-      const key = event.key.toLowerCase();
+    loadInitialExperience();
+  }, [loadInitialExperience]);
 
-      if (key === "o") {
-        setOperationsOpen((currentValue) => !currentValue);
-      }
+  useEffect(() => {
+    const channel = supabase
+      .channel("giveaway-public-experience")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "giveaway_experience",
+          filter: `id=eq.${EXPERIENCE_ID}`,
+        },
+        async (payload) => {
+          if (!payload.new) {
+            return;
+          }
 
-      if (key === "escape") {
-        setOperationsOpen(false);
-      }
+          await applyExperienceState(payload.new);
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setConnectionStatus("connected");
+          return;
+        }
 
-      if (key === "f") {
-        toggleFullscreen();
-      }
-    };
-
-    window.addEventListener("keydown", keyboardHandler);
+        if (
+          status === "CHANNEL_ERROR" ||
+          status === "TIMED_OUT" ||
+          status === "CLOSED"
+        ) {
+          setConnectionStatus("disconnected");
+        }
+      });
 
     return () => {
-      window.removeEventListener("keydown", keyboardHandler);
+      supabase.removeChannel(channel);
     };
-  }, [toggleFullscreen]);
+  }, [applyExperienceState]);
 
   useEffect(() => {
-    return () => {
-      if (selectionIntervalRef.current) {
-        window.clearInterval(selectionIntervalRef.current);
+    const refreshState = () => {
+      if (document.visibilityState === "visible") {
+        loadInitialExperience();
       }
     };
-  }, []);
+
+    document.addEventListener(
+      "visibilitychange",
+      refreshState
+    );
+
+    window.addEventListener("focus", refreshState);
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        refreshState
+      );
+
+      window.removeEventListener("focus", refreshState);
+    };
+  }, [loadInitialExperience]);
+
+  if (isLoading && !experience) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020711] text-[#f4f1ea] selection:bg-[#c7a86c]/30">
       <AtmosphericBackground
-        stage={stage}
+        stage={safeStage}
         atmosphere={stageContent.atmosphere}
         passengers={passengers}
       />
 
       <div className="relative z-20 flex min-h-screen flex-col">
         <PublicHeader
-          stage={stage}
+          stage={safeStage}
           stageIndex={stageIndex}
           passengerCount={passengerCount}
+          connectionStatus={connectionStatus}
         />
 
         <div className="flex flex-1 items-center justify-center px-5 pb-24 pt-28 sm:px-9 sm:pb-28 sm:pt-32 lg:px-14">
           <div className="mx-auto w-full max-w-[1680px]">
             <AnimatePresence mode="wait">
               <ExperienceStage
-                key={stage}
-                stage={stage}
+                key={safeStage}
+                stage={safeStage}
                 content={stageContent}
                 passengerCount={passengerCount}
                 selectionPreview={selectionPreview}
@@ -421,359 +536,18 @@ export default function GiveawayPage() {
         </div>
 
         <BrandSignature
-          stage={stage}
+          stage={safeStage}
           status={stageContent.systemStatus}
           progress={stageContent.progress}
         />
       </div>
-
-      <OperationsConsole
-        open={operationsOpen}
-        setOpen={setOperationsOpen}
-        stage={stage}
-        stageIndex={stageIndex}
-        passengerCount={passengerCount}
-        manifestLoaded={manifestLoaded}
-        manifestLoadedAt={formattedManifestTime}
-        isProcessing={isProcessing}
-        selectedPassenger={selectedPassenger}
-        errorMessage={errorMessage}
-        canSelectPassenger={canSelectPassenger}
-        onFullscreen={toggleFullscreen}
-        onLoadManifest={() =>
-          loadManifest({
-            setStage,
-            setPassengers,
-            setSelectedPassenger,
-            setSelectionPreview,
-            setManifestLoadedAt,
-            setErrorMessage,
-            setIsProcessing,
-          })
-        }
-        onBeginBoarding={() =>
-          transitionTo(STAGES.FINAL_BOARDING)
-        }
-        onVerifyManifest={() =>
-          verifyManifest({
-            passengers,
-            setPassengers,
-            setStage,
-            setErrorMessage,
-            setIsProcessing,
-          })
-        }
-        onConfirmClearance={() =>
-          transitionTo(STAGES.CLEARANCE)
-        }
-        onLockDestination={() =>
-          transitionTo(STAGES.DESTINATION_LOCKED)
-        }
-        onSelectPassenger={() =>
-          selectPassenger({
-            passengers,
-            selectionIntervalRef,
-            setStage,
-            setSelectionPreview,
-            setSelectedPassenger,
-            setErrorMessage,
-            setIsProcessing,
-          })
-        }
-        onRevealWinner={() =>
-          transitionTo(STAGES.WINNER_REVEALED)
-        }
-        onClosing={() =>
-          transitionTo(STAGES.CLOSING)
-        }
-        onReset={() =>
-          resetExperience({
-            selectionIntervalRef,
-            setStage,
-            setPassengers,
-            setSelectedPassenger,
-            setSelectionPreview,
-            setManifestLoadedAt,
-            setErrorMessage,
-            setIsProcessing,
-          })
-        }
-      />
     </main>
   );
 }
 
 
 // ============================================================================
-// SECTION 4 — SUPABASE PASSENGER MANIFEST
-// ============================================================================
-
-async function loadManifest({
-  setStage,
-  setPassengers,
-  setSelectedPassenger,
-  setSelectionPreview,
-  setManifestLoadedAt,
-  setErrorMessage,
-  setIsProcessing,
-}) {
-  setIsProcessing(true);
-  setErrorMessage("");
-  setSelectedPassenger(null);
-  setSelectionPreview(null);
-  setStage(STAGES.MANIFEST_LOADING);
-
-  try {
-    const { data, error } = await supabase
-      .from("participants")
-      .select(`
-        id,
-        full_name,
-        email,
-        ticket_code,
-        flight,
-        seat,
-        gate,
-        terminal,
-        status,
-        created_at,
-        giveaway_eligible,
-        giveaway_winner,
-        giveaway_selected_at
-      `)
-      .eq("giveaway_eligible", true)
-      .not("full_name", "is", null)
-      .not("ticket_code", "is", null)
-      .order("created_at", {
-        ascending: true,
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    const validPassengers = (data || []).filter(
-      (passenger) =>
-        passenger?.id &&
-        passenger?.full_name?.trim() &&
-        passenger?.ticket_code?.trim() &&
-        passenger?.giveaway_eligible === true
-    );
-
-    if (validPassengers.length === 0) {
-      throw new Error(
-        "No eligible checked-in passengers were found."
-      );
-    }
-
-    setPassengers(validPassengers);
-    setManifestLoadedAt(new Date());
-
-    await delay(1800);
-
-    setStage(STAGES.MANIFEST_READY);
-  } catch (error) {
-    console.error("Manifest loading error:", error);
-
-    setPassengers([]);
-    setStage(STAGES.INITIAL);
-    setErrorMessage(
-      error?.message ||
-        "Passenger manifest could not be loaded."
-    );
-  } finally {
-    setIsProcessing(false);
-  }
-}
-
-async function verifyManifest({
-  passengers,
-  setPassengers,
-  setStage,
-  setErrorMessage,
-  setIsProcessing,
-}) {
-  if (!passengers.length) {
-    setErrorMessage(
-      "Load the passenger manifest before verification."
-    );
-    return;
-  }
-
-  setIsProcessing(true);
-  setErrorMessage("");
-  setStage(STAGES.VERIFYING);
-
-  try {
-    await delay(2400);
-
-    const verifiedPassengers = passengers.filter(
-      (passenger) =>
-        passenger?.id &&
-        passenger?.full_name?.trim() &&
-        passenger?.ticket_code?.trim() &&
-        passenger?.giveaway_eligible === true
-    );
-
-    if (verifiedPassengers.length === 0) {
-      throw new Error(
-        "No passenger records passed verification."
-      );
-    }
-
-    setPassengers(verifiedPassengers);
-    setStage(STAGES.VERIFIED);
-  } catch (error) {
-    console.error("Manifest verification error:", error);
-
-    setErrorMessage(
-      error?.message ||
-        "Manifest verification could not be completed."
-    );
-
-    setStage(STAGES.MANIFEST_READY);
-  } finally {
-    setIsProcessing(false);
-  }
-}
-
-
-// ============================================================================
-// SECTION 5 — EXPERIENCE STATE MACHINE
-// ============================================================================
-
-async function selectPassenger({
-  passengers,
-  selectionIntervalRef,
-  setStage,
-  setSelectionPreview,
-  setSelectedPassenger,
-  setErrorMessage,
-  setIsProcessing,
-}) {
-  if (!passengers.length) {
-    setErrorMessage(
-      "The verified passenger manifest is empty."
-    );
-    return;
-  }
-
-  setIsProcessing(true);
-  setErrorMessage("");
-  setSelectedPassenger(null);
-  setSelectionPreview(null);
-  setStage(STAGES.SELECTING);
-
-  try {
-    selectionIntervalRef.current = window.setInterval(() => {
-      const previewIndex = secureRandomIndex(passengers.length);
-
-      if (previewIndex !== null) {
-        setSelectionPreview(passengers[previewIndex]);
-      }
-    }, SELECTION_TICK);
-
-    await delay(SELECTION_DURATION);
-
-    window.clearInterval(selectionIntervalRef.current);
-    selectionIntervalRef.current = null;
-
-    const winnerIndex = secureRandomIndex(passengers.length);
-
-    if (winnerIndex === null) {
-      throw new Error(
-        "A passenger could not be selected."
-      );
-    }
-
-    const winner = passengers[winnerIndex];
-
-    setSelectionPreview(winner);
-
-    const { error: previousWinnerError } = await supabase
-      .from("participants")
-      .update({
-        giveaway_winner: false,
-        giveaway_selected_at: null,
-      })
-      .eq("giveaway_winner", true)
-      .neq("id", winner.id);
-
-    if (previousWinnerError) {
-      throw previousWinnerError;
-    }
-
-    const selectedAt = new Date().toISOString();
-
-    const { error: winnerUpdateError } = await supabase
-      .from("participants")
-      .update({
-        giveaway_winner: true,
-        giveaway_selected_at: selectedAt,
-      })
-      .eq("id", winner.id)
-      .eq("giveaway_eligible", true);
-
-    if (winnerUpdateError) {
-      throw winnerUpdateError;
-    }
-
-    setSelectedPassenger({
-      ...winner,
-      giveaway_winner: true,
-      giveaway_selected_at: selectedAt,
-    });
-
-    await delay(1300);
-
-    setStage(STAGES.PASSENGER_SELECTED);
-  } catch (error) {
-    if (selectionIntervalRef.current) {
-      window.clearInterval(selectionIntervalRef.current);
-      selectionIntervalRef.current = null;
-    }
-
-    console.error("Passenger selection error:", error);
-
-    setSelectionPreview(null);
-    setErrorMessage(
-      error?.message ||
-        "Passenger selection could not be completed."
-    );
-
-    setStage(STAGES.DESTINATION_LOCKED);
-  } finally {
-    setIsProcessing(false);
-  }
-}
-
-function resetExperience({
-  selectionIntervalRef,
-  setStage,
-  setPassengers,
-  setSelectedPassenger,
-  setSelectionPreview,
-  setManifestLoadedAt,
-  setErrorMessage,
-  setIsProcessing,
-}) {
-  if (selectionIntervalRef.current) {
-    window.clearInterval(selectionIntervalRef.current);
-    selectionIntervalRef.current = null;
-  }
-
-  setStage(STAGES.INITIAL);
-  setPassengers([]);
-  setSelectedPassenger(null);
-  setSelectionPreview(null);
-  setManifestLoadedAt(null);
-  setErrorMessage("");
-  setIsProcessing(false);
-}
-
-
-// ============================================================================
-// SECTION 6 — STAGE SCREENS
+// SECTION 4 — PUBLIC EXPERIENCE STATE SCREENS
 // ============================================================================
 
 function ExperienceStage({
@@ -882,7 +656,9 @@ function OperationsStage({
           variants={MOTION.fadeUp}
           className="max-w-[1400px] text-[clamp(3.2rem,8.6vw,9.7rem)] font-extralight leading-[0.83] tracking-[-0.068em] text-[#f4f3ef]"
         >
-          <span className="block">{content.primary}</span>
+          <span className="block">
+            {content.primary}
+          </span>
 
           <span className="block text-white/72">
             {content.secondary}
@@ -943,7 +719,7 @@ function OperationsStage({
             className="mt-10 max-w-2xl border-l border-red-300/35 bg-red-300/[0.035] px-5 py-3 text-left"
           >
             <p className="text-[8px] uppercase tracking-[0.3em] text-red-200/45">
-              Ground Operations Notice
+              Experience Notice
             </p>
 
             <p className="mt-2 text-xs tracking-[0.035em] text-red-100/65">
@@ -956,12 +732,19 @@ function OperationsStage({
   );
 }
 
+
+// ============================================================================
+// SECTION 5 — PASSENGER SELECTION PUBLIC SCREEN
+// ============================================================================
+
 function PassengerSelectionStage({
   content,
   passenger,
   passengerCount,
 }) {
-  const reference = passenger?.ticket_code || "AV-••••••";
+  const reference =
+    passenger?.ticket_code || "AV-••••••";
+
   const seat = passenger?.seat || "—";
   const gate = passenger?.gate || "—";
   const flight = passenger?.flight || "OM 1025";
@@ -983,12 +766,13 @@ function PassengerSelectionStage({
 
         <h1 className="mt-7 text-[clamp(3.4rem,8.5vw,9.3rem)] font-extralight leading-[0.84] tracking-[-0.07em] text-[#f4f3ef]">
           Selection
+
           <span className="block text-white/65">
             In Progress
           </span>
         </h1>
 
-        <div className="relative mt-12 w-full max-w-5xl border-y border-white/[0.075] py-8 sm:mt-16 sm:py-10">
+        <div className="relative mt-12 w-full max-w-5xl overflow-hidden border-y border-white/[0.075] py-8 sm:mt-16 sm:py-10">
           <motion.div
             className="absolute inset-y-0 w-[34%] bg-gradient-to-r from-transparent via-[#d0b276]/[0.08] to-transparent"
             animate={{
@@ -1003,7 +787,7 @@ function PassengerSelectionStage({
 
           <AnimatePresence mode="wait">
             <motion.div
-              key={`${reference}-${seat}-${gate}`}
+              key={`${reference}-${seat}-${gate}-${flight}`}
               initial={{
                 opacity: 0,
                 y: 14,
@@ -1051,7 +835,8 @@ function PassengerSelectionStage({
           <ProcessingIndicator />
 
           <span className="text-[9px] uppercase tracking-[0.34em] text-white/30">
-            Processing {formatCount(passengerCount)} verified records
+            Processing {formatCount(passengerCount)} verified
+            records
           </span>
         </div>
       </div>
@@ -1073,7 +858,12 @@ function SelectionMetric({ label, value }) {
   );
 }
 
-function PassengerSelectedStage({ content }) {
+
+// ============================================================================
+// SECTION 6 — PASSENGER SELECTED PUBLIC SCREEN
+// ============================================================================
+
+function PassengerSelectedStage() {
   return (
     <motion.section
       variants={MOTION.screen}
@@ -1158,6 +948,7 @@ function PassengerSelectedStage({ content }) {
           className="mt-7 text-[clamp(4rem,10vw,10.8rem)] font-extralight leading-[0.82] tracking-[-0.075em] text-[#f5f4f0]"
         >
           Passenger
+
           <span className="block text-white/65">
             Selected
           </span>
@@ -1200,395 +991,7 @@ function PassengerSelectedStage({ content }) {
 
 
 // ============================================================================
-// SECTION 7 — OPERATIONS CONTROLS
-// ============================================================================
-
-function OperationsConsole({
-  open,
-  setOpen,
-  stage,
-  stageIndex,
-  passengerCount,
-  manifestLoaded,
-  manifestLoadedAt,
-  isProcessing,
-  selectedPassenger,
-  errorMessage,
-  canSelectPassenger,
-  onFullscreen,
-  onLoadManifest,
-  onBeginBoarding,
-  onVerifyManifest,
-  onConfirmClearance,
-  onLockDestination,
-  onSelectPassenger,
-  onRevealWinner,
-  onClosing,
-  onReset,
-}) {
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Open Ground Operations"
-        className={`fixed bottom-5 right-5 z-40 flex items-center gap-3 rounded-full border border-[#c6a86c]/20 bg-[#06101d]/85 px-5 py-3 text-[8px] uppercase tracking-[0.3em] text-[#d4bd8e]/65 shadow-[0_18px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl transition duration-500 hover:border-[#c6a86c]/40 hover:text-[#ead8b5] ${
-          open
-            ? "pointer-events-none translate-y-4 opacity-0"
-            : "translate-y-0 opacity-100"
-        }`}
-      >
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#c8aa70]/35" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#c8aa70]/80" />
-        </span>
-
-        Ground Operations
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.aside
-            initial={{
-              opacity: 0,
-              y: 35,
-              scale: 0.985,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              y: 25,
-              scale: 0.985,
-            }}
-            transition={{
-              duration: 0.45,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            className="fixed bottom-3 left-3 right-3 z-50 mx-auto max-h-[calc(100vh-1.5rem)] max-w-[1220px] overflow-y-auto border border-white/[0.09] bg-[#050d18]/95 shadow-[0_35px_140px_rgba(0,0,0,0.82)] backdrop-blur-2xl sm:bottom-6 sm:left-6 sm:right-6"
-          >
-            <div className="flex items-start justify-between gap-8 border-b border-white/[0.07] px-5 py-5 sm:px-7">
-              <div>
-                <div className="flex items-center gap-3">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#c8aa70]" />
-
-                  <p className="text-[9px] uppercase tracking-[0.34em] text-[#d3bb8b]">
-                    Ground Operations
-                  </p>
-                </div>
-
-                <p className="mt-2 text-[10px] uppercase tracking-[0.19em] text-white/25">
-                  Secret Destination Ceremonial Control System
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={onFullscreen}
-                  className="border border-white/[0.07] px-4 py-2 text-[8px] uppercase tracking-[0.25em] text-white/35 transition hover:border-[#c8aa70]/30 hover:text-[#ddc89e]"
-                >
-                  Fullscreen
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close operations console"
-                  className="flex h-9 w-9 items-center justify-center border border-white/[0.07] text-lg font-light text-white/35 transition hover:border-white/20 hover:text-white/75"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-
-            <div className="grid gap-5 p-5 sm:p-7 lg:grid-cols-[0.72fr_1.28fr]">
-              <ConsoleStatus
-                stage={stage}
-                stageIndex={stageIndex}
-                passengerCount={passengerCount}
-                manifestLoadedAt={manifestLoadedAt}
-                selectedPassenger={selectedPassenger}
-                isProcessing={isProcessing}
-                errorMessage={errorMessage}
-              />
-
-              <div className="border border-white/[0.065] bg-white/[0.018] p-4 sm:p-5">
-                <div className="mb-4">
-                  <p className="text-[8px] uppercase tracking-[0.3em] text-white/30">
-                    Ceremony sequence
-                  </p>
-
-                  <p className="mt-2 text-xs font-light text-white/25">
-                    Execute the procedures in numerical order.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                  <ConsoleButton
-                    number="01"
-                    label="Load Manifest"
-                    active={stage === STAGES.MANIFEST_LOADING}
-                    disabled={isProcessing}
-                    onClick={onLoadManifest}
-                  />
-
-                  <ConsoleButton
-                    number="02"
-                    label="Begin Final Boarding"
-                    active={stage === STAGES.FINAL_BOARDING}
-                    disabled={!manifestLoaded || isProcessing}
-                    onClick={onBeginBoarding}
-                  />
-
-                  <ConsoleButton
-                    number="03"
-                    label="Verify Manifest"
-                    active={stage === STAGES.VERIFYING}
-                    disabled={!manifestLoaded || isProcessing}
-                    onClick={onVerifyManifest}
-                  />
-
-                  <ConsoleButton
-                    number="04"
-                    label="Confirm Clearance"
-                    active={stage === STAGES.CLEARANCE}
-                    disabled={
-                      stage !== STAGES.VERIFIED ||
-                      isProcessing
-                    }
-                    onClick={onConfirmClearance}
-                  />
-
-                  <ConsoleButton
-                    number="05"
-                    label="Lock Destination"
-                    active={stage === STAGES.DESTINATION_LOCKED}
-                    disabled={
-                      stage !== STAGES.CLEARANCE ||
-                      isProcessing
-                    }
-                    onClick={onLockDestination}
-                  />
-
-                  <ConsoleButton
-                    number="06"
-                    label="Select Passenger"
-                    active={stage === STAGES.SELECTING}
-                    disabled={!canSelectPassenger}
-                    important
-                    onClick={onSelectPassenger}
-                  />
-
-                  <ConsoleButton
-                    number="07"
-                    label="Reveal Passenger"
-                    active={stage === STAGES.WINNER_REVEALED}
-                    disabled={
-                      stage !== STAGES.PASSENGER_SELECTED ||
-                      !selectedPassenger ||
-                      isProcessing
-                    }
-                    important
-                    onClick={onRevealWinner}
-                  />
-
-                  <ConsoleButton
-                    number="08"
-                    label="Closing Ceremony"
-                    active={stage === STAGES.CLOSING}
-                    disabled={
-                      stage !== STAGES.WINNER_REVEALED ||
-                      isProcessing
-                    }
-                    onClick={onClosing}
-                  />
-
-                  <ConsoleButton
-                    number="00"
-                    label="Reset Experience"
-                    disabled={isProcessing}
-                    danger
-                    onClick={onReset}
-                  />
-                </div>
-              </div>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
-
-function ConsoleStatus({
-  stage,
-  stageIndex,
-  passengerCount,
-  manifestLoadedAt,
-  selectedPassenger,
-  isProcessing,
-  errorMessage,
-}) {
-  const content = STAGE_CONTENT[stage];
-
-  return (
-    <div className="border border-white/[0.065] bg-white/[0.018] p-5">
-      <p className="text-[8px] uppercase tracking-[0.3em] text-white/30">
-        Live procedure status
-      </p>
-
-      <div className="mt-5 border-b border-white/[0.065] pb-5">
-        <p className="text-xl font-light tracking-[-0.035em] text-[#eeeae2]">
-          {content.primary} {content.secondary}
-        </p>
-
-        <div className="mt-3 flex items-center gap-2">
-          <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              errorMessage
-                ? "bg-red-300"
-                : isProcessing
-                  ? "animate-pulse bg-[#c8aa70]"
-                  : "bg-emerald-300/70"
-            }`}
-          />
-
-          <span className="text-[8px] uppercase tracking-[0.27em] text-white/30">
-            {errorMessage
-              ? "Attention required"
-              : isProcessing
-                ? "Procedure processing"
-                : content.systemStatus}
-          </span>
-        </div>
-      </div>
-
-      <div className="mt-5 grid grid-cols-2 gap-5">
-        <StatusMetric
-          label="Sequence"
-          value={`${String(stageIndex + 1).padStart(
-            2,
-            "0"
-          )} / ${String(STAGE_ORDER.length).padStart(
-            2,
-            "0"
-          )}`}
-        />
-
-        <StatusMetric
-          label="Manifest"
-          value={
-            passengerCount
-              ? formatCount(passengerCount)
-              : "—"
-          }
-        />
-
-        <StatusMetric
-          label="Loaded"
-          value={manifestLoadedAt}
-        />
-
-        <StatusMetric
-          label="Destination"
-          value={
-            stageIndex >=
-            STAGE_ORDER.indexOf(STAGES.DESTINATION_LOCKED)
-              ? "LOCKED"
-              : "PENDING"
-          }
-        />
-      </div>
-
-      <div className="mt-5 border-l border-[#c8aa70]/25 bg-[#c8aa70]/[0.025] px-4 py-3">
-        <p className="text-[8px] uppercase tracking-[0.26em] text-[#cdb583]/50">
-          Selected reference
-        </p>
-
-        <p className="mt-2 truncate font-mono text-[10px] tracking-[0.13em] text-white/40">
-          {selectedPassenger?.ticket_code ||
-            "IDENTITY NOT ASSIGNED"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function StatusMetric({ label, value }) {
-  return (
-    <div>
-      <p className="text-[8px] uppercase tracking-[0.25em] text-white/20">
-        {label}
-      </p>
-
-      <p className="mt-2 truncate font-mono text-[10px] tracking-[0.1em] text-white/48">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function ConsoleButton({
-  number,
-  label,
-  active,
-  disabled,
-  important,
-  danger,
-  onClick,
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={`relative min-h-[78px] overflow-hidden border px-4 py-3 text-left transition duration-300 ${
-        disabled
-          ? "cursor-not-allowed border-white/[0.035] bg-white/[0.01] opacity-30"
-          : danger
-            ? "border-red-300/10 bg-red-400/[0.02] hover:border-red-300/25 hover:bg-red-400/[0.045]"
-            : important
-              ? "border-[#c8aa70]/22 bg-[#c8aa70]/[0.045] hover:border-[#c8aa70]/48 hover:bg-[#c8aa70]/[0.08]"
-              : "border-white/[0.065] bg-white/[0.015] hover:border-white/[0.16] hover:bg-white/[0.035]"
-      } ${
-        active
-          ? "border-[#d0b377]/60 bg-[#c8aa70]/[0.085]"
-          : ""
-      }`}
-    >
-      {active && (
-        <motion.span
-          layoutId="active-console-procedure"
-          className="absolute inset-y-0 left-0 w-px bg-[#dfc58f]"
-        />
-      )}
-
-      <span className="font-mono text-[8px] tracking-[0.2em] text-white/20">
-        {number}
-      </span>
-
-      <span
-        className={`mt-3 block text-[9px] uppercase tracking-[0.2em] ${
-          danger
-            ? "text-red-100/45"
-            : important
-              ? "text-[#dec99f]/70"
-              : "text-white/43"
-        }`}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}
-
-
-// ============================================================================
-// SECTION 8 — WINNER REVEAL
+// SECTION 7 — WINNER REVEAL
 // ============================================================================
 
 function WinnerRevealStage({ content, passenger }) {
@@ -1783,6 +1186,11 @@ function WinnerDivider() {
   );
 }
 
+
+// ============================================================================
+// SECTION 8 — CLOSING CEREMONY
+// ============================================================================
+
 function ClosingStage({ content }) {
   return (
     <motion.section
@@ -1911,6 +1319,7 @@ function PublicHeader({
   stage,
   stageIndex,
   passengerCount,
+  connectionStatus,
 }) {
   return (
     <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-6 py-6 sm:px-9 sm:py-8 lg:px-12">
@@ -1955,6 +1364,8 @@ function PublicHeader({
               : "ACTIVE"
           }
         />
+
+        <ConnectionMetric status={connectionStatus} />
       </div>
     </header>
   );
@@ -1970,6 +1381,32 @@ function HeaderMetric({ label, value }) {
       <p className="mt-2 font-mono text-[8px] tracking-[0.18em] text-white/38">
         {value}
       </p>
+    </div>
+  );
+}
+
+function ConnectionMetric({ status }) {
+  const connected = status === "connected";
+
+  return (
+    <div className="text-right">
+      <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
+        Signal
+      </p>
+
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            connected
+              ? "bg-emerald-300/65"
+              : "animate-pulse bg-[#c8aa70]/70"
+          }`}
+        />
+
+        <p className="font-mono text-[8px] tracking-[0.18em] text-white/38">
+          {connected ? "LIVE" : "SYNC"}
+        </p>
+      </div>
     </div>
   );
 }
@@ -2239,23 +1676,25 @@ function RunwayLayer() {
   return (
     <div className="absolute bottom-[8%] left-1/2 w-[70%] -translate-x-1/2 opacity-30">
       <div className="relative h-12">
-        {Array.from({ length: 13 }).map((_, index) => (
-          <motion.span
-            key={index}
-            animate={{
-              opacity: [0.1, 0.75, 0.1],
-            }}
-            transition={{
-              duration: 3.8,
-              repeat: Infinity,
-              delay: index * 0.18,
-            }}
-            className="absolute bottom-0 h-[2px] w-[2px] rounded-full bg-[#dfc48e]"
-            style={{
-              left: `${(index / 12) * 100}%`,
-            }}
-          />
-        ))}
+        {Array.from({ length: 13 }).map(
+          (_, index) => (
+            <motion.span
+              key={index}
+              animate={{
+                opacity: [0.1, 0.75, 0.1],
+              }}
+              transition={{
+                duration: 3.8,
+                repeat: Infinity,
+                delay: index * 0.18,
+              }}
+              className="absolute bottom-0 h-[2px] w-[2px] rounded-full bg-[#dfc48e]"
+              style={{
+                left: `${(index / 12) * 100}%`,
+              }}
+            />
+          )
+        )}
 
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.055] to-transparent" />
       </div>
@@ -2292,6 +1731,35 @@ function NoiseLayer() {
         }}
       />
     </div>
+  );
+}
+
+
+// ============================================================================
+// SECTION 11 — SUPPORTING VISUAL COMPONENTS
+// ============================================================================
+
+function PublicLoadingScreen() {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020711] text-[#f4f1ea]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(23,68,116,0.38),transparent_45%),linear-gradient(180deg,#06111f_0%,#020812_58%,#01040a_100%)]" />
+
+      <div className="relative z-10 flex flex-col items-center text-center">
+        <OrbitMark large />
+
+        <p className="mt-10 text-[9px] uppercase tracking-[0.42em] text-[#cbb07c]">
+          Secret Destination Experience
+        </p>
+
+        <div className="mt-6 flex items-center gap-4">
+          <ProcessingIndicator />
+
+          <p className="text-[8px] uppercase tracking-[0.32em] text-white/30">
+            Establishing live connection
+          </p>
+        </div>
+      </div>
+    </main>
   );
 }
 
