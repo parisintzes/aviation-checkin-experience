@@ -11,6 +11,11 @@ import {
 } from "react";
 
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Instrument_Sans,
+  IBM_Plex_Mono,
+} from "next/font/google";
+
 import { supabase } from "@/lib/supabaseClient";
 
 
@@ -19,6 +24,18 @@ import { supabase } from "@/lib/supabaseClient";
 // ============================================================================
 
 const EXPERIENCE_ID = "main";
+const instrumentSans = Instrument_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-instrument-sans",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["300", "400", "500"],
+  display: "swap",
+  variable: "--font-ibm-plex-mono",
+});
 
 const STAGES = {
   INITIAL: "initial",
@@ -504,7 +521,9 @@ export default function GiveawayPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#020711] text-[#f4f1ea] selection:bg-[#c7a86c]/30">
+   <main
+  className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative min-h-screen overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea] selection:bg-[#c7a86c]/30`}
+>
       <AtmosphericBackground
         stage={safeStage}
         atmosphere={stageContent.atmosphere}
@@ -634,36 +653,36 @@ function OperationsStage({
         className="relative z-10 flex w-full max-w-[1350px] flex-col items-center px-4 text-center"
       >
         <motion.div
-          variants={MOTION.fadeUp}
-          className="mb-7 flex items-center gap-5 sm:mb-9"
-        >
-          <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#c8aa70]/50 sm:w-24" />
+  variants={MOTION.fadeUp}
+  className="mb-8 flex flex-col items-center sm:mb-10"
+>
+  <div className="flex items-center gap-4">
+    <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#c8aa70]/45 sm:w-20" />
 
-          <div>
-            <p className="text-[8px] font-medium uppercase tracking-[0.42em] text-white/30 sm:text-[9px]">
-              {content.chapter}
-            </p>
+    <p className="font-[var(--font-ibm-plex-mono)] text-[7px] font-normal uppercase tracking-[0.4em] text-white/24 sm:text-[8px]">
+      {content.chapter}
+    </p>
 
-            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.38em] text-[#cbb07c] sm:text-xs">
-              {content.eyebrow}
-            </p>
-          </div>
+    <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#c8aa70]/45 sm:w-20" />
+  </div>
 
-          <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#c8aa70]/50 sm:w-24" />
-        </motion.div>
+  <p className="mt-4 text-[9px] font-medium uppercase tracking-[0.42em] text-[#d1b77f] sm:text-[11px]">
+    {content.eyebrow}
+  </p>
+</motion.div>
 
         <motion.h1
-          variants={MOTION.fadeUp}
-          className="max-w-[1400px] text-[clamp(3.2rem,8.6vw,9.7rem)] font-extralight leading-[0.83] tracking-[-0.068em] text-[#f4f3ef]"
-        >
-          <span className="block">
-            {content.primary}
-          </span>
+  variants={MOTION.fadeUp}
+  className="max-w-[1480px] text-[clamp(3.35rem,8.4vw,9.4rem)] font-[300] leading-[0.86] tracking-[-0.075em] text-[#f7f6f2]"
+>
+  <span className="block">
+    {content.primary}
+  </span>
 
-          <span className="block text-white/72">
-            {content.secondary}
-          </span>
-        </motion.h1>
+  <span className="block text-[#d9dde3]/72">
+    {content.secondary}
+  </span>
+</motion.h1>
 
         <motion.p
           variants={MOTION.fadeUp}
@@ -687,7 +706,7 @@ function OperationsStage({
               <span className="h-px w-12 bg-white/10" />
             </div>
 
-            <p className="mt-5 font-mono text-5xl font-light tracking-[-0.055em] text-[#e5dccb] sm:text-7xl">
+            <p className="mt-5 font-[var(--font-ibm-plex-mono)] text-5xl font-light tracking-[-0.055em] text-[#e5dccb] sm:text-7xl">
               {formatCount(passengerCount)}
             </p>
           </motion.div>
@@ -764,7 +783,7 @@ function PassengerSelectionStage({
           {content.eyebrow}
         </p>
 
-        <h1 className="mt-7 text-[clamp(3.4rem,8.5vw,9.3rem)] font-extralight leading-[0.84] tracking-[-0.07em] text-[#f4f3ef]">
+        <h1 className="mt-7 text-[clamp(3.5rem,8.3vw,9.1rem)] font-[300] leading-[0.86] tracking-[-0.075em] text-[#f7f6f2]">
           Selection
 
           <span className="block text-white/65">
@@ -851,7 +870,7 @@ function SelectionMetric({ label, value }) {
         {label}
       </p>
 
-      <p className="mt-3 truncate font-mono text-sm tracking-[0.15em] text-[#dfcfaf]/75 sm:text-lg">
+      <p className="mt-3 truncate font-[var(--font-ibm-plex-mono)] text-sm tracking-[0.15em] text-[#dfcfaf]/75 sm:text-lg">
         {value}
       </p>
     </div>
@@ -1072,7 +1091,7 @@ function WinnerRevealStage({ content, passenger }) {
             delay: 0.75,
             duration: 0.8,
           }}
-          className="mt-8 font-mono text-xs tracking-[0.28em] text-white/35 sm:text-sm"
+          className="mt-8 font-[var(--font-ibm-plex-mono)] text-xs tracking-[0.28em] text-white/35 sm:text-sm"
         >
           {passenger?.ticket_code || "AV-••••••"}
         </motion.p>
@@ -1173,7 +1192,7 @@ function WinnerMetric({ label, value }) {
         {label}
       </p>
 
-      <p className="mt-2 font-mono text-xs tracking-[0.16em] text-[#e0cfad]/70">
+      <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-xs tracking-[0.16em] text-[#e0cfad]/70">
         {value}
       </p>
     </div>
@@ -1378,7 +1397,7 @@ function HeaderMetric({ label, value }) {
         {label}
       </p>
 
-      <p className="mt-2 font-mono text-[8px] tracking-[0.18em] text-white/38">
+      <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.18em] text-white/38">
         {value}
       </p>
     </div>
@@ -1403,7 +1422,7 @@ function ConnectionMetric({ status }) {
           }`}
         />
 
-        <p className="font-mono text-[8px] tracking-[0.18em] text-white/38">
+        <p className="font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.18em] text-white/38">
           {connected ? "LIVE" : "SYNC"}
         </p>
       </div>
@@ -1431,7 +1450,7 @@ function BrandSignature({ stage, status, progress }) {
               {status}
             </span>
 
-            <span className="font-mono text-[7px] tracking-[0.17em] text-white/23">
+            <span className="font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.17em] text-white/23">
               {String(progress).padStart(3, "0")}%
             </span>
           </div>
@@ -1455,7 +1474,7 @@ function BrandSignature({ stage, status, progress }) {
             Secret Destination
           </p>
 
-          <p className="mt-2 font-mono text-[7px] tracking-[0.2em] text-white/13">
+          <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.2em] text-white/13">
             {stage === STAGES.CLOSING
               ? "JOURNEY COMPLETE"
               : "CONFIDENTIAL"}
@@ -1625,7 +1644,7 @@ function ManifestDataStream({ passengers, visible }) {
           (reference, index) => (
             <p
               key={`${reference}-${index}`}
-              className="font-mono text-[7px] uppercase tracking-[0.28em] text-white/[0.055]"
+              className="font-[var(--font-ibm-plex-mono)] text-[7px] uppercase tracking-[0.28em] text-white/[0.055]"
             >
               {reference}
             </p>
@@ -1767,7 +1786,7 @@ function StageCoordinates() {
   return (
     <>
       <div className="absolute left-0 top-1/2 hidden -translate-y-1/2 items-center gap-3 lg:flex">
-        <span className="font-mono text-[7px] tracking-[0.2em] text-white/12">
+        <span className="font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.2em] text-white/12">
           40.6401° N
         </span>
 
@@ -1777,7 +1796,7 @@ function StageCoordinates() {
       <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-3 lg:flex">
         <span className="h-px w-12 bg-white/[0.07]" />
 
-        <span className="font-mono text-[7px] tracking-[0.2em] text-white/12">
+        <span className="font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.2em] text-white/12">
           22.9444° E
         </span>
       </div>
