@@ -964,7 +964,7 @@ function PassengerSelectedStage() {
             duration: 1.25,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-7 text-[clamp(4rem,10vw,10.8rem)] font-extralight leading-[0.82] tracking-[-0.075em] text-[#f5f4f0]"
+          className="mt-7 text-[clamp(4rem,9.6vw,10.4rem)] font-[300] leading-[0.84] tracking-[-0.08em] text-[#f7f6f2]"
         >
           Passenger
 
@@ -1112,7 +1112,7 @@ function WinnerRevealStage({ content, passenger }) {
             duration: 1.5,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-8 max-w-[1450px] font-serif text-[clamp(4rem,10vw,11rem)] font-light leading-[0.85] tracking-[-0.065em] text-[#f7f1e7]"
+          className="mt-8 max-w-[1500px] text-[clamp(4rem,9.8vw,10.8rem)] font-[300] leading-[0.86] tracking-[-0.08em] text-[#faf8f3]"
         >
           {passengerName}
         </motion.h1>
@@ -1274,7 +1274,7 @@ function ClosingStage({ content }) {
             duration: 1.4,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-8 text-[clamp(3.6rem,9vw,9.8rem)] font-extralight leading-[0.84] tracking-[-0.075em] text-[#f5f3ed]"
+          className="mt-8 text-[clamp(3.6rem,8.8vw,9.5rem)] font-[300] leading-[0.86] tracking-[-0.08em] text-[#f7f6f2]"
         >
           <span className="block">
             {content.primary}
