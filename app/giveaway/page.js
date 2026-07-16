@@ -1397,7 +1397,31 @@ function PublicHeader({
     </header>
   );
 }
+function ConnectionMetric({ status }) {
+  const connected = status === "connected";
 
+  return (
+    <div className="min-w-[66px] text-right">
+      <p className="text-[6px] font-medium uppercase tracking-[0.34em] text-white/16">
+        Signal
+      </p>
+
+      <div className="mt-2 flex items-center justify-end gap-2">
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            connected
+              ? "bg-emerald-300/65"
+              : "animate-pulse bg-[#c8aa70]/70"
+          }`}
+        />
+
+        <p className="font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.16em] text-white/42">
+          {connected ? "LIVE" : "SYNC"}
+        </p>
+      </div>
+    </div>
+  );
+}
 function BrandSignature({
   stage,
   status,
