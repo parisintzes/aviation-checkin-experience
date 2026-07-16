@@ -1396,6 +1396,19 @@ function PublicHeader({
       </div>
     </header>
   );
+function HeaderMetric({ label, value }) {
+  return (
+    <div className="min-w-[66px] text-right">
+      <p className="text-[6px] font-medium uppercase tracking-[0.34em] text-white/16">
+        {label}
+      </p>
+
+      <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[8px] font-normal tracking-[0.16em] text-white/42">
+        {value}
+      </p>
+    </div>
+  );
+}
 }
 function ConnectionMetric({ status }) {
   const connected = status === "connected";
