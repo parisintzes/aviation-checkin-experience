@@ -1341,150 +1341,151 @@ function PublicHeader({
   connectionStatus,
 }) {
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-start justify-between px-6 py-6 sm:px-9 sm:py-8 lg:px-12">
-      <div>
-        <p className="text-lg font-light tracking-[-0.04em] text-[#f2eee7] sm:text-2xl">
-          OMMT
-          <span className="lowercase">o</span>
-          ...New Horizons
-        </p>
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-6 pt-6 sm:px-9 sm:pt-8 lg:px-12">
+      <div className="mx-auto flex max-w-[1680px] items-start justify-between border-b border-white/[0.055] pb-5">
+        <div>
+          <p className="text-[17px] font-[400] tracking-[-0.045em] text-[#f3f1eb] sm:text-[21px]">
+            OMMT
+            <span className="lowercase">o</span>
+            <span className="text-white/38">
+              ...New Horizons
+            </span>
+          </p>
 
-        <p className="mt-2 text-[7px] uppercase tracking-[0.39em] text-white/22 sm:text-[8px]">
-          Aviation · Tourism · Innovation
-        </p>
-      </div>
+          <div className="mt-3 flex items-center gap-3">
+            <span className="h-px w-5 bg-[#c8aa70]/45" />
 
-      <div className="hidden items-start gap-8 sm:flex lg:gap-11">
-        <HeaderMetric
-          label="Sequence"
-          value={`${String(stageIndex + 1).padStart(
-            2,
-            "0"
-          )} / ${String(STAGE_ORDER.length).padStart(
-            2,
-            "0"
-          )}`}
-        />
+            <p className="text-[6px] font-medium uppercase tracking-[0.42em] text-white/23 sm:text-[7px]">
+              Aviation · Tourism · Innovation
+            </p>
+          </div>
+        </div>
 
-        <HeaderMetric
-          label="Manifest"
-          value={
-            passengerCount
-              ? formatCount(passengerCount)
-              : "—"
-          }
-        />
+        <div className="hidden items-start gap-7 sm:flex lg:gap-10">
+          <HeaderMetric
+            label="Sequence"
+            value={`${String(stageIndex + 1).padStart(
+              2,
+              "0"
+            )} / ${String(STAGE_ORDER.length).padStart(
+              2,
+              "0"
+            )}`}
+          />
 
-        <HeaderMetric
-          label="Status"
-          value={
-            stage === STAGES.CLOSING
-              ? "COMPLETE"
-              : "ACTIVE"
-          }
-        />
+          <HeaderMetric
+            label="Manifest"
+            value={
+              passengerCount
+                ? formatCount(passengerCount)
+                : "—"
+            }
+          />
 
-        <ConnectionMetric status={connectionStatus} />
+          <HeaderMetric
+            label="Status"
+            value={
+              stage === STAGES.CLOSING
+                ? "COMPLETE"
+                : "ACTIVE"
+            }
+          />
+
+          <ConnectionMetric status={connectionStatus} />
+        </div>
       </div>
     </header>
   );
 }
 
-function HeaderMetric({ label, value }) {
+function BrandSignature({
+  stage,
+  status,
+  progress,
+}) {
+  const destinationState =
+    stage === STAGES.CLOSING
+      ? "JOURNEY COMPLETE"
+      : stage === STAGES.DESTINATION_LOCKED ||
+          STAGE_ORDER.indexOf(stage) >
+            STAGE_ORDER.indexOf(
+              STAGES.DESTINATION_LOCKED
+            )
+        ? "DESTINATION LOCKED"
+        : "DESTINATION CONFIDENTIAL";
+
   return (
-    <div className="text-right">
-      <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
-        {label}
-      </p>
+    <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-6 pb-7 sm:px-9 sm:pb-9 lg:px-12">
+      <div className="mx-auto max-w-[1680px]">
+        <div className="grid items-end gap-8 border-t border-white/[0.05] pt-5 sm:grid-cols-[1fr_1.2fr_1fr]">
+          <div className="hidden sm:block">
+            <p className="text-[6px] font-medium uppercase tracking-[0.38em] text-white/17">
+              Marketing Made in Greece — On Air
+            </p>
 
-      <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.18em] text-white/38">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function ConnectionMetric({ status }) {
-  const connected = status === "connected";
-
-  return (
-    <div className="text-right">
-      <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
-        Signal
-      </p>
-
-      <div className="mt-2 flex items-center justify-end gap-2">
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            connected
-              ? "bg-emerald-300/65"
-              : "animate-pulse bg-[#c8aa70]/70"
-          }`}
-        />
-
-        <p className="font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.18em] text-white/38">
-          {connected ? "LIVE" : "SYNC"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function BrandSignature({ stage, status, progress }) {
-  return (
-    <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-6 pb-6 sm:px-9 sm:pb-8 lg:px-12">
-      <div className="mx-auto flex max-w-[1680px] items-end justify-between gap-8">
-        <div className="hidden sm:block">
-          <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
-            Marketing Made in Greece — On Air
-          </p>
-
-          <p className="mt-2 text-[7px] uppercase tracking-[0.3em] text-white/13">
-            Philoxenia 2026
-          </p>
-        </div>
-
-        <div className="w-full max-w-md sm:w-[360px]">
-          <div className="mb-2 flex items-center justify-between gap-6">
-            <span className="truncate text-[7px] uppercase tracking-[0.3em] text-white/23">
-              {status}
-            </span>
-
-            <span className="font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.17em] text-white/23">
-              {String(progress).padStart(3, "0")}%
-            </span>
+            <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.18em] text-white/12">
+              PHILOXENIA 2026
+            </p>
           </div>
 
-          <div className="h-px overflow-hidden bg-white/[0.06]">
-            <motion.div
-              animate={{
-                width: `${progress}%`,
-              }}
-              transition={{
-                duration: 1.15,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="h-full bg-gradient-to-r from-[#715a35] via-[#c6a86c] to-[#e1ca98]"
-            />
+          <div className="mx-auto w-full max-w-[470px]">
+            <div className="flex items-center justify-between gap-6">
+              <div>
+                <p className="text-[6px] font-medium uppercase tracking-[0.36em] text-white/16">
+                  Flight Sequence
+                </p>
+
+                <p className="mt-2 text-[7px] font-medium uppercase tracking-[0.28em] text-white/34">
+                  {status}
+                </p>
+              </div>
+
+              <p className="font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.15em] text-[#d2b77f]/55">
+                {String(progress).padStart(3, "0")}%
+              </p>
+            </div>
+
+            <div className="relative mt-4 h-[3px]">
+              <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/[0.07]" />
+
+              <motion.div
+                animate={{
+                  width: `${progress}%`,
+                }}
+                transition={{
+                  duration: 1.2,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="absolute left-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-[#7e633a] via-[#c8aa70] to-[#e3cd9c] shadow-[0_0_10px_rgba(200,170,112,0.25)]"
+              />
+
+              <motion.span
+                animate={{
+                  left: `${progress}%`,
+                }}
+                transition={{
+                  duration: 1.2,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="absolute top-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ddc48f] shadow-[0_0_12px_rgba(221,196,143,0.65)]"
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="hidden text-right lg:block">
-          <p className="text-[7px] uppercase tracking-[0.34em] text-white/18">
-            Secret Destination
-          </p>
+          <div className="hidden text-right sm:block">
+            <p className="text-[6px] font-medium uppercase tracking-[0.38em] text-white/17">
+              Mission Status
+            </p>
 
-          <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.2em] text-white/13">
-            {stage === STAGES.CLOSING
-              ? "JOURNEY COMPLETE"
-              : "CONFIDENTIAL"}
-          </p>
+            <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.17em] text-white/26">
+              {destinationState}
+            </p>
+          </div>
         </div>
       </div>
     </footer>
   );
 }
-
 
 // ============================================================================
 // SECTION 10 — ATMOSPHERIC BACKGROUND
@@ -1760,7 +1761,9 @@ function NoiseLayer() {
 
 function PublicLoadingScreen() {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020711] text-[#f4f1ea]">
+   <main
+  className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea]`}
+>ζ
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(23,68,116,0.38),transparent_45%),linear-gradient(180deg,#06111f_0%,#020812_58%,#01040a_100%)]" />
 
       <div className="relative z-10 flex flex-col items-center text-center">
