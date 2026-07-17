@@ -644,7 +644,6 @@ function OperationsStage({
       exit="exit"
       className="relative flex min-h-[610px] items-center justify-center"
     >
-      <StageCoordinates />
 
       <motion.div
         variants={MOTION.stagger}
