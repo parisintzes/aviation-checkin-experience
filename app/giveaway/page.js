@@ -1027,22 +1027,6 @@ function WinnerRevealStage({ content, passenger }) {
     >
       <StageCoordinates />
 
-      <motion.div
-        initial={{
-          opacity: 0,
-          scaleX: 0,
-        }}
-        animate={{
-          opacity: 1,
-          scaleX: 1,
-        }}
-        transition={{
-          duration: 1.8,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        className="absolute left-[8%] right-[8%] top-1/2 h-px origin-center bg-gradient-to-r from-transparent via-[#d5b878]/45 to-transparent"
-      />
-
       <div className="relative z-10 flex w-full max-w-[1500px] flex-col items-center px-4 text-center">
         <motion.div
           initial={{
