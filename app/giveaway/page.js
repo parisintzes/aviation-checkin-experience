@@ -672,7 +672,7 @@ function OperationsStage({
 
         <motion.h1
   variants={MOTION.fadeUp}
-  className="max-w-[1480px] text-[clamp(3.35rem,8.4vw,9.4rem)] font-[300] leading-[0.86] tracking-[-0.075em] text-[#f7f6f2]"
+  className="max-w-[1480px] text-[clamp(3.35rem,8.4vw,9.4rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]"
 >
   <span className="block">
     {content.primary}
@@ -782,7 +782,7 @@ function PassengerSelectionStage({
           {content.eyebrow}
         </p>
 
-        <h1 className="mt-7 text-[clamp(3.5rem,8.3vw,9.1rem)] font-[300] leading-[0.86] tracking-[-0.075em] text-[#f7f6f2]">
+        <h1 className="mt-7 text-[clamp(3.5rem,8.3vw,9.1rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]">
           Selection
 
           <span className="block text-white/65">
@@ -963,7 +963,7 @@ function PassengerSelectedStage() {
             duration: 1.25,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-7 text-[clamp(4rem,9.6vw,10.4rem)] font-[300] leading-[0.84] tracking-[-0.08em] text-[#f7f6f2]"
+          className="mt-7 text-[clamp(4rem,9.6vw,10.4rem)] font-[300] leading-[0.84] tracking-[-0.03em] text-[#f7f6f2]"
         >
           Passenger
 
@@ -1095,7 +1095,7 @@ function WinnerRevealStage({ content, passenger }) {
             duration: 1.5,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-8 max-w-[1500px] text-[clamp(4rem,9.8vw,10.8rem)] font-[300] leading-[0.86] tracking-[-0.08em] text-[#faf8f3]"
+          className="mt-8 max-w-[1500px] text-[clamp(4rem,9.8vw,10.8rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#faf8f3]"
         >
           {passengerName}
         </motion.h1>
@@ -1257,7 +1257,7 @@ function ClosingStage({ content }) {
             duration: 1.4,
             ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-8 text-[clamp(3.6rem,8.8vw,9.5rem)] font-[300] leading-[0.86] tracking-[-0.08em] text-[#f7f6f2]"
+          className="mt-8 text-[clamp(3.6rem,8.8vw,9.5rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]"
         >
           <span className="block">
             {content.primary}
