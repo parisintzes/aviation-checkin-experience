@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { AnimatePresence, motion } from "framer-motion";
+
 import {
   Instrument_Sans,
   IBM_Plex_Mono,
@@ -18,12 +19,12 @@ import {
 
 import { supabase } from "@/lib/supabaseClient";
 
-
 // ============================================================================
 // SECTION 2 — CONFIGURATION
 // ============================================================================
 
 const EXPERIENCE_ID = "main";
+
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   display: "swap",
@@ -46,6 +47,9 @@ const STAGES = {
   VERIFIED: "verified",
   CLEARANCE: "clearance",
   DESTINATION_LOCKED: "destination_locked",
+
+  DESTINATION_REVEALED: "destination_revealed",
+
   SELECTING: "selecting",
   PASSENGER_SELECTED: "passenger_selected",
   WINNER_REVEALED: "winner_revealed",
@@ -61,6 +65,7 @@ const STAGE_ORDER = [
   STAGES.VERIFIED,
   STAGES.CLEARANCE,
   STAGES.DESTINATION_LOCKED,
+  STAGES.DESTINATION_REVEALED,
   STAGES.SELECTING,
   STAGES.PASSENGER_SELECTED,
   STAGES.WINNER_REVEALED,
@@ -158,14 +163,26 @@ const STAGE_CONTENT = {
     primary: "Destination",
     secondary: "Locked",
     description:
-      "The destination has been secured. Passenger selection may now begin.",
+      "Destination secured. Awaiting declassification clearance.",
     systemStatus: "Destination Confidential",
     progress: 78,
     atmosphere: "locked",
   },
 
-  [STAGES.SELECTING]: {
+  [STAGES.DESTINATION_REVEALED]: {
     chapter: "PROCEDURE 08",
+    eyebrow: "Destination Declassified",
+    primary: "PARIS",
+    secondary: "ORLY AIRPORT",
+    description:
+      "The secret destination has been officially revealed.",
+    systemStatus: "Destination Revealed — ORY",
+    progress: 83,
+    atmosphere: "destination_reveal",
+  },
+
+  [STAGES.SELECTING]: {
+    chapter: "PROCEDURE 09",
     eyebrow: "Passenger Selection Sequence",
     primary: "Selection",
     secondary: "In Progress",
@@ -213,6 +230,10 @@ const STAGE_CONTENT = {
   },
 };
 
+// ============================================================================
+// SECTION 3 — MOTION CONFIGURATION
+// ============================================================================
+
 const MOTION = {
   screen: {
     initial: {
@@ -225,6 +246,7 @@ const MOTION = {
       opacity: 1,
       filter: "blur(0px)",
       scale: 1,
+
       transition: {
         duration: 1.15,
         ease: [0.22, 1, 0.36, 1],
@@ -235,6 +257,7 @@ const MOTION = {
       opacity: 0,
       filter: "blur(12px)",
       scale: 1.012,
+
       transition: {
         duration: 0.65,
         ease: [0.4, 0, 1, 1],
@@ -251,6 +274,7 @@ const MOTION = {
     animate: {
       opacity: 1,
       y: 0,
+
       transition: {
         duration: 0.9,
         ease: [0.22, 1, 0.36, 1],
@@ -272,20 +296,23 @@ const formatCount = (value) =>
     minimumIntegerDigits: 2,
   }).format(value || 0);
 
-
 // ============================================================================
-// SECTION 3 — MAIN PUBLIC GIVEAWAY PAGE
+// SECTION 4 — MAIN PUBLIC GIVEAWAY PAGE
 // ============================================================================
 
 export default function GiveawayPage() {
   const [experience, setExperience] = useState(null);
+
   const [passengers, setPassengers] = useState([]);
+
   const [selectedPassenger, setSelectedPassenger] =
     useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
+
   const [connectionStatus, setConnectionStatus] =
     useState("connecting");
+
   const [errorMessage, setErrorMessage] = useState("");
 
   const stage = experience?.stage || STAGES.INITIAL;
@@ -306,6 +333,10 @@ export default function GiveawayPage() {
 
   const selectionPreview =
     experience?.selection_preview || null;
+
+  // --------------------------------------------------------------------------
+  // LOAD SELECTED PASSENGER
+  // --------------------------------------------------------------------------
 
   const loadSelectedPassenger = useCallback(
     async (passengerId) => {
@@ -354,6 +385,10 @@ export default function GiveawayPage() {
     []
   );
 
+  // --------------------------------------------------------------------------
+  // LOAD PASSENGER REFERENCES
+  // --------------------------------------------------------------------------
+
   const loadPassengerReferences = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -382,14 +417,12 @@ export default function GiveawayPage() {
         "Passenger reference loading error:",
         error
       );
-
-      /*
-       * Δεν εμφανίζουμε public error για τα atmospheric
-       * references, επειδή δεν επηρεάζουν τη λειτουργία
-       * της τελετής.
-       */
     }
   }, []);
+
+  // --------------------------------------------------------------------------
+  // APPLY EXPERIENCE STATE
+  // --------------------------------------------------------------------------
 
   const applyExperienceState = useCallback(
     async (nextExperience) => {
@@ -410,6 +443,10 @@ export default function GiveawayPage() {
     },
     [loadSelectedPassenger]
   );
+
+  // --------------------------------------------------------------------------
+  // INITIAL EXPERIENCE
+  // --------------------------------------------------------------------------
 
   const loadInitialExperience = useCallback(async () => {
     setIsLoading(true);
@@ -453,6 +490,10 @@ export default function GiveawayPage() {
     loadInitialExperience();
   }, [loadInitialExperience]);
 
+  // --------------------------------------------------------------------------
+  // SUPABASE REALTIME
+  // --------------------------------------------------------------------------
+
   useEffect(() => {
     const channel = supabase
       .channel("giveaway-public-experience")
@@ -492,6 +533,10 @@ export default function GiveawayPage() {
     };
   }, [applyExperienceState]);
 
+  // --------------------------------------------------------------------------
+  // REFRESH WHEN DISPLAY RETURNS TO FOREGROUND
+  // --------------------------------------------------------------------------
+
   useEffect(() => {
     const refreshState = () => {
       if (document.visibilityState === "visible") {
@@ -521,9 +566,9 @@ export default function GiveawayPage() {
   }
 
   return (
-   <main
-  className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative min-h-screen overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea] selection:bg-[#c7a86c]/30`}
->
+    <main
+      className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative min-h-screen overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea] selection:bg-[#c7a86c]/30`}
+    >
       <AtmosphericBackground
         stage={safeStage}
         atmosphere={stageContent.atmosphere}
@@ -564,9 +609,8 @@ export default function GiveawayPage() {
   );
 }
 
-
 // ============================================================================
-// SECTION 4 — PUBLIC EXPERIENCE STATE SCREENS
+// SECTION 5 — EXPERIENCE STAGE ROUTER
 // ============================================================================
 
 function ExperienceStage({
@@ -577,6 +621,10 @@ function ExperienceStage({
   selectedPassenger,
   errorMessage,
 }) {
+  if (stage === STAGES.DESTINATION_REVEALED) {
+    return <DestinationRevealStage />;
+  }
+
   if (stage === STAGES.SELECTING) {
     return (
       <PassengerSelectionStage
@@ -588,9 +636,7 @@ function ExperienceStage({
   }
 
   if (stage === STAGES.PASSENGER_SELECTED) {
-    return (
-      <PassengerSelectedStage content={content} />
-    );
+    return <PassengerSelectedStage />;
   }
 
   if (stage === STAGES.WINNER_REVEALED) {
@@ -615,6 +661,10 @@ function ExperienceStage({
     />
   );
 }
+
+// ============================================================================
+// SECTION 6 — STANDARD OPERATIONS STAGE
+// ============================================================================
 
 function OperationsStage({
   stage,
@@ -644,7 +694,6 @@ function OperationsStage({
       exit="exit"
       className="relative flex min-h-[610px] items-center justify-center"
     >
-
       <motion.div
         variants={MOTION.stagger}
         initial="initial"
@@ -652,36 +701,36 @@ function OperationsStage({
         className="relative z-10 flex w-full max-w-[1350px] flex-col items-center px-4 text-center"
       >
         <motion.div
-  variants={MOTION.fadeUp}
-  className="mb-8 flex flex-col items-center sm:mb-10"
->
-  <div className="flex items-center gap-4">
-    <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#c8aa70]/45 sm:w-20" />
+          variants={MOTION.fadeUp}
+          className="mb-8 flex flex-col items-center sm:mb-10"
+        >
+          <div className="flex items-center gap-4">
+            <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#c8aa70]/45 sm:w-20" />
 
-    <p className="font-[var(--font-ibm-plex-mono)] text-[7px] font-normal uppercase tracking-[0.4em] text-white/24 sm:text-[8px]">
-      {content.chapter}
-    </p>
+            <p className="font-[var(--font-ibm-plex-mono)] text-[7px] font-normal uppercase tracking-[0.4em] text-white/24 sm:text-[8px]">
+              {content.chapter}
+            </p>
 
-    <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#c8aa70]/45 sm:w-20" />
-  </div>
+            <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#c8aa70]/45 sm:w-20" />
+          </div>
 
-  <p className="mt-4 text-[9px] font-medium uppercase tracking-[0.42em] text-[#d1b77f] sm:text-[11px]">
-    {content.eyebrow}
-  </p>
-</motion.div>
+          <p className="mt-4 text-[9px] font-medium uppercase tracking-[0.42em] text-[#d1b77f] sm:text-[11px]">
+            {content.eyebrow}
+          </p>
+        </motion.div>
 
         <motion.h1
-  variants={MOTION.fadeUp}
-  className="max-w-[1480px] text-[clamp(3.35rem,8.4vw,9.4rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]"
->
-  <span className="block">
-    {content.primary}
-  </span>
+          variants={MOTION.fadeUp}
+          className="max-w-[1480px] text-[clamp(3.35rem,8.4vw,9.4rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]"
+        >
+          <span className="block">
+            {content.primary}
+          </span>
 
-  <span className="block text-[#d9dde3]/72">
-    {content.secondary}
-  </span>
-</motion.h1>
+          <span className="block text-white/65">
+            {content.secondary}
+          </span>
+        </motion.h1>
 
         <motion.p
           variants={MOTION.fadeUp}
@@ -750,9 +799,305 @@ function OperationsStage({
   );
 }
 
+// ============================================================================
+// SECTION 7 — CINEMATIC DESTINATION REVEAL
+// ============================================================================
+
+function DestinationRevealStage() {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const timers = [
+      window.setTimeout(() => setPhase(1), 1500),
+      window.setTimeout(() => setPhase(2), 3000),
+      window.setTimeout(() => setPhase(3), 4500),
+      window.setTimeout(() => setPhase(4), 6000),
+      window.setTimeout(() => setPhase(5), 7500),
+    ];
+
+    return () => {
+      timers.forEach((timer) => {
+        window.clearTimeout(timer);
+      });
+    };
+  }, []);
+
+  return (
+    <motion.section
+      variants={MOTION.screen}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="relative flex min-h-[700px] items-center justify-center overflow-hidden"
+    >
+      <StageCoordinates />
+
+      {/* CINEMATIC RADAR */}
+
+      <motion.div
+        initial={{
+          opacity: 0,
+        }}
+        animate={{
+          opacity: 0.16,
+        }}
+        transition={{
+          duration: 2,
+        }}
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c8aa70]/20"
+      >
+        <div className="absolute inset-[15%] rounded-full border border-[#c8aa70]/15" />
+
+        <div className="absolute inset-[30%] rounded-full border border-[#c8aa70]/15" />
+
+        <div className="absolute inset-[45%] rounded-full border border-[#c8aa70]/15" />
+
+        <motion.div
+          animate={{
+            rotate: 360,
+          }}
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+          className="absolute inset-0 rounded-full"
+          style={{
+            background:
+              "conic-gradient(from 0deg, transparent 0deg, transparent 315deg, rgba(200,170,112,0.18) 350deg, transparent 360deg)",
+          }}
+        />
+      </motion.div>
+
+      {/* MAIN CONTENT */}
+
+      <div className="relative z-10 flex w-full max-w-[1500px] flex-col items-center px-4 text-center">
+
+        {/* PHASES 0–2 — CONTROL TOWER */}
+
+        <AnimatePresence mode="wait">
+          {phase < 3 && (
+            <motion.div
+              key="signal"
+              initial={{
+                opacity: 0,
+                y: 20,
+                filter: "blur(12px)",
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                filter: "blur(0px)",
+              }}
+              exit={{
+                opacity: 0,
+                y: -25,
+                filter: "blur(12px)",
+              }}
+              transition={{
+                duration: 0.8,
+              }}
+              className="flex flex-col items-center"
+            >
+              <motion.div
+                animate={{
+                  rotate: 360,
+                }}
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                className="mb-12 flex h-24 w-24 items-center justify-center rounded-full border border-[#c8aa70]/30"
+              >
+                <div className="h-2 w-2 rounded-full bg-[#d8be88] shadow-[0_0_20px_rgba(216,190,136,0.7)]" />
+              </motion.div>
+
+              <p className="font-[var(--font-ibm-plex-mono)] text-[9px] uppercase tracking-[0.45em] text-[#d0b57d] sm:text-xs">
+                {phase === 0
+                  ? "Destination Signal Acquired"
+                  : phase === 1
+                    ? "Coordinates Verified"
+                    : "Declassification Authorised"}
+              </p>
+
+              <motion.h1
+                key={phase}
+                initial={{
+                  opacity: 0,
+                  y: 18,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.7,
+                }}
+                className="mt-8 text-[clamp(2.7rem,6vw,6rem)] font-[300] leading-[0.95] tracking-[-0.035em] text-[#f7f6f2]"
+              >
+                {phase === 0
+                  ? "Signal Acquired"
+                  : phase === 1
+                    ? "Coordinates Verified"
+                    : "Destination Clearance"}
+              </motion.h1>
+
+              <p className="mt-8 font-[var(--font-ibm-plex-mono)] text-[9px] tracking-[0.3em] text-white/30">
+                {phase === 0
+                  ? "ESTABLISHING SECURE DESTINATION LINK"
+                  : phase === 1
+                    ? "48.7292° N · 2.3597° E"
+                    : "DESTINATION DATA READY FOR RELEASE"}
+              </p>
+
+              <div className="mt-10 flex items-center gap-4">
+                <ProcessingIndicator />
+
+                <span className="text-[8px] uppercase tracking-[0.35em] text-white/25">
+                  Control Tower Processing
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* PHASES 3–5 — DESTINATION REVEAL */}
+
+        <AnimatePresence>
+          {phase >= 3 && (
+            <motion.div
+              key="destination"
+              initial={{
+                opacity: 0,
+                scale: 0.94,
+                filter: "blur(20px)",
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                filter: "blur(0px)",
+              }}
+              transition={{
+                duration: 1.6,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="flex w-full flex-col items-center"
+            >
+              <motion.p
+                initial={{
+                  opacity: 0,
+                  y: 15,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: 0.2,
+                  duration: 0.9,
+                }}
+                className="text-[9px] uppercase tracking-[0.5em] text-[#d1b77f] sm:text-xs"
+              >
+                Destination Declassified
+              </motion.p>
+
+              <motion.div
+                initial={{
+                  scaleX: 0,
+                }}
+                animate={{
+                  scaleX: 1,
+                }}
+                transition={{
+                  delay: 0.5,
+                  duration: 1.3,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="mt-8 h-px w-52 origin-center bg-gradient-to-r from-transparent via-[#d8be88] to-transparent sm:w-96"
+              />
+
+              <motion.h1
+                initial={{
+                  opacity: 0,
+                  y: 55,
+                  filter: "blur(18px)",
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  filter: "blur(0px)",
+                }}
+                transition={{
+                  delay: 0.8,
+                  duration: 1.6,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="mt-10 text-[clamp(5rem,15vw,15rem)] font-[300] leading-[0.8] tracking-[-0.055em] text-[#faf8f3]"
+              >
+                PARIS
+              </motion.h1>
+
+              <AnimatePresence>
+                {phase >= 4 && (
+                  <motion.div
+                    initial={{
+                      opacity: 0,
+                      y: 30,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      duration: 1,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="mt-12"
+                  >
+                    <p className="text-xl font-light uppercase tracking-[0.35em] text-[#e4d5b8] sm:text-3xl">
+                      ORLY AIRPORT
+                    </p>
+
+                    <p className="mt-5 font-[var(--font-ibm-plex-mono)] text-[10px] uppercase tracking-[0.45em] text-white/40 sm:text-sm">
+                      ORY · FRANCE
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <AnimatePresence>
+                {phase >= 5 && (
+                  <motion.div
+                    initial={{
+                      opacity: 0,
+                      y: 15,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      duration: 1,
+                    }}
+                    className="mt-12"
+                  >
+                    <p className="text-[9px] uppercase tracking-[0.35em] text-[#d1b77f]/60">
+                      Your Secret Destination Has Been Revealed
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.section>
+  );
+}
 
 // ============================================================================
-// SECTION 5 — PASSENGER SELECTION PUBLIC SCREEN
+// SECTION 8 — PASSENGER SELECTION PUBLIC SCREEN
 // ============================================================================
 
 function PassengerSelectionStage({
@@ -853,8 +1198,7 @@ function PassengerSelectionStage({
           <ProcessingIndicator />
 
           <span className="text-[9px] uppercase tracking-[0.34em] text-white/30">
-            Processing {formatCount(passengerCount)} verified
-            records
+            Processing {formatCount(passengerCount)} verified records
           </span>
         </div>
       </div>
@@ -876,9 +1220,8 @@ function SelectionMetric({ label, value }) {
   );
 }
 
-
 // ============================================================================
-// SECTION 6 — PASSENGER SELECTED PUBLIC SCREEN
+// SECTION 9 — PASSENGER SELECTED PUBLIC SCREEN
 // ============================================================================
 
 function PassengerSelectedStage() {
@@ -1007,9 +1350,8 @@ function PassengerSelectedStage() {
   );
 }
 
-
 // ============================================================================
-// SECTION 7 — WINNER REVEAL
+// SECTION 10 — WINNER REVEAL
 // ============================================================================
 
 function WinnerRevealStage({ content, passenger }) {
@@ -1188,9 +1530,8 @@ function WinnerDivider() {
   );
 }
 
-
 // ============================================================================
-// SECTION 8 — CLOSING CEREMONY
+// SECTION 11 — CLOSING CEREMONY
 // ============================================================================
 
 function ClosingStage({ content }) {
@@ -1312,9 +1653,8 @@ function ClosingStage({ content }) {
   );
 }
 
-
 // ============================================================================
-// SECTION 9 — BRAND SIGNATURE
+// SECTION 12 — PUBLIC HEADER
 // ============================================================================
 
 function PublicHeader({
@@ -1379,6 +1719,8 @@ function PublicHeader({
       </div>
     </header>
   );
+}
+
 function HeaderMetric({ label, value }) {
   return (
     <div className="min-w-[66px] text-right">
@@ -1392,7 +1734,7 @@ function HeaderMetric({ label, value }) {
     </div>
   );
 }
-}
+
 function ConnectionMetric({ status }) {
   const connected = status === "connected";
 
@@ -1418,6 +1760,11 @@ function ConnectionMetric({ status }) {
     </div>
   );
 }
+
+// ============================================================================
+// SECTION 13 — BRAND SIGNATURE
+// ============================================================================
+
 function BrandSignature({
   stage,
   status,
@@ -1426,13 +1773,14 @@ function BrandSignature({
   const destinationState =
     stage === STAGES.CLOSING
       ? "JOURNEY COMPLETE"
-      : stage === STAGES.DESTINATION_LOCKED ||
-          STAGE_ORDER.indexOf(stage) >
-            STAGE_ORDER.indexOf(
-              STAGES.DESTINATION_LOCKED
-            )
-        ? "DESTINATION LOCKED"
-        : "DESTINATION CONFIDENTIAL";
+      : STAGE_ORDER.indexOf(stage) >=
+          STAGE_ORDER.indexOf(
+            STAGES.DESTINATION_REVEALED
+          )
+        ? "DESTINATION REVEALED · ORY"
+        : stage === STAGES.DESTINATION_LOCKED
+          ? "DESTINATION LOCKED"
+          : "DESTINATION CONFIDENTIAL";
 
   return (
     <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-6 pb-7 sm:px-9 sm:pb-9 lg:px-12">
@@ -1508,7 +1856,7 @@ function BrandSignature({
 }
 
 // ============================================================================
-// SECTION 10 — ATMOSPHERIC BACKGROUND
+// SECTION 14 — ATMOSPHERIC BACKGROUND
 // ============================================================================
 
 function AtmosphericBackground({
@@ -1518,6 +1866,7 @@ function AtmosphericBackground({
 }) {
   const intense = [
     "locked",
+    "destination_reveal",
     "selection",
     "reveal",
     "closing",
@@ -1556,7 +1905,8 @@ function AtmosphericBackground({
         animate={{
           opacity:
             atmosphere === "reveal" ||
-            atmosphere === "closing"
+            atmosphere === "closing" ||
+            atmosphere === "destination_reveal"
               ? 0.3
               : atmosphere === "locked"
                 ? 0.18
@@ -1587,6 +1937,7 @@ function AtmosphericBackground({
           STAGES.VERIFIED,
           STAGES.CLEARANCE,
           STAGES.DESTINATION_LOCKED,
+          STAGES.DESTINATION_REVEALED,
         ].includes(stage)}
       />
 
@@ -1601,6 +1952,10 @@ function AtmosphericBackground({
   );
 }
 
+// ============================================================================
+// SECTION 15 — GRID LAYER
+// ============================================================================
+
 function GridLayer() {
   return (
     <div
@@ -1608,15 +1963,22 @@ function GridLayer() {
       style={{
         backgroundImage:
           "linear-gradient(rgba(255,255,255,0.33) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.33) 1px, transparent 1px)",
+
         backgroundSize: "74px 74px",
+
         maskImage:
           "linear-gradient(to bottom, transparent, black 15%, black 80%, transparent)",
+
         WebkitMaskImage:
           "linear-gradient(to bottom, transparent, black 15%, black 80%, transparent)",
       }}
     />
   );
 }
+
+// ============================================================================
+// SECTION 16 — MANIFEST DATA STREAM
+// ============================================================================
 
 function ManifestDataStream({ passengers, visible }) {
   const fallbackReferences = [
@@ -1676,6 +2038,10 @@ function ManifestDataStream({ passengers, visible }) {
   );
 }
 
+// ============================================================================
+// SECTION 17 — RADAR LAYER
+// ============================================================================
+
 function RadarLayer({ visible }) {
   return (
     <motion.div
@@ -1688,9 +2054,11 @@ function RadarLayer({ visible }) {
       className="absolute right-[-13%] top-[12%] hidden h-[620px] w-[620px] rounded-full border border-[#b9d0e9]/20 lg:block"
     >
       <span className="absolute inset-[18%] rounded-full border border-[#b9d0e9]/15" />
+
       <span className="absolute inset-[36%] rounded-full border border-[#b9d0e9]/15" />
 
       <span className="absolute left-1/2 top-0 h-full w-px bg-[#b9d0e9]/10" />
+
       <span className="absolute left-0 top-1/2 h-px w-full bg-[#b9d0e9]/10" />
 
       <motion.div
@@ -1711,6 +2079,10 @@ function RadarLayer({ visible }) {
     </motion.div>
   );
 }
+
+// ============================================================================
+// SECTION 18 — RUNWAY LAYER
+// ============================================================================
 
 function RunwayLayer() {
   return (
@@ -1742,6 +2114,10 @@ function RunwayLayer() {
   );
 }
 
+// ============================================================================
+// SECTION 19 — MOVING REFLECTION
+// ============================================================================
+
 function MovingReflection() {
   return (
     <motion.div
@@ -1760,6 +2136,10 @@ function MovingReflection() {
   );
 }
 
+// ============================================================================
+// SECTION 20 — NOISE LAYER
+// ============================================================================
+
 function NoiseLayer() {
   return (
     <div className="absolute inset-0 opacity-[0.023] mix-blend-soft-light">
@@ -1774,16 +2154,15 @@ function NoiseLayer() {
   );
 }
 
-
 // ============================================================================
-// SECTION 11 — SUPPORTING VISUAL COMPONENTS
+// SECTION 21 — PUBLIC LOADING SCREEN
 // ============================================================================
 
 function PublicLoadingScreen() {
   return (
-   <main
-  className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea]`}
->ζ
+    <main
+      className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea]`}
+    >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(23,68,116,0.38),transparent_45%),linear-gradient(180deg,#06111f_0%,#020812_58%,#01040a_100%)]" />
 
       <div className="relative z-10 flex flex-col items-center text-center">
@@ -1804,6 +2183,10 @@ function PublicLoadingScreen() {
     </main>
   );
 }
+
+// ============================================================================
+// SECTION 22 — STAGE COORDINATES
+// ============================================================================
 
 function StageCoordinates() {
   return (
@@ -1827,6 +2210,10 @@ function StageCoordinates() {
   );
 }
 
+// ============================================================================
+// SECTION 23 — PROCESSING INDICATOR
+// ============================================================================
+
 function ProcessingIndicator() {
   return (
     <span className="flex items-center gap-1.5">
@@ -1848,6 +2235,10 @@ function ProcessingIndicator() {
     </span>
   );
 }
+
+// ============================================================================
+// SECTION 24 — ORBIT MARK
+// ============================================================================
 
 function OrbitMark({ large = false }) {
   const sizeClass = large ? "h-20 w-20" : "h-12 w-12";
@@ -1884,6 +2275,10 @@ function OrbitMark({ large = false }) {
     </div>
   );
 }
+
+// ============================================================================
+// SECTION 25 — CHECK ICON
+// ============================================================================
 
 function CheckIcon() {
   return (
