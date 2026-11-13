@@ -721,8 +721,16 @@ export default function GiveawayOperationsPage() {
   setSuccessMessage("");
 
   try {
-    const response = await fetch(
-      "/api/giveaway/select-winner",
+  // Start the passenger selection stage.
+  await updateExperience({
+    stage: STAGES.SELECTING,
+    is_processing: true,
+    selection_preview: null,
+    last_action: "Passenger Selection Sequence",
+  });
+
+  const response = await fetch(
+    "/api/giveaway/select-winner",
       {
         method: "POST",
         headers: {
