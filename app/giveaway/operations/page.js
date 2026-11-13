@@ -175,27 +175,6 @@ const formatCount = (value) =>
     minimumIntegerDigits: 2,
   }).format(value || 0);
 
-  }
-
-  const range = 0x100000000;
-
-  if (length > range) {
-    throw new Error("Passenger manifest exceeds random selection range.");
-  }
-
-  const limit = Math.floor(range / length) * length;
-  const values = new Uint32Array(1);
-
-  let randomValue;
-
-  do {
-    window.crypto.getRandomValues(values);
-    randomValue = values[0];
-  } while (randomValue >= limit);
-
-  return randomValue % length;
-};
-
 // ============================================================================
 // SECTION 3 — MAIN OPERATIONS PAGE
 // ============================================================================
