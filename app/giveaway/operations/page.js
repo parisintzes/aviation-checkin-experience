@@ -708,31 +708,81 @@ export default function GiveawayOperationsPage() {
             // ================================================================
 
             onSelectPassenger={async () => {
-              if (
-                executingRef.current ||
-                stage !==
-                  STAGES.DESTINATION_REVEALED
-              ) {
-                return;
-              }
+  if (
+    executingRef.current ||
+    stage !== STAGES.DESTINATION_REVEALED
+  ) {
+    return;
+  }
 
-              executingRef.current = true;
+  executingRef.current = true;
+  setIsExecuting(true);
+  setErrorMessage("");
+  setSuccessMessage("");
 
-              try {
-                await handlePassengerSelection({
-                  passengers,
-                  selectionIntervalRef,
-                  updateExperience,
-                  setPassengers,
-                  setSelectedPassenger,
-                  setIsExecuting,
-                  setErrorMessage,
-                  setSuccessMessage,
-                });
-              } finally {
-                executingRef.current = false;
-              }
-            }}
+  try {
+    const response = await fetch(
+      "/api/giveaway/select-winner",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.error || "Passenger selection failed."
+      );
+    }
+
+    const winnerId = result.winnerId;
+
+    if (winnerId == null) {
+      throw new Error("No winner was returned.");
+    }
+
+    await loadSelectedPassenger(winnerId);
+
+    // Read the final stage written by the database function.
+    const { data, error } = await supabase
+      .from("giveaway_experience")
+      .select("*")
+      .eq("id", EXPERIENCE_ID)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (
+      data.stage !== STAGES.PASSENGER_SELECTED ||
+      String(data.selected_passenger_id) !== String(winnerId)
+    ) {
+      throw new Error(
+        "Winner was selected, but the experience state needs verification."
+      );
+    }
+
+    setExperience(data);
+
+    setSuccessMessage(
+      "Passenger selected successfully. Ready for reveal."
+    );
+  } catch (error) {
+    console.error("Passenger selection error:", error);
+
+    setErrorMessage(
+      error?.message || "Passenger selection failed."
+    );
+  } finally {
+    executingRef.current = false;
+    setIsExecuting(false);
+  }
+}}
 
             // ================================================================
             // 08 — REVEAL WINNER
