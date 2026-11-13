@@ -1,12 +1,10 @@
 "use client";
 
-// ============================================================================
-// SECTION 1 — IMPORTS
-// ============================================================================
-
 import {
   useCallback,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -20,7 +18,7 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 
 // ============================================================================
-// SECTION 2 — CONFIGURATION
+// CONFIGURATION
 // ============================================================================
 
 const EXPERIENCE_ID = "main";
@@ -47,9 +45,7 @@ const STAGES = {
   VERIFIED: "verified",
   CLEARANCE: "clearance",
   DESTINATION_LOCKED: "destination_locked",
-
   DESTINATION_REVEALED: "destination_revealed",
-
   SELECTING: "selecting",
   PASSENGER_SELECTED: "passenger_selected",
   WINNER_REVEALED: "winner_revealed",
@@ -73,231 +69,169 @@ const STAGE_ORDER = [
 ];
 
 const STAGE_CONTENT = {
-  [STAGES.INITIAL]: {
-    chapter: "ACT III",
+  initial: {
     eyebrow: "Secret Destination Experience",
     primary: "Final Boarding",
     secondary: "Procedure",
     description:
-      "The final chapter of today’s journey is ready to begin.",
-    systemStatus: "Awaiting Ground Operations",
+      "The final chapter of today's journey is ready to begin.",
+    status: "Awaiting Ground Operations",
     progress: 0,
-    atmosphere: "idle",
   },
 
-  [STAGES.MANIFEST_LOADING]: {
-    chapter: "PROCEDURE 01",
+  manifest_loading: {
     eyebrow: "Passenger Manifest",
     primary: "Manifest",
     secondary: "Loading",
     description:
-      "Retrieving eligible passengers from the secured check-in records.",
-    systemStatus: "Secure Data Transfer",
+      "Retrieving eligible passengers from secured check-in records.",
+    status: "Secure Data Transfer",
     progress: 12,
-    atmosphere: "data",
   },
 
-  [STAGES.MANIFEST_READY]: {
-    chapter: "PROCEDURE 02",
+  manifest_ready: {
     eyebrow: "Passenger Manifest",
     primary: "Manifest",
     secondary: "Received",
     description:
       "Passenger records have been transferred to Ground Operations.",
-    systemStatus: "Manifest Available",
+    status: "Manifest Available",
     progress: 24,
-    atmosphere: "data",
   },
 
-  [STAGES.FINAL_BOARDING]: {
-    chapter: "PROCEDURE 03",
+  final_boarding: {
     eyebrow: "Final Boarding Procedure",
     primary: "Final",
     secondary: "Boarding",
     description:
       "Eligible passengers are entering the final departure sequence.",
-    systemStatus: "Boarding in Progress",
+    status: "Boarding in Progress",
     progress: 36,
-    atmosphere: "boarding",
   },
 
-  [STAGES.VERIFYING]: {
-    chapter: "PROCEDURE 04",
+  verifying: {
     eyebrow: "Eligibility Verification",
     primary: "Manifest",
     secondary: "Verification",
     description:
       "Check-in credentials and giveaway eligibility are being confirmed.",
-    systemStatus: "Verification in Progress",
+    status: "Verification in Progress",
     progress: 48,
-    atmosphere: "scan",
   },
 
-  [STAGES.VERIFIED]: {
-    chapter: "PROCEDURE 05",
+  verified: {
     eyebrow: "Eligibility Verification",
     primary: "Manifest",
     secondary: "Verified",
     description:
-      "All passenger records have passed the final eligibility procedure.",
-    systemStatus: "Verification Complete",
+      "Passenger records have passed the final eligibility procedure.",
+    status: "Verification Complete",
     progress: 58,
-    atmosphere: "verified",
   },
 
-  [STAGES.CLEARANCE]: {
-    chapter: "PROCEDURE 06",
+  clearance: {
     eyebrow: "Ground Operations Clearance",
     primary: "Departure",
     secondary: "Clearance",
     description:
       "Ground Operations has authorised the Secret Destination procedure.",
-    systemStatus: "Clearance Confirmed",
+    status: "Clearance Confirmed",
     progress: 68,
-    atmosphere: "clearance",
   },
 
-  [STAGES.DESTINATION_LOCKED]: {
-    chapter: "PROCEDURE 07",
+  destination_locked: {
     eyebrow: "Secret Destination",
     primary: "Destination",
     secondary: "Locked",
     description:
       "Destination secured. Awaiting declassification clearance.",
-    systemStatus: "Destination Confidential",
+    status: "Destination Confidential",
     progress: 78,
-    atmosphere: "locked",
   },
 
-  [STAGES.DESTINATION_REVEALED]: {
-    chapter: "PROCEDURE 08",
+  destination_revealed: {
     eyebrow: "Destination Declassified",
     primary: "PARIS",
     secondary: "ORLY AIRPORT",
     description:
       "The secret destination has been officially revealed.",
-    systemStatus: "Destination Revealed — ORY",
+    status: "Destination Revealed — ORY",
     progress: 83,
-    atmosphere: "destination_reveal",
   },
 
-  [STAGES.SELECTING]: {
-    chapter: "PROCEDURE 09",
+  selecting: {
     eyebrow: "Passenger Selection Sequence",
     primary: "Selection",
     secondary: "In Progress",
     description:
-      "The verified manifest is being processed through the final selection sequence.",
-    systemStatus: "Secure Selection Active",
+      "Processing the verified passenger manifest.",
+    status: "Secure Selection Active",
     progress: 88,
-    atmosphere: "selection",
   },
 
-  [STAGES.PASSENGER_SELECTED]: {
-    chapter: "FINAL CLEARANCE",
-    eyebrow: "Passenger Selection Sequence",
+  passenger_selected: {
+    eyebrow: "Identity Secured",
     primary: "Passenger",
     secondary: "Selected",
     description:
       "Identity secured. Awaiting public announcement clearance.",
-    systemStatus: "Identity Secured",
+    status: "Identity Secured",
     progress: 94,
-    atmosphere: "silence",
   },
 
-  [STAGES.WINNER_REVEALED]: {
-    chapter: "SECRET DESTINATION CLEARANCE",
+  winner_revealed: {
     eyebrow: "Passenger Cleared",
     primary: "Your Next Journey",
     secondary: "Begins Now",
     description:
       "One passenger has received clearance for the Secret Destination Experience.",
-    systemStatus: "Passenger Cleared",
+    status: "Passenger Cleared",
     progress: 100,
-    atmosphere: "reveal",
   },
 
-  [STAGES.CLOSING]: {
-    chapter: "NEW HORIZONS",
+  closing: {
     eyebrow: "OMMTo Airlines",
     primary: "One Journey Ends.",
     secondary: "Another Begins.",
     description:
       "Thank you for travelling with us through New Horizons.",
-    systemStatus: "Experience Complete",
+    status: "Experience Complete",
     progress: 100,
-    atmosphere: "closing",
   },
 };
 
-// ============================================================================
-// SECTION 3 — MOTION CONFIGURATION
-// ============================================================================
-
 const MOTION = {
-  screen: {
-    initial: {
-      opacity: 0,
-      filter: "blur(18px)",
-      scale: 0.985,
-    },
+  initial: {
+    opacity: 0,
+    filter: "blur(16px)",
+    scale: 0.985,
+  },
 
-    animate: {
-      opacity: 1,
-      filter: "blur(0px)",
-      scale: 1,
-
-      transition: {
-        duration: 1.15,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-
-    exit: {
-      opacity: 0,
-      filter: "blur(12px)",
-      scale: 1.012,
-
-      transition: {
-        duration: 0.65,
-        ease: [0.4, 0, 1, 1],
-      },
+  animate: {
+    opacity: 1,
+    filter: "blur(0px)",
+    scale: 1,
+    transition: {
+      duration: 1,
+      ease: [0.22, 1, 0.36, 1],
     },
   },
 
-  fadeUp: {
-    initial: {
-      opacity: 0,
-      y: 28,
-    },
-
-    animate: {
-      opacity: 1,
-      y: 0,
-
-      transition: {
-        duration: 0.9,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  },
-
-  stagger: {
-    animate: {
-      transition: {
-        staggerChildren: 0.13,
-      },
+  exit: {
+    opacity: 0,
+    filter: "blur(12px)",
+    scale: 1.01,
+    transition: {
+      duration: 0.45,
     },
   },
 };
 
 const formatCount = (value) =>
-  new Intl.NumberFormat("en-US", {
-    minimumIntegerDigits: 2,
-  }).format(value || 0);
+  String(Number(value) || 0).padStart(2, "0");
 
 // ============================================================================
-// SECTION 4 — MAIN PUBLIC GIVEAWAY PAGE
+// MAIN PAGE
 // ============================================================================
 
 export default function GiveawayPage() {
@@ -315,13 +249,15 @@ export default function GiveawayPage() {
 
   const [errorMessage, setErrorMessage] = useState("");
 
+  const latestExperienceRef = useRef(null);
+
   const stage = experience?.stage || STAGES.INITIAL;
 
   const safeStage = STAGE_CONTENT[stage]
     ? stage
     : STAGES.INITIAL;
 
-  const stageContent = STAGE_CONTENT[safeStage];
+  const content = STAGE_CONTENT[safeStage];
 
   const stageIndex = Math.max(
     0,
@@ -329,10 +265,68 @@ export default function GiveawayPage() {
   );
 
   const passengerCount =
-    experience?.manifest_count || passengers.length || 0;
+    experience?.manifest_count ?? passengers.length;
 
-  const selectionPreview =
-    experience?.selection_preview || null;
+  // --------------------------------------------------------------------------
+  // LOAD ALL ELIGIBLE PASSENGER REFERENCES
+  // --------------------------------------------------------------------------
+
+  const loadPassengers = useCallback(async () => {
+    try {
+      const allPassengers = [];
+      const pageSize = 500;
+
+      let from = 0;
+
+      while (true) {
+        const { data, error } = await supabase
+          .from("participants")
+          .select(
+            "id,ticket_code,flight,seat,gate,created_at"
+          )
+          .eq("giveaway_eligible", true)
+          .not("ticket_code", "is", null)
+          .order("created_at", {
+            ascending: true,
+          })
+          .order("id", {
+            ascending: true,
+          })
+          .range(from, from + pageSize - 1);
+
+        if (error) {
+          throw error;
+        }
+
+        const batch = data || [];
+
+        allPassengers.push(...batch);
+
+        if (batch.length < pageSize) {
+          break;
+        }
+
+        from += pageSize;
+      }
+
+      const validPassengers = allPassengers.filter(
+        (passenger) =>
+          typeof passenger.ticket_code === "string" &&
+          passenger.ticket_code.trim() !== ""
+      );
+
+      setPassengers(validPassengers);
+    } catch (error) {
+      console.error(
+        "Passenger loading error:",
+        error
+      );
+
+      setErrorMessage(
+        "Unable to retrieve passenger references."
+      );
+    }
+  }, []);
 
   // --------------------------------------------------------------------------
   // LOAD SELECTED PASSENGER
@@ -340,7 +334,7 @@ export default function GiveawayPage() {
 
   const loadSelectedPassenger = useCallback(
     async (passengerId) => {
-      if (!passengerId) {
+      if (passengerId == null) {
         setSelectedPassenger(null);
         return;
       }
@@ -348,21 +342,9 @@ export default function GiveawayPage() {
       try {
         const { data, error } = await supabase
           .from("participants")
-          .select(`
-            id,
-            full_name,
-            email,
-            ticket_code,
-            flight,
-            seat,
-            gate,
-            terminal,
-            status,
-            created_at,
-            giveaway_eligible,
-            giveaway_winner,
-            giveaway_selected_at
-          `)
+          .select(
+            "id,full_name,ticket_code,flight,seat,gate,terminal"
+          )
           .eq("id", passengerId)
           .maybeSingle();
 
@@ -377,126 +359,116 @@ export default function GiveawayPage() {
           error
         );
 
-        setErrorMessage(
-          "The selected passenger could not be loaded."
-        );
+        setSelectedPassenger(null);
       }
     },
     []
   );
 
   // --------------------------------------------------------------------------
-  // LOAD PASSENGER REFERENCES
-  // --------------------------------------------------------------------------
-
-  const loadPassengerReferences = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("participants")
-        .select(`
-          id,
-          ticket_code,
-          flight,
-          seat,
-          gate
-        `)
-        .eq("giveaway_eligible", true)
-        .not("ticket_code", "is", null)
-        .order("created_at", {
-          ascending: true,
-        })
-        .limit(12);
-
-      if (error) {
-        throw error;
-      }
-
-      setPassengers(data || []);
-    } catch (error) {
-      console.error(
-        "Passenger reference loading error:",
-        error
-      );
-    }
-  }, []);
-
-  // --------------------------------------------------------------------------
   // APPLY EXPERIENCE STATE
   // --------------------------------------------------------------------------
 
   const applyExperienceState = useCallback(
-    async (nextExperience) => {
+    (nextExperience) => {
       if (!nextExperience) {
         return;
       }
 
-      setExperience(nextExperience);
-      setErrorMessage("");
+      const previous = latestExperienceRef.current;
 
-      if (nextExperience.selected_passenger_id) {
-        await loadSelectedPassenger(
-          nextExperience.selected_passenger_id
-        );
-      } else {
-        setSelectedPassenger(null);
+      // Ignore stale events when timestamps are available.
+      if (
+        previous?.updated_at &&
+        nextExperience.updated_at &&
+        new Date(nextExperience.updated_at).getTime() <
+          new Date(previous.updated_at).getTime()
+      ) {
+        return;
       }
+
+      latestExperienceRef.current = nextExperience;
+
+      setExperience(nextExperience);
     },
-    [loadSelectedPassenger]
+    []
   );
 
   // --------------------------------------------------------------------------
-  // INITIAL EXPERIENCE
+  // FETCH EXPERIENCE
   // --------------------------------------------------------------------------
 
-  const loadInitialExperience = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
+  const refreshExperience = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("giveaway_experience")
         .select("*")
         .eq("id", EXPERIENCE_ID)
-        .maybeSingle();
+        .single();
 
       if (error) {
         throw error;
       }
 
-      if (!data) {
-        throw new Error(
-          "The giveaway experience state has not been initialized."
-        );
-      }
+      applyExperienceState(data);
 
-      await applyExperienceState(data);
-      await loadPassengerReferences();
+      setErrorMessage("");
     } catch (error) {
       console.error(
-        "Public giveaway loading error:",
+        "Experience synchronization error:",
         error
       );
 
       setErrorMessage(
-        error?.message ||
-          "The Secret Destination Experience could not be loaded."
+        "Experience synchronization unavailable."
       );
     } finally {
       setIsLoading(false);
     }
-  }, [applyExperienceState, loadPassengerReferences]);
-
-  useEffect(() => {
-    loadInitialExperience();
-  }, [loadInitialExperience]);
+  }, [applyExperienceState]);
 
   // --------------------------------------------------------------------------
-  // SUPABASE REALTIME
+  // INITIAL LOAD
+  // --------------------------------------------------------------------------
+
+  useEffect(() => {
+    refreshExperience();
+    loadPassengers();
+  }, [refreshExperience, loadPassengers]);
+
+  // --------------------------------------------------------------------------
+  // LOAD WINNER ONLY WHEN REVEAL IS AUTHORISED
+  // --------------------------------------------------------------------------
+
+  useEffect(() => {
+    const revealAllowed = [
+      STAGES.WINNER_REVEALED,
+      STAGES.CLOSING,
+    ].includes(safeStage);
+
+    if (
+      revealAllowed &&
+      experience?.selected_passenger_id != null
+    ) {
+      loadSelectedPassenger(
+        experience.selected_passenger_id
+      );
+    } else {
+      setSelectedPassenger(null);
+    }
+  }, [
+    safeStage,
+    experience?.selected_passenger_id,
+    loadSelectedPassenger,
+  ]);
+
+  // --------------------------------------------------------------------------
+  // REALTIME SUBSCRIPTION
   // --------------------------------------------------------------------------
 
   useEffect(() => {
     const channel = supabase
-      .channel("giveaway-public-experience")
+      .channel("ommt-public-display")
       .on(
         "postgres_changes",
         {
@@ -505,18 +477,16 @@ export default function GiveawayPage() {
           table: "giveaway_experience",
           filter: `id=eq.${EXPERIENCE_ID}`,
         },
-        async (payload) => {
-          if (!payload.new) {
-            return;
+        (payload) => {
+          if (payload.new) {
+            applyExperienceState(payload.new);
           }
-
-          await applyExperienceState(payload.new);
         }
       )
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setConnectionStatus("connected");
-          return;
+          refreshExperience();
         }
 
         if (
@@ -531,49 +501,63 @@ export default function GiveawayPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [applyExperienceState]);
+  }, [applyExperienceState, refreshExperience]);
 
   // --------------------------------------------------------------------------
-  // REFRESH WHEN DISPLAY RETURNS TO FOREGROUND
+  // FALLBACK SYNCHRONIZATION
   // --------------------------------------------------------------------------
 
   useEffect(() => {
-    const refreshState = () => {
+    const interval = window.setInterval(() => {
+      refreshExperience();
+    }, 2500);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [refreshExperience]);
+
+  // --------------------------------------------------------------------------
+  // REFRESH WHEN WINDOW BECOMES ACTIVE
+  // --------------------------------------------------------------------------
+
+  useEffect(() => {
+    const refresh = () => {
       if (document.visibilityState === "visible") {
-        loadInitialExperience();
+        refreshExperience();
       }
     };
 
     document.addEventListener(
       "visibilitychange",
-      refreshState
+      refresh
     );
 
-    window.addEventListener("focus", refreshState);
+    window.addEventListener("focus", refresh);
 
     return () => {
       document.removeEventListener(
         "visibilitychange",
-        refreshState
+        refresh
       );
 
-      window.removeEventListener("focus", refreshState);
+      window.removeEventListener("focus", refresh);
     };
-  }, [loadInitialExperience]);
+  }, [refreshExperience]);
+
+  // --------------------------------------------------------------------------
+  // LOADING
+  // --------------------------------------------------------------------------
 
   if (isLoading && !experience) {
-    return <PublicLoadingScreen />;
+    return <LoadingScreen />;
   }
 
   return (
     <main
-      className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative min-h-screen overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea] selection:bg-[#c7a86c]/30`}
+      className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative min-h-screen overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea]`}
     >
-      <AtmosphericBackground
-        stage={safeStage}
-        atmosphere={stageContent.atmosphere}
-        passengers={passengers}
-      />
+      <AtmosphericBackground stage={safeStage} />
 
       <div className="relative z-20 flex min-h-screen flex-col">
         <PublicHeader
@@ -583,15 +567,15 @@ export default function GiveawayPage() {
           connectionStatus={connectionStatus}
         />
 
-        <div className="flex flex-1 items-center justify-center px-5 pb-24 pt-28 sm:px-9 sm:pb-28 sm:pt-32 lg:px-14">
+        <div className="flex flex-1 items-center justify-center px-5 pb-24 pt-28 sm:px-9 lg:px-14">
           <div className="mx-auto w-full max-w-[1680px]">
             <AnimatePresence mode="wait">
               <ExperienceStage
                 key={safeStage}
                 stage={safeStage}
-                content={stageContent}
+                content={content}
+                passengers={passengers}
                 passengerCount={passengerCount}
-                selectionPreview={selectionPreview}
                 selectedPassenger={selectedPassenger}
                 errorMessage={errorMessage}
               />
@@ -601,8 +585,8 @@ export default function GiveawayPage() {
 
         <BrandSignature
           stage={safeStage}
-          status={stageContent.systemStatus}
-          progress={stageContent.progress}
+          status={content.status}
+          progress={content.progress}
         />
       </div>
     </main>
@@ -610,197 +594,107 @@ export default function GiveawayPage() {
 }
 
 // ============================================================================
-// SECTION 5 — EXPERIENCE STAGE ROUTER
+// STAGE ROUTER
 // ============================================================================
 
 function ExperienceStage({
   stage,
   content,
+  passengers,
   passengerCount,
-  selectionPreview,
   selectedPassenger,
   errorMessage,
 }) {
-  if (stage === STAGES.DESTINATION_REVEALED) {
-    return <DestinationRevealStage />;
-  }
+  switch (stage) {
+    case STAGES.DESTINATION_REVEALED:
+      return <DestinationRevealStage />;
 
-  if (stage === STAGES.SELECTING) {
-    return (
-      <PassengerSelectionStage
-        content={content}
-        passenger={selectionPreview}
-        passengerCount={passengerCount}
-      />
-    );
-  }
+    case STAGES.SELECTING:
+      return (
+        <PassengerSelectionStage
+          content={content}
+          passengers={passengers}
+          passengerCount={passengerCount}
+        />
+      );
 
-  if (stage === STAGES.PASSENGER_SELECTED) {
-    return <PassengerSelectedStage />;
-  }
+    case STAGES.PASSENGER_SELECTED:
+      return <PassengerSelectedStage />;
 
-  if (stage === STAGES.WINNER_REVEALED) {
-    return (
-      <WinnerRevealStage
-        content={content}
-        passenger={selectedPassenger}
-      />
-    );
-  }
+    case STAGES.WINNER_REVEALED:
+      return (
+        <WinnerRevealStage
+          passenger={selectedPassenger}
+        />
+      );
 
-  if (stage === STAGES.CLOSING) {
-    return <ClosingStage content={content} />;
-  }
+    case STAGES.CLOSING:
+      return <ClosingStage />;
 
-  return (
-    <OperationsStage
-      stage={stage}
-      content={content}
-      passengerCount={passengerCount}
-      errorMessage={errorMessage}
-    />
-  );
+    default:
+      return (
+        <OperationsStage
+          content={content}
+          passengerCount={passengerCount}
+          errorMessage={errorMessage}
+        />
+      );
+  }
 }
 
 // ============================================================================
-// SECTION 6 — STANDARD OPERATIONS STAGE
+// STANDARD OPERATIONS
 // ============================================================================
 
 function OperationsStage({
-  stage,
   content,
   passengerCount,
   errorMessage,
 }) {
-  const showManifestCount = [
-    STAGES.MANIFEST_READY,
-    STAGES.FINAL_BOARDING,
-    STAGES.VERIFYING,
-    STAGES.VERIFIED,
-    STAGES.CLEARANCE,
-    STAGES.DESTINATION_LOCKED,
-  ].includes(stage);
-
-  const processingStage = [
-    STAGES.MANIFEST_LOADING,
-    STAGES.VERIFYING,
-  ].includes(stage);
-
   return (
     <motion.section
-      variants={MOTION.screen}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="relative flex min-h-[610px] items-center justify-center"
+      {...MOTION}
+      className="relative flex min-h-[650px] items-center justify-center"
     >
-      <motion.div
-        variants={MOTION.stagger}
-        initial="initial"
-        animate="animate"
-        className="relative z-10 flex w-full max-w-[1350px] flex-col items-center px-4 text-center"
-      >
-        <motion.div
-          variants={MOTION.fadeUp}
-          className="mb-8 flex flex-col items-center sm:mb-10"
-        >
-          <div className="flex items-center gap-4">
-            <span className="h-px w-10 bg-gradient-to-r from-transparent to-[#c8aa70]/45 sm:w-20" />
+      <div className="flex w-full flex-col items-center text-center">
+        <p className="text-[10px] uppercase tracking-[0.45em] text-[#d1b77f]">
+          {content.eyebrow}
+        </p>
 
-            <p className="font-[var(--font-ibm-plex-mono)] text-[7px] font-normal uppercase tracking-[0.4em] text-white/24 sm:text-[8px]">
-              {content.chapter}
-            </p>
+        <h1 className="mt-9 text-[clamp(3.5rem,9vw,10rem)] font-[300] leading-[0.87] tracking-[-0.04em]">
+          {content.primary}
 
-            <span className="h-px w-10 bg-gradient-to-l from-transparent to-[#c8aa70]/45 sm:w-20" />
-          </div>
-
-          <p className="mt-4 text-[9px] font-medium uppercase tracking-[0.42em] text-[#d1b77f] sm:text-[11px]">
-            {content.eyebrow}
-          </p>
-        </motion.div>
-
-        <motion.h1
-          variants={MOTION.fadeUp}
-          className="max-w-[1480px] text-[clamp(3.35rem,8.4vw,9.4rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]"
-        >
-          <span className="block">
-            {content.primary}
-          </span>
-
-          <span className="block text-white/65">
+          <span className="block text-white/60">
             {content.secondary}
           </span>
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          variants={MOTION.fadeUp}
-          className="mt-8 max-w-2xl text-sm font-light leading-7 tracking-[0.03em] text-white/45 sm:mt-10 sm:text-base sm:leading-8"
-        >
+        <p className="mt-10 max-w-2xl text-sm font-light leading-8 text-white/40">
           {content.description}
-        </motion.p>
+        </p>
 
-        {showManifestCount && (
-          <motion.div
-            variants={MOTION.fadeUp}
-            className="mt-12 sm:mt-14"
-          >
-            <div className="flex items-center justify-center gap-4">
-              <span className="h-px w-12 bg-white/10" />
+        <div className="mt-14 border-t border-white/10 px-16 pt-8">
+          <p className="text-[9px] uppercase tracking-[0.35em] text-white/30">
+            Passenger Manifest
+          </p>
 
-              <p className="text-[9px] uppercase tracking-[0.42em] text-white/30">
-                Verified Passenger Manifest
-              </p>
-
-              <span className="h-px w-12 bg-white/10" />
-            </div>
-
-            <p className="mt-5 font-[var(--font-ibm-plex-mono)] text-5xl font-light tracking-[-0.055em] text-[#e5dccb] sm:text-7xl">
-              {formatCount(passengerCount)}
-            </p>
-          </motion.div>
-        )}
-
-        {processingStage && (
-          <motion.div
-            variants={MOTION.fadeUp}
-            className="mt-12 flex items-center gap-4"
-          >
-            <ProcessingIndicator />
-
-            <span className="text-[9px] uppercase tracking-[0.34em] text-white/30">
-              Procedure active
-            </span>
-          </motion.div>
-        )}
+          <p className="mt-5 font-[var(--font-ibm-plex-mono)] text-5xl font-light text-[#e5dccb]">
+            {formatCount(passengerCount)}
+          </p>
+        </div>
 
         {errorMessage && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 12,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-            }}
-            className="mt-10 max-w-2xl border-l border-red-300/35 bg-red-300/[0.035] px-5 py-3 text-left"
-          >
-            <p className="text-[8px] uppercase tracking-[0.3em] text-red-200/45">
-              Experience Notice
-            </p>
-
-            <p className="mt-2 text-xs tracking-[0.035em] text-red-100/65">
-              {errorMessage}
-            </p>
-          </motion.div>
+          <p className="mt-8 text-xs text-red-200/60">
+            {errorMessage}
+          </p>
         )}
-      </motion.div>
+      </div>
     </motion.section>
   );
 }
 
 // ============================================================================
-// SECTION 7 — CINEMATIC DESTINATION REVEAL
+// DESTINATION REVEAL
 // ============================================================================
 
 function DestinationRevealStage() {
@@ -808,80 +702,33 @@ function DestinationRevealStage() {
 
   useEffect(() => {
     const timers = [
-      window.setTimeout(() => setPhase(1), 1500),
-      window.setTimeout(() => setPhase(2), 3000),
-      window.setTimeout(() => setPhase(3), 4500),
-      window.setTimeout(() => setPhase(4), 6000),
-      window.setTimeout(() => setPhase(5), 7500),
+      setTimeout(() => setPhase(1), 1500),
+      setTimeout(() => setPhase(2), 3000),
+      setTimeout(() => setPhase(3), 4500),
+      setTimeout(() => setPhase(4), 6000),
+      setTimeout(() => setPhase(5), 7500),
     ];
 
     return () => {
-      timers.forEach((timer) => {
-        window.clearTimeout(timer);
-      });
+      timers.forEach(clearTimeout);
     };
   }, []);
 
   return (
     <motion.section
-      variants={MOTION.screen}
-      initial="initial"
-      animate="animate"
-      exit="exit"
+      {...MOTION}
       className="relative flex min-h-[700px] items-center justify-center overflow-hidden"
     >
-      <StageCoordinates />
+      <Radar />
 
-      {/* CINEMATIC RADAR */}
-
-      <motion.div
-        initial={{
-          opacity: 0,
-        }}
-        animate={{
-          opacity: 0.16,
-        }}
-        transition={{
-          duration: 2,
-        }}
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c8aa70]/20"
-      >
-        <div className="absolute inset-[15%] rounded-full border border-[#c8aa70]/15" />
-
-        <div className="absolute inset-[30%] rounded-full border border-[#c8aa70]/15" />
-
-        <div className="absolute inset-[45%] rounded-full border border-[#c8aa70]/15" />
-
-        <motion.div
-          animate={{
-            rotate: 360,
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-          className="absolute inset-0 rounded-full"
-          style={{
-            background:
-              "conic-gradient(from 0deg, transparent 0deg, transparent 315deg, rgba(200,170,112,0.18) 350deg, transparent 360deg)",
-          }}
-        />
-      </motion.div>
-
-      {/* MAIN CONTENT */}
-
-      <div className="relative z-10 flex w-full max-w-[1500px] flex-col items-center px-4 text-center">
-
-        {/* PHASES 0–2 — CONTROL TOWER */}
-
+      <div className="relative z-10 flex w-full flex-col items-center text-center">
         <AnimatePresence mode="wait">
-          {phase < 3 && (
+          {phase < 3 ? (
             <motion.div
-              key="signal"
+              key={`signal-${phase}`}
               initial={{
                 opacity: 0,
-                y: 20,
+                y: 25,
                 filter: "blur(12px)",
               }}
               animate={{
@@ -891,83 +738,39 @@ function DestinationRevealStage() {
               }}
               exit={{
                 opacity: 0,
-                y: -25,
-                filter: "blur(12px)",
-              }}
-              transition={{
-                duration: 0.8,
+                y: -20,
               }}
               className="flex flex-col items-center"
             >
-              <motion.div
-                animate={{
-                  rotate: 360,
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                className="mb-12 flex h-24 w-24 items-center justify-center rounded-full border border-[#c8aa70]/30"
-              >
-                <div className="h-2 w-2 rounded-full bg-[#d8be88] shadow-[0_0_20px_rgba(216,190,136,0.7)]" />
-              </motion.div>
+              <OrbitMark large />
 
-              <p className="font-[var(--font-ibm-plex-mono)] text-[9px] uppercase tracking-[0.45em] text-[#d0b57d] sm:text-xs">
-                {phase === 0
-                  ? "Destination Signal Acquired"
-                  : phase === 1
-                    ? "Coordinates Verified"
-                    : "Declassification Authorised"}
+              <p className="mt-12 text-[10px] uppercase tracking-[0.4em] text-[#d1b77f]">
+                Destination Declassification
               </p>
 
-              <motion.h1
-                key={phase}
-                initial={{
-                  opacity: 0,
-                  y: 18,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  duration: 0.7,
-                }}
-                className="mt-8 text-[clamp(2.7rem,6vw,6rem)] font-[300] leading-[0.95] tracking-[-0.035em] text-[#f7f6f2]"
-              >
+              <h1 className="mt-8 text-[clamp(3rem,7vw,7rem)] font-light tracking-[-0.04em]">
                 {phase === 0
                   ? "Signal Acquired"
                   : phase === 1
                     ? "Coordinates Verified"
                     : "Destination Clearance"}
-              </motion.h1>
+              </h1>
 
-              <p className="mt-8 font-[var(--font-ibm-plex-mono)] text-[9px] tracking-[0.3em] text-white/30">
+              <p className="mt-8 font-[var(--font-ibm-plex-mono)] text-xs tracking-[0.2em] text-white/30">
                 {phase === 0
-                  ? "ESTABLISHING SECURE DESTINATION LINK"
+                  ? "ESTABLISHING SECURE CONNECTION"
                   : phase === 1
                     ? "48.7292° N · 2.3597° E"
-                    : "DESTINATION DATA READY FOR RELEASE"}
+                    : "DESTINATION READY FOR RELEASE"}
               </p>
 
-              <div className="mt-10 flex items-center gap-4">
+              <div className="mt-10">
                 <ProcessingIndicator />
-
-                <span className="text-[8px] uppercase tracking-[0.35em] text-white/25">
-                  Control Tower Processing
-                </span>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* PHASES 3–5 — DESTINATION REVEAL */}
-
-        <AnimatePresence>
-          {phase >= 3 && (
+          ) : (
             <motion.div
-              key="destination"
+              key="paris"
               initial={{
                 opacity: 0,
                 scale: 0.94,
@@ -979,115 +782,51 @@ function DestinationRevealStage() {
                 filter: "blur(0px)",
               }}
               transition={{
-                duration: 1.6,
-                ease: [0.22, 1, 0.36, 1],
+                duration: 1.5,
               }}
-              className="flex w-full flex-col items-center"
+              className="flex flex-col items-center"
             >
-              <motion.p
-                initial={{
-                  opacity: 0,
-                  y: 15,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: 0.2,
-                  duration: 0.9,
-                }}
-                className="text-[9px] uppercase tracking-[0.5em] text-[#d1b77f] sm:text-xs"
-              >
+              <p className="text-[11px] uppercase tracking-[0.5em] text-[#d1b77f]">
                 Destination Declassified
-              </motion.p>
+              </p>
 
               <motion.div
-                initial={{
-                  scaleX: 0,
-                }}
-                animate={{
-                  scaleX: 1,
-                }}
-                transition={{
-                  delay: 0.5,
-                  duration: 1.3,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="mt-8 h-px w-52 origin-center bg-gradient-to-r from-transparent via-[#d8be88] to-transparent sm:w-96"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 1.3 }}
+                className="mt-9 h-px w-72 bg-gradient-to-r from-transparent via-[#d8be88] to-transparent"
               />
 
-              <motion.h1
-                initial={{
-                  opacity: 0,
-                  y: 55,
-                  filter: "blur(18px)",
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  filter: "blur(0px)",
-                }}
-                transition={{
-                  delay: 0.8,
-                  duration: 1.6,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="mt-10 text-[clamp(5rem,15vw,15rem)] font-[300] leading-[0.8] tracking-[-0.055em] text-[#faf8f3]"
-              >
+              <h1 className="mt-12 text-[clamp(6rem,16vw,16rem)] font-[300] leading-[0.85] tracking-[-0.06em]">
                 PARIS
-              </motion.h1>
+              </h1>
 
-              <AnimatePresence>
-                {phase >= 4 && (
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                      y: 30,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      duration: 1,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                    className="mt-12"
-                  >
-                    <p className="text-xl font-light uppercase tracking-[0.35em] text-[#e4d5b8] sm:text-3xl">
-                      ORLY AIRPORT
-                    </p>
+              {phase >= 4 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 25 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 1 }}
+                  className="mt-12"
+                >
+                  <p className="text-2xl font-light uppercase tracking-[0.35em] text-[#e4d5b8]">
+                    ORLY AIRPORT
+                  </p>
 
-                    <p className="mt-5 font-[var(--font-ibm-plex-mono)] text-[10px] uppercase tracking-[0.45em] text-white/40 sm:text-sm">
-                      ORY · FRANCE
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  <p className="mt-6 font-[var(--font-ibm-plex-mono)] text-sm tracking-[0.4em] text-white/40">
+                    ORY · FRANCE
+                  </p>
+                </motion.div>
+              )}
 
-              <AnimatePresence>
-                {phase >= 5 && (
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                      y: 15,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                    }}
-                    transition={{
-                      duration: 1,
-                    }}
-                    className="mt-12"
-                  >
-                    <p className="text-[9px] uppercase tracking-[0.35em] text-[#d1b77f]/60">
-                      Your Secret Destination Has Been Revealed
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {phase >= 5 && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mt-14 text-[10px] uppercase tracking-[0.35em] text-[#d1b77f]/60"
+                >
+                  Your Secret Destination Has Been Revealed
+                </motion.p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -1097,47 +836,99 @@ function DestinationRevealStage() {
 }
 
 // ============================================================================
-// SECTION 8 — PASSENGER SELECTION PUBLIC SCREEN
+// PASSENGER SELECTION
+// VISUAL ANIMATION ONLY — NO WINNER SELECTION
 // ============================================================================
 
 function PassengerSelectionStage({
   content,
-  passenger,
+  passengers,
   passengerCount,
 }) {
-  const reference =
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const lastIndexRef = useRef(-1);
+
+  const validPassengers = useMemo(
+    () =>
+      passengers.filter(
+        (passenger) =>
+          typeof passenger.ticket_code === "string" &&
+          passenger.ticket_code.trim() !== ""
+      ),
+    [passengers]
+  );
+
+  useEffect(() => {
+    if (!validPassengers.length) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      const count = validPassengers.length;
+
+      if (count === 1) {
+        setActiveIndex(0);
+        return;
+      }
+
+      // Avoid repeating the same ticket consecutively.
+      let nextIndex = Math.floor(Math.random() * count);
+
+      if (nextIndex === lastIndexRef.current) {
+        nextIndex = (nextIndex + 1) % count;
+      }
+
+      lastIndexRef.current = nextIndex;
+
+      setActiveIndex(nextIndex);
+    }, 130);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [validPassengers]);
+
+  const passenger =
+    validPassengers.length > 0
+      ? validPassengers[activeIndex % validPassengers.length]
+      : null;
+
+  const ticket =
     passenger?.ticket_code || "AV-••••••";
 
-  const seat = passenger?.seat || "—";
-  const gate = passenger?.gate || "—";
-  const flight = passenger?.flight || "OM 1025";
+  const flight =
+    passenger?.flight || "OM 1025";
+
+  const seat =
+    passenger?.seat || "—";
+
+  const gate =
+    passenger?.gate || "—";
 
   return (
     <motion.section
-      variants={MOTION.screen}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="relative flex min-h-[650px] items-center justify-center"
+      {...MOTION}
+      className="relative flex min-h-[680px] items-center justify-center"
     >
       <StageCoordinates />
 
       <div className="relative z-10 flex w-full max-w-[1420px] flex-col items-center px-4 text-center">
-        <p className="text-[9px] uppercase tracking-[0.44em] text-[#cbb07c] sm:text-xs">
+        <p className="text-[10px] uppercase tracking-[0.44em] text-[#cbb07c]">
           {content.eyebrow}
         </p>
 
-        <h1 className="mt-7 text-[clamp(3.5rem,8.3vw,9.1rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]">
+        <h1 className="mt-8 text-[clamp(3.8rem,9vw,10rem)] font-[300] leading-[0.86] tracking-[-0.04em]">
           Selection
 
-          <span className="block text-white/65">
+          <span className="block text-white/60">
             In Progress
           </span>
         </h1>
 
-        <div className="relative mt-12 w-full max-w-5xl overflow-hidden border-y border-white/[0.075] py-8 sm:mt-16 sm:py-10">
+        <div className="relative mt-16 w-full max-w-5xl overflow-hidden border-y border-white/[0.08] py-10">
           <motion.div
-            className="absolute inset-y-0 w-[34%] bg-gradient-to-r from-transparent via-[#d0b276]/[0.08] to-transparent"
+            className="pointer-events-none absolute inset-y-0 w-[34%] bg-gradient-to-r from-transparent via-[#d0b276]/[0.09] to-transparent"
             animate={{
               x: ["-140%", "390%"],
             }}
@@ -1148,144 +939,122 @@ function PassengerSelectionStage({
             }}
           />
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={`${reference}-${seat}-${gate}-${flight}`}
-              initial={{
-                opacity: 0,
-                y: 14,
-                filter: "blur(8px)",
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                filter: "blur(0px)",
-              }}
-              exit={{
-                opacity: 0,
-                y: -14,
-                filter: "blur(8px)",
-              }}
-              transition={{
-                duration: 0.16,
-              }}
-              className="relative grid grid-cols-2 gap-6 sm:grid-cols-4"
-            >
-              <SelectionMetric
-                label="Ticket"
-                value={reference}
-              />
+          <div className="relative grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <AnimatedSelectionMetric
+              label="Ticket"
+              value={ticket}
+            />
 
-              <SelectionMetric
-                label="Flight"
-                value={flight}
-              />
+            <AnimatedSelectionMetric
+              label="Flight"
+              value={flight}
+            />
 
-              <SelectionMetric
-                label="Seat"
-                value={seat}
-              />
+            <AnimatedSelectionMetric
+              label="Seat"
+              value={seat}
+            />
 
-              <SelectionMetric
-                label="Gate"
-                value={gate}
-              />
-            </motion.div>
-          </AnimatePresence>
+            <AnimatedSelectionMetric
+              label="Gate"
+              value={gate}
+            />
+          </div>
         </div>
 
-        <div className="mt-10 flex items-center gap-4">
+        <div className="mt-11 flex items-center gap-4">
           <ProcessingIndicator />
 
-          <span className="text-[9px] uppercase tracking-[0.34em] text-white/30">
+          <span className="text-[9px] uppercase tracking-[0.34em] text-white/35">
             Processing {formatCount(passengerCount)} verified records
           </span>
         </div>
+
+        <p className="mt-7 font-[var(--font-ibm-plex-mono)] text-[8px] uppercase tracking-[0.3em] text-[#cbb07c]/35">
+          Secure selection sequence active
+        </p>
       </div>
     </motion.section>
   );
 }
 
-function SelectionMetric({ label, value }) {
+function AnimatedSelectionMetric({
+  label,
+  value,
+}) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-[8px] uppercase tracking-[0.34em] text-white/25">
         {label}
       </p>
 
-      <p className="mt-3 truncate font-[var(--font-ibm-plex-mono)] text-sm tracking-[0.15em] text-[#dfcfaf]/75 sm:text-lg">
-        {value}
-      </p>
+      <div className="mt-4 h-7 overflow-hidden">
+        <AnimatePresence mode="sync">
+          <motion.p
+            key={`${label}-${value}`}
+            initial={{
+              opacity: 0,
+              y: 9,
+              filter: "blur(4px)",
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              filter: "blur(0px)",
+            }}
+            exit={{
+              opacity: 0,
+              y: -9,
+              filter: "blur(4px)",
+            }}
+            transition={{
+              duration: 0.1,
+            }}
+            className="truncate font-[var(--font-ibm-plex-mono)] text-sm tracking-[0.12em] text-[#dfcfaf]/80 sm:text-lg"
+          >
+            {value}
+          </motion.p>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
 
 // ============================================================================
-// SECTION 9 — PASSENGER SELECTED PUBLIC SCREEN
+// PASSENGER SELECTED
 // ============================================================================
 
 function PassengerSelectedStage() {
   return (
     <motion.section
-      variants={MOTION.screen}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="relative flex min-h-[650px] items-center justify-center"
+      {...MOTION}
+      className="relative flex min-h-[680px] items-center justify-center"
     >
       <StageCoordinates />
 
-      <div className="relative z-10 flex flex-col items-center px-4 text-center">
+      <div className="flex flex-col items-center px-4 text-center">
         <motion.div
           initial={{
             opacity: 0,
-            scale: 0.6,
+            scale: 0.5,
           }}
           animate={{
             opacity: 1,
             scale: 1,
           }}
           transition={{
-            duration: 1.1,
-            ease: [0.22, 1, 0.36, 1],
+            duration: 1,
           }}
-          className="relative mb-12 flex h-20 w-20 items-center justify-center"
+          className="mb-12 flex h-24 w-24 items-center justify-center rounded-full border border-[#c8aa70]/30"
         >
-          <motion.span
-            initial={{
-              scale: 0.7,
-              opacity: 0,
-            }}
-            animate={{
-              scale: 1.7,
-              opacity: 0,
-            }}
-            transition={{
-              duration: 2.2,
-              repeat: Infinity,
-            }}
-            className="absolute inset-0 rounded-full border border-[#c8aa70]/25"
-          />
-
-          <span className="absolute inset-0 rounded-full border border-[#c8aa70]/30" />
-
           <CheckIcon />
         </motion.div>
 
         <motion.p
-          initial={{
-            opacity: 0,
-            y: 15,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.25,
-            duration: 0.8,
-          }}
-          className="text-[9px] uppercase tracking-[0.46em] text-[#cbb07c] sm:text-xs"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-[11px] uppercase tracking-[0.45em] text-[#cbb07c]"
         >
           Identity Secured
         </motion.p>
@@ -1293,8 +1062,8 @@ function PassengerSelectedStage() {
         <motion.h1
           initial={{
             opacity: 0,
-            y: 35,
-            filter: "blur(10px)",
+            y: 40,
+            filter: "blur(15px)",
           }}
           animate={{
             opacity: 1,
@@ -1302,48 +1071,35 @@ function PassengerSelectedStage() {
             filter: "blur(0px)",
           }}
           transition={{
-            delay: 0.45,
-            duration: 1.25,
-            ease: [0.22, 1, 0.36, 1],
+            delay: 0.5,
+            duration: 1.3,
           }}
-          className="mt-7 text-[clamp(4rem,9.6vw,10.4rem)] font-[300] leading-[0.84] tracking-[-0.03em] text-[#f7f6f2]"
+          className="mt-9 text-[clamp(4rem,10vw,11rem)] font-[300] leading-[0.85] tracking-[-0.04em]"
         >
           Passenger
 
-          <span className="block text-white/65">
+          <span className="block text-white/60">
             Selected
           </span>
         </motion.h1>
 
         <motion.div
-          initial={{
-            scaleX: 0,
-          }}
-          animate={{
-            scaleX: 1,
-          }}
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: 1 }}
           transition={{
-            delay: 0.9,
-            duration: 1.6,
-            ease: [0.22, 1, 0.36, 1],
+            delay: 1,
+            duration: 1.3,
           }}
-          className="mt-10 h-px w-56 origin-center bg-gradient-to-r from-transparent via-[#c8aa70]/65 to-transparent sm:w-96"
+          className="mt-12 h-px w-80 bg-gradient-to-r from-transparent via-[#c8aa70] to-transparent"
         />
 
         <motion.p
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: 1,
-          }}
-          transition={{
-            delay: 1.25,
-            duration: 1,
-          }}
-          className="mt-8 text-xs uppercase tracking-[0.3em] text-white/30"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4 }}
+          className="mt-10 text-[10px] uppercase tracking-[0.35em] text-white/35"
         >
-          Awaiting public reveal clearance
+          Awaiting Public Reveal Clearance
         </motion.p>
       </div>
     </motion.section>
@@ -1351,72 +1107,34 @@ function PassengerSelectedStage() {
 }
 
 // ============================================================================
-// SECTION 10 — WINNER REVEAL
+// WINNER REVEAL
 // ============================================================================
 
-function WinnerRevealStage({ content, passenger }) {
-  const passengerName =
-    passenger?.full_name || "Selected Passenger";
-
+function WinnerRevealStage({ passenger }) {
   return (
     <motion.section
-      variants={MOTION.screen}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="relative flex min-h-[700px] items-center justify-center"
+      {...MOTION}
+      className="relative flex min-h-[720px] items-center justify-center"
     >
       <StageCoordinates />
 
-      <div className="relative z-10 flex w-full max-w-[1500px] flex-col items-center px-4 text-center">
-        <motion.div
-          initial={{
-            opacity: 0,
-            scale: 0.75,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-          }}
-          transition={{
-            duration: 1.15,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="mb-9 flex h-20 w-20 items-center justify-center"
-        >
-          <OrbitMark />
-        </motion.div>
+      <div className="flex w-full max-w-[1500px] flex-col items-center px-4 text-center">
+        <OrbitMark large />
 
         <motion.p
-          initial={{
-            opacity: 0,
-            y: 15,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.3,
-            duration: 0.8,
-          }}
-          className="text-[9px] uppercase tracking-[0.48em] text-[#d0b57d] sm:text-xs"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-12 text-[11px] uppercase tracking-[0.48em] text-[#d0b57d]"
         >
-          {content.eyebrow}
+          Passenger Cleared
         </motion.p>
 
         <motion.p
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: 1,
-          }}
-          transition={{
-            delay: 0.75,
-            duration: 0.8,
-          }}
-          className="mt-8 font-[var(--font-ibm-plex-mono)] text-xs tracking-[0.28em] text-white/35 sm:text-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-9 font-[var(--font-ibm-plex-mono)] text-sm tracking-[0.3em] text-white/40"
         >
           {passenger?.ticket_code || "AV-••••••"}
         </motion.p>
@@ -1425,7 +1143,7 @@ function WinnerRevealStage({ content, passenger }) {
           initial={{
             opacity: 0,
             y: 45,
-            filter: "blur(16px)",
+            filter: "blur(18px)",
           }}
           animate={{
             opacity: 1,
@@ -1433,50 +1151,34 @@ function WinnerRevealStage({ content, passenger }) {
             filter: "blur(0px)",
           }}
           transition={{
-            delay: 1.15,
+            delay: 1.1,
             duration: 1.5,
-            ease: [0.22, 1, 0.36, 1],
           }}
-          className="mt-8 max-w-[1500px] text-[clamp(4rem,9.8vw,10.8rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#faf8f3]"
+          className="mt-9 max-w-[1450px] break-words text-[clamp(3.5rem,9vw,10rem)] font-[300] leading-[0.9] tracking-[-0.045em]"
         >
-          {passengerName}
+          {passenger?.full_name || "Selected Passenger"}
         </motion.h1>
 
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 18,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 1.8,
-            duration: 0.9,
-          }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8 }}
+          className="mt-12 flex flex-wrap justify-center gap-10"
         >
           <WinnerMetric
             label="Flight"
             value={passenger?.flight || "OM 1025"}
           />
 
-          <WinnerDivider />
-
           <WinnerMetric
             label="Seat"
             value={passenger?.seat || "—"}
           />
 
-          <WinnerDivider />
-
           <WinnerMetric
             label="Gate"
             value={passenger?.gate || "—"}
           />
-
-          <WinnerDivider />
 
           <WinnerMetric
             label="Terminal"
@@ -1485,23 +1187,16 @@ function WinnerRevealStage({ content, passenger }) {
         </motion.div>
 
         <motion.div
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: 1,
-          }}
-          transition={{
-            delay: 2.35,
-            duration: 1,
-          }}
-          className="mt-14"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.4 }}
+          className="mt-16"
         >
-          <p className="text-xs font-light uppercase tracking-[0.33em] text-[#ded1ba]/55 sm:text-sm">
+          <p className="text-sm uppercase tracking-[0.3em] text-[#ded1ba]/60">
             Your next journey begins now.
           </p>
 
-          <p className="mt-5 text-lg font-light tracking-[-0.025em] text-[#f0e9dc] sm:text-2xl">
+          <p className="mt-6 text-2xl font-light text-[#f0e9dc]">
             Secret Destination Experience
           </p>
         </motion.div>
@@ -1513,148 +1208,59 @@ function WinnerRevealStage({ content, passenger }) {
 function WinnerMetric({ label, value }) {
   return (
     <div className="min-w-[90px]">
-      <p className="text-[8px] uppercase tracking-[0.3em] text-white/25">
+      <p className="text-[8px] uppercase tracking-[0.3em] text-white/30">
         {label}
       </p>
 
-      <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-xs tracking-[0.16em] text-[#e0cfad]/70">
+      <p className="mt-3 font-[var(--font-ibm-plex-mono)] text-sm tracking-[0.15em] text-[#e0cfad]/75">
         {value}
       </p>
     </div>
   );
 }
 
-function WinnerDivider() {
-  return (
-    <span className="hidden h-8 w-px bg-white/10 sm:block" />
-  );
-}
-
 // ============================================================================
-// SECTION 11 — CLOSING CEREMONY
+// CLOSING CEREMONY
 // ============================================================================
 
-function ClosingStage({ content }) {
+function ClosingStage() {
   return (
     <motion.section
-      variants={MOTION.screen}
-      initial="initial"
-      animate="animate"
-      exit="exit"
+      {...MOTION}
       className="relative flex min-h-[680px] items-center justify-center"
     >
-      <StageCoordinates />
+      <div className="flex flex-col items-center px-4 text-center">
+        <OrbitMark large />
 
-      <div className="relative z-10 flex max-w-[1450px] flex-col items-center px-4 text-center">
-        <motion.div
-          initial={{
-            opacity: 0,
-            scale: 0.7,
-          }}
-          animate={{
-            opacity: 1,
-            scale: 1,
-          }}
-          transition={{
-            duration: 1.3,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="mb-11"
-        >
-          <OrbitMark large />
-        </motion.div>
-
-        <motion.p
-          initial={{
-            opacity: 0,
-            y: 15,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            delay: 0.35,
-            duration: 0.8,
-          }}
-          className="text-[9px] uppercase tracking-[0.48em] text-[#cfb47d] sm:text-xs"
-        >
+        <p className="mt-12 text-[10px] uppercase tracking-[0.45em] text-[#cfb47d]">
           Secret Destination Experience
-        </motion.p>
+        </p>
 
-        <motion.h1
-          initial={{
-            opacity: 0,
-            y: 40,
-            filter: "blur(14px)",
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-            filter: "blur(0px)",
-          }}
-          transition={{
-            delay: 0.65,
-            duration: 1.4,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="mt-8 text-[clamp(3.6rem,8.8vw,9.5rem)] font-[300] leading-[0.86] tracking-[-0.03em] text-[#f7f6f2]"
-        >
-          <span className="block">
-            {content.primary}
+        <h1 className="mt-10 text-[clamp(3.5rem,9vw,10rem)] font-[300] leading-[0.9] tracking-[-0.04em]">
+          One Journey Ends.
+
+          <span className="block text-white/60">
+            Another Begins.
           </span>
+        </h1>
 
-          <span className="block text-white/65">
-            {content.secondary}
-          </span>
-        </motion.h1>
+        <p className="mt-12 text-sm text-white/40">
+          Thank you for travelling with us through New Horizons.
+        </p>
 
-        <motion.p
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: 1,
-          }}
-          transition={{
-            delay: 1.4,
-            duration: 1,
-          }}
-          className="mt-9 text-sm font-light tracking-[0.06em] text-white/38 sm:text-base"
-        >
-          {content.description}
-        </motion.p>
-
-        <motion.div
-          initial={{
-            opacity: 0,
-          }}
-          animate={{
-            opacity: 1,
-          }}
-          transition={{
-            delay: 2,
-            duration: 1.2,
-          }}
-          className="mt-16"
-        >
-          <p className="text-xl font-light tracking-[-0.035em] text-[#eee7db] sm:text-3xl">
-            OMMT
-            <span className="lowercase">o</span>
+        <p className="mt-16 text-3xl font-light tracking-[-0.04em]">
+          OMMTo
+          <span className="text-white/40">
             ...New Horizons
-          </p>
-
-          <p className="mt-3 text-[8px] uppercase tracking-[0.4em] text-white/24">
-            Aviation · Tourism · Innovation
-          </p>
-        </motion.div>
+          </span>
+        </p>
       </div>
     </motion.section>
   );
 }
 
 // ============================================================================
-// SECTION 12 — PUBLIC HEADER
+// HEADER
 // ============================================================================
 
 function PublicHeader({
@@ -1664,45 +1270,33 @@ function PublicHeader({
   connectionStatus,
 }) {
   return (
-    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-6 pt-6 sm:px-9 sm:pt-8 lg:px-12">
-      <div className="mx-auto flex max-w-[1680px] items-start justify-between border-b border-white/[0.055] pb-5">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-6 pt-7 sm:px-10 lg:px-12">
+      <div className="mx-auto flex max-w-[1680px] items-start justify-between border-b border-white/[0.06] pb-6">
         <div>
-          <p className="text-[17px] font-[400] tracking-[-0.045em] text-[#f3f1eb] sm:text-[21px]">
-            OMMT
-            <span className="lowercase">o</span>
-            <span className="text-white/38">
+          <p className="text-xl font-light tracking-[-0.045em]">
+            OMMTo
+            <span className="text-white/40">
               ...New Horizons
             </span>
           </p>
 
-          <div className="mt-3 flex items-center gap-3">
-            <span className="h-px w-5 bg-[#c8aa70]/45" />
-
-            <p className="text-[6px] font-medium uppercase tracking-[0.42em] text-white/23 sm:text-[7px]">
-              Aviation · Tourism · Innovation
-            </p>
-          </div>
+          <p className="mt-4 text-[7px] uppercase tracking-[0.4em] text-[#c8aa70]/45">
+            Aviation · Tourism · Innovation
+          </p>
         </div>
 
-        <div className="hidden items-start gap-7 sm:flex lg:gap-10">
+        <div className="hidden gap-10 sm:flex">
           <HeaderMetric
             label="Sequence"
             value={`${String(stageIndex + 1).padStart(
               2,
               "0"
-            )} / ${String(STAGE_ORDER.length).padStart(
-              2,
-              "0"
-            )}`}
+            )} / ${STAGE_ORDER.length}`}
           />
 
           <HeaderMetric
             label="Manifest"
-            value={
-              passengerCount
-                ? formatCount(passengerCount)
-                : "—"
-            }
+            value={formatCount(passengerCount)}
           />
 
           <HeaderMetric
@@ -1714,7 +1308,14 @@ function PublicHeader({
             }
           />
 
-          <ConnectionMetric status={connectionStatus} />
+          <HeaderMetric
+            label="Signal"
+            value={
+              connectionStatus === "connected"
+                ? "LIVE"
+                : "SYNC"
+            }
+          />
         </div>
       </div>
     </header>
@@ -1723,46 +1324,20 @@ function PublicHeader({
 
 function HeaderMetric({ label, value }) {
   return (
-    <div className="min-w-[66px] text-right">
-      <p className="text-[6px] font-medium uppercase tracking-[0.34em] text-white/16">
+    <div className="text-right">
+      <p className="text-[7px] uppercase tracking-[0.3em] text-white/20">
         {label}
       </p>
 
-      <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[8px] font-normal tracking-[0.16em] text-white/42">
+      <p className="mt-3 font-[var(--font-ibm-plex-mono)] text-[9px] tracking-[0.15em] text-white/50">
         {value}
       </p>
     </div>
   );
 }
 
-function ConnectionMetric({ status }) {
-  const connected = status === "connected";
-
-  return (
-    <div className="min-w-[66px] text-right">
-      <p className="text-[6px] font-medium uppercase tracking-[0.34em] text-white/16">
-        Signal
-      </p>
-
-      <div className="mt-2 flex items-center justify-end gap-2">
-        <span
-          className={`h-1.5 w-1.5 rounded-full ${
-            connected
-              ? "bg-emerald-300/65"
-              : "animate-pulse bg-[#c8aa70]/70"
-          }`}
-        />
-
-        <p className="font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.16em] text-white/42">
-          {connected ? "LIVE" : "SYNC"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 // ============================================================================
-// SECTION 13 — BRAND SIGNATURE
+// FOOTER
 // ============================================================================
 
 function BrandSignature({
@@ -1770,85 +1345,65 @@ function BrandSignature({
   status,
   progress,
 }) {
-  const destinationState =
-    stage === STAGES.CLOSING
-      ? "JOURNEY COMPLETE"
-      : STAGE_ORDER.indexOf(stage) >=
-          STAGE_ORDER.indexOf(
-            STAGES.DESTINATION_REVEALED
-          )
-        ? "DESTINATION REVEALED · ORY"
-        : stage === STAGES.DESTINATION_LOCKED
-          ? "DESTINATION LOCKED"
-          : "DESTINATION CONFIDENTIAL";
+  const destinationRevealed =
+    STAGE_ORDER.indexOf(stage) >=
+    STAGE_ORDER.indexOf(STAGES.DESTINATION_REVEALED);
 
   return (
-    <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-6 pb-7 sm:px-9 sm:pb-9 lg:px-12">
-      <div className="mx-auto max-w-[1680px]">
-        <div className="grid items-end gap-8 border-t border-white/[0.05] pt-5 sm:grid-cols-[1fr_1.2fr_1fr]">
-          <div className="hidden sm:block">
-            <p className="text-[6px] font-medium uppercase tracking-[0.38em] text-white/17">
-              Marketing Made in Greece — On Air
-            </p>
+    <footer className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-6 pb-8 sm:px-10 lg:px-12">
+      <div className="mx-auto grid max-w-[1680px] items-end gap-8 border-t border-white/[0.06] pt-6 sm:grid-cols-3">
+        <div className="hidden sm:block">
+          <p className="text-[7px] uppercase tracking-[0.35em] text-white/20">
+            Marketing Made in Greece — On Air
+          </p>
 
-            <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.18em] text-white/12">
-              PHILOXENIA 2026
-            </p>
-          </div>
+          <p className="mt-3 font-[var(--font-ibm-plex-mono)] text-[8px] text-white/15">
+            PHILOXENIA 2026
+          </p>
+        </div>
 
-          <div className="mx-auto w-full max-w-[470px]">
-            <div className="flex items-center justify-between gap-6">
-              <div>
-                <p className="text-[6px] font-medium uppercase tracking-[0.36em] text-white/16">
-                  Flight Sequence
-                </p>
+        <div>
+          <div className="flex justify-between">
+            <div>
+              <p className="text-[7px] uppercase tracking-[0.3em] text-white/20">
+                Flight Sequence
+              </p>
 
-                <p className="mt-2 text-[7px] font-medium uppercase tracking-[0.28em] text-white/34">
-                  {status}
-                </p>
-              </div>
-
-              <p className="font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.15em] text-[#d2b77f]/55">
-                {String(progress).padStart(3, "0")}%
+              <p className="mt-3 text-[8px] uppercase tracking-[0.25em] text-white/40">
+                {status}
               </p>
             </div>
 
-            <div className="relative mt-4 h-[3px]">
-              <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/[0.07]" />
-
-              <motion.div
-                animate={{
-                  width: `${progress}%`,
-                }}
-                transition={{
-                  duration: 1.2,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="absolute left-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-[#7e633a] via-[#c8aa70] to-[#e3cd9c] shadow-[0_0_10px_rgba(200,170,112,0.25)]"
-              />
-
-              <motion.span
-                animate={{
-                  left: `${progress}%`,
-                }}
-                transition={{
-                  duration: 1.2,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                className="absolute top-1/2 h-[5px] w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ddc48f] shadow-[0_0_12px_rgba(221,196,143,0.65)]"
-              />
-            </div>
-          </div>
-
-          <div className="hidden text-right sm:block">
-            <p className="text-[6px] font-medium uppercase tracking-[0.38em] text-white/17">
-              Mission Status
-            </p>
-
-            <p className="mt-2 font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.17em] text-white/26">
-              {destinationState}
+            <p className="font-[var(--font-ibm-plex-mono)] text-[9px] text-[#d2b77f]/65">
+              {progress}%
             </p>
           </div>
+
+          <div className="mt-5 h-px bg-white/10">
+            <motion.div
+              animate={{
+                width: `${progress}%`,
+              }}
+              transition={{
+                duration: 1,
+              }}
+              className="h-px bg-gradient-to-r from-[#7e633a] via-[#c8aa70] to-[#e3cd9c]"
+            />
+          </div>
+        </div>
+
+        <div className="hidden text-right sm:block">
+          <p className="text-[7px] uppercase tracking-[0.3em] text-white/20">
+            Mission Status
+          </p>
+
+          <p className="mt-3 font-[var(--font-ibm-plex-mono)] text-[8px] tracking-[0.15em] text-white/35">
+            {stage === STAGES.CLOSING
+              ? "JOURNEY COMPLETE"
+              : destinationRevealed
+                ? "DESTINATION REVEALED · ORY"
+                : "DESTINATION CONFIDENTIAL"}
+          </p>
         </div>
       </div>
     </footer>
@@ -1856,21 +1411,11 @@ function BrandSignature({
 }
 
 // ============================================================================
-// SECTION 14 — ATMOSPHERIC BACKGROUND
+// BACKGROUND
 // ============================================================================
 
-function AtmosphericBackground({
-  stage,
-  atmosphere,
-  passengers,
-}) {
-  const intense = [
-    "locked",
-    "destination_reveal",
-    "selection",
-    "reveal",
-    "closing",
-  ].includes(atmosphere);
+function AtmosphericBackground({ stage }) {
+  const isSelection = stage === STAGES.SELECTING;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -1878,188 +1423,57 @@ function AtmosphericBackground({
 
       <motion.div
         animate={{
-          opacity: intense ? 0.42 : 0.24,
-          scale: intense ? 1.08 : 1,
-          x:
-            atmosphere === "selection"
-              ? ["-4%", "4%", "-4%"]
-              : "0%",
+          opacity: isSelection ? 0.45 : 0.25,
+          scale: isSelection ? 1.1 : 1,
         }}
         transition={{
-          opacity: {
-            duration: 2,
-          },
-          scale: {
-            duration: 2,
-          },
-          x: {
-            duration: 12,
-            repeat: Infinity,
-            ease: "easeInOut",
-          },
+          duration: 2,
         }}
-        className="absolute left-1/2 top-[-33%] h-[95%] w-[75%] -translate-x-1/2 rounded-full bg-[#174474]/38 blur-[170px]"
+        className="absolute left-1/2 top-[-30%] h-[95%] w-[75%] -translate-x-1/2 rounded-full bg-[#174474]/40 blur-[170px]"
+      />
+
+      <div
+        className="absolute inset-0 opacity-[0.045]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.33) 1px, transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.33) 1px,transparent 1px)",
+          backgroundSize: "74px 74px",
+        }}
       />
 
       <motion.div
         animate={{
-          opacity:
-            atmosphere === "reveal" ||
-            atmosphere === "closing" ||
-            atmosphere === "destination_reveal"
-              ? 0.3
-              : atmosphere === "locked"
-                ? 0.18
-                : 0.08,
+          x: ["-40%", "160%"],
+          opacity: [0, 0.15, 0],
         }}
         transition={{
-          duration: 2.3,
+          duration: 16,
+          repeat: Infinity,
+          repeatDelay: 3,
+          ease: "linear",
         }}
-        className="absolute bottom-[-42%] left-[6%] h-[75%] w-[70%] rounded-full bg-[#b38b4b]/32 blur-[190px]"
+        className="absolute top-[20%] h-px w-[32%] bg-gradient-to-r from-transparent via-[#d7bc83]/70 to-transparent"
       />
-
-      <GridLayer />
-
-      <ManifestDataStream
-        passengers={passengers}
-        visible={[
-          STAGES.MANIFEST_LOADING,
-          STAGES.MANIFEST_READY,
-          STAGES.FINAL_BOARDING,
-          STAGES.VERIFYING,
-          STAGES.SELECTING,
-        ].includes(stage)}
-      />
-
-      <RadarLayer
-        visible={[
-          STAGES.VERIFYING,
-          STAGES.VERIFIED,
-          STAGES.CLEARANCE,
-          STAGES.DESTINATION_LOCKED,
-          STAGES.DESTINATION_REVEALED,
-        ].includes(stage)}
-      />
-
-      <RunwayLayer />
-
-      <MovingReflection />
 
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_28%,rgba(0,0,0,0.68)_100%)]" />
-
-      <NoiseLayer />
     </div>
   );
 }
 
 // ============================================================================
-// SECTION 15 — GRID LAYER
+// RADAR
 // ============================================================================
 
-function GridLayer() {
-  return (
-    <div
-      className="absolute inset-0 opacity-[0.045]"
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(255,255,255,0.33) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.33) 1px, transparent 1px)",
-
-        backgroundSize: "74px 74px",
-
-        maskImage:
-          "linear-gradient(to bottom, transparent, black 15%, black 80%, transparent)",
-
-        WebkitMaskImage:
-          "linear-gradient(to bottom, transparent, black 15%, black 80%, transparent)",
-      }}
-    />
-  );
-}
-
-// ============================================================================
-// SECTION 16 — MANIFEST DATA STREAM
-// ============================================================================
-
-function ManifestDataStream({ passengers, visible }) {
-  const fallbackReferences = [
-    "OM1025",
-    "AV-183742",
-    "BOARDING",
-    "MANIFEST",
-    "VERIFIED",
-    "GATE 08",
-    "TERMINAL 02",
-    "CLEARANCE",
-  ];
-
-  const passengerReferences = passengers
-    .slice(0, 8)
-    .map((passenger) => passenger.ticket_code)
-    .filter(Boolean);
-
-  const references =
-    passengerReferences.length > 0
-      ? passengerReferences
-      : fallbackReferences;
-
+function Radar() {
   return (
     <motion.div
-      animate={{
-        opacity: visible ? 1 : 0.25,
-      }}
-      transition={{
-        duration: 1.5,
-      }}
-      className="absolute inset-y-[18%] left-[2%] hidden w-40 overflow-hidden lg:block"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 0.18 }}
+      className="pointer-events-none absolute left-1/2 top-1/2 h-[650px] w-[650px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#c8aa70]/20"
     >
-      <motion.div
-        animate={{
-          y: ["0%", "-45%"],
-        }}
-        transition={{
-          duration: 22,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        className="space-y-7"
-      >
-        {[...references, ...references, ...references].map(
-          (reference, index) => (
-            <p
-              key={`${reference}-${index}`}
-              className="font-[var(--font-ibm-plex-mono)] text-[7px] uppercase tracking-[0.28em] text-white/[0.055]"
-            >
-              {reference}
-            </p>
-          )
-        )}
-      </motion.div>
-    </motion.div>
-  );
-}
+      <div className="absolute inset-[15%] rounded-full border border-[#c8aa70]/15" />
 
-// ============================================================================
-// SECTION 17 — RADAR LAYER
-// ============================================================================
-
-function RadarLayer({ visible }) {
-  return (
-    <motion.div
-      animate={{
-        opacity: visible ? 0.12 : 0.025,
-      }}
-      transition={{
-        duration: 1.8,
-      }}
-      className="absolute right-[-13%] top-[12%] hidden h-[620px] w-[620px] rounded-full border border-[#b9d0e9]/20 lg:block"
-    >
-      <span className="absolute inset-[18%] rounded-full border border-[#b9d0e9]/15" />
-
-      <span className="absolute inset-[36%] rounded-full border border-[#b9d0e9]/15" />
-
-      <span className="absolute left-1/2 top-0 h-full w-px bg-[#b9d0e9]/10" />
-
-      <span className="absolute left-0 top-1/2 h-px w-full bg-[#b9d0e9]/10" />
+      <div className="absolute inset-[30%] rounded-full border border-[#c8aa70]/15" />
 
       <motion.div
         animate={{
@@ -2073,7 +1487,7 @@ function RadarLayer({ visible }) {
         className="absolute inset-0 rounded-full"
         style={{
           background:
-            "conic-gradient(from 0deg, transparent 0deg, transparent 322deg, rgba(170,205,236,0.16) 350deg, transparent 360deg)",
+            "conic-gradient(from 0deg,transparent 0deg,transparent 315deg,rgba(200,170,112,0.18) 350deg,transparent 360deg)",
         }}
       />
     </motion.div>
@@ -2081,128 +1495,24 @@ function RadarLayer({ visible }) {
 }
 
 // ============================================================================
-// SECTION 18 — RUNWAY LAYER
-// ============================================================================
-
-function RunwayLayer() {
-  return (
-    <div className="absolute bottom-[8%] left-1/2 w-[70%] -translate-x-1/2 opacity-30">
-      <div className="relative h-12">
-        {Array.from({ length: 13 }).map(
-          (_, index) => (
-            <motion.span
-              key={index}
-              animate={{
-                opacity: [0.1, 0.75, 0.1],
-              }}
-              transition={{
-                duration: 3.8,
-                repeat: Infinity,
-                delay: index * 0.18,
-              }}
-              className="absolute bottom-0 h-[2px] w-[2px] rounded-full bg-[#dfc48e]"
-              style={{
-                left: `${(index / 12) * 100}%`,
-              }}
-            />
-          )
-        )}
-
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.055] to-transparent" />
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// SECTION 19 — MOVING REFLECTION
-// ============================================================================
-
-function MovingReflection() {
-  return (
-    <motion.div
-      animate={{
-        x: ["-40%", "160%"],
-        opacity: [0, 0.16, 0],
-      }}
-      transition={{
-        duration: 16,
-        repeat: Infinity,
-        repeatDelay: 3,
-        ease: "linear",
-      }}
-      className="absolute top-[20%] h-px w-[32%] bg-gradient-to-r from-transparent via-[#d7bc83]/70 to-transparent"
-    />
-  );
-}
-
-// ============================================================================
-// SECTION 20 — NOISE LAYER
-// ============================================================================
-
-function NoiseLayer() {
-  return (
-    <div className="absolute inset-0 opacity-[0.023] mix-blend-soft-light">
-      <div
-        className="h-full w-full"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.75'/%3E%3C/svg%3E\")",
-        }}
-      />
-    </div>
-  );
-}
-
-// ============================================================================
-// SECTION 21 — PUBLIC LOADING SCREEN
-// ============================================================================
-
-function PublicLoadingScreen() {
-  return (
-    <main
-      className={`${instrumentSans.variable} ${ibmPlexMono.variable} relative flex min-h-screen items-center justify-center overflow-hidden bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea]`}
-    >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(23,68,116,0.38),transparent_45%),linear-gradient(180deg,#06111f_0%,#020812_58%,#01040a_100%)]" />
-
-      <div className="relative z-10 flex flex-col items-center text-center">
-        <OrbitMark large />
-
-        <p className="mt-10 text-[9px] uppercase tracking-[0.42em] text-[#cbb07c]">
-          Secret Destination Experience
-        </p>
-
-        <div className="mt-6 flex items-center gap-4">
-          <ProcessingIndicator />
-
-          <p className="text-[8px] uppercase tracking-[0.32em] text-white/30">
-            Establishing live connection
-          </p>
-        </div>
-      </div>
-    </main>
-  );
-}
-
-// ============================================================================
-// SECTION 22 — STAGE COORDINATES
+// STAGE COORDINATES
 // ============================================================================
 
 function StageCoordinates() {
   return (
     <>
       <div className="absolute left-0 top-1/2 hidden -translate-y-1/2 items-center gap-3 lg:flex">
-        <span className="font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.2em] text-white/12">
+        <span className="font-[var(--font-ibm-plex-mono)] text-[8px] text-white/15">
           40.6401° N
         </span>
 
-        <span className="h-px w-12 bg-white/[0.07]" />
+        <span className="h-px w-12 bg-white/10" />
       </div>
 
       <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 items-center gap-3 lg:flex">
-        <span className="h-px w-12 bg-white/[0.07]" />
+        <span className="h-px w-12 bg-white/10" />
 
-        <span className="font-[var(--font-ibm-plex-mono)] text-[7px] tracking-[0.2em] text-white/12">
+        <span className="font-[var(--font-ibm-plex-mono)] text-[8px] text-white/15">
           22.9444° E
         </span>
       </div>
@@ -2211,15 +1521,15 @@ function StageCoordinates() {
 }
 
 // ============================================================================
-// SECTION 23 — PROCESSING INDICATOR
+// PROCESSING INDICATOR
 // ============================================================================
 
 function ProcessingIndicator() {
   return (
-    <span className="flex items-center gap-1.5">
-      {[0, 1, 2].map((item) => (
+    <span className="flex items-center gap-2">
+      {[0, 1, 2].map((index) => (
         <motion.span
-          key={item}
+          key={index}
           animate={{
             opacity: [0.2, 1, 0.2],
             scale: [0.75, 1.15, 0.75],
@@ -2227,9 +1537,9 @@ function ProcessingIndicator() {
           transition={{
             duration: 1.4,
             repeat: Infinity,
-            delay: item * 0.2,
+            delay: index * 0.2,
           }}
-          className="h-1 w-1 rounded-full bg-[#c9ab70]"
+          className="h-1.5 w-1.5 rounded-full bg-[#c9ab70]"
         />
       ))}
     </span>
@@ -2237,14 +1547,16 @@ function ProcessingIndicator() {
 }
 
 // ============================================================================
-// SECTION 24 — ORBIT MARK
+// ORBIT MARK
 // ============================================================================
 
 function OrbitMark({ large = false }) {
-  const sizeClass = large ? "h-20 w-20" : "h-12 w-12";
+  const size = large
+    ? "h-24 w-24"
+    : "h-14 w-14";
 
   return (
-    <div className={`relative ${sizeClass}`}>
+    <div className={`relative ${size}`}>
       <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#d1b477]" />
 
       <motion.span
@@ -2270,21 +1582,21 @@ function OrbitMark({ large = false }) {
           repeat: Infinity,
           ease: "linear",
         }}
-        className="absolute inset-[18%] rotate-45 rounded-full border border-[#d1b477]/18"
+        className="absolute inset-[18%] rounded-full border border-[#d1b477]/20"
       />
     </div>
   );
 }
 
 // ============================================================================
-// SECTION 25 — CHECK ICON
+// CHECK ICON
 // ============================================================================
 
 function CheckIcon() {
   return (
     <svg
-      width="27"
-      height="27"
+      width="35"
+      height="35"
       viewBox="0 0 30 30"
       fill="none"
       aria-hidden="true"
@@ -2304,11 +1616,38 @@ function CheckIcon() {
           opacity: 1,
         }}
         transition={{
-          delay: 0.45,
+          delay: 0.5,
           duration: 1.1,
-          ease: [0.22, 1, 0.36, 1],
         }}
       />
     </svg>
+  );
+}
+
+// ============================================================================
+// LOADING SCREEN
+// ============================================================================
+
+function LoadingScreen() {
+  return (
+    <main
+      className={`${instrumentSans.variable} ${ibmPlexMono.variable} flex min-h-screen items-center justify-center bg-[#020711] font-[var(--font-instrument-sans)] text-[#f4f1ea]`}
+    >
+      <div className="flex flex-col items-center text-center">
+        <OrbitMark large />
+
+        <p className="mt-12 text-[10px] uppercase tracking-[0.4em] text-[#cbb07c]">
+          Secret Destination Experience
+        </p>
+
+        <div className="mt-8 flex items-center gap-4">
+          <ProcessingIndicator />
+
+          <p className="text-[9px] uppercase tracking-[0.3em] text-white/35">
+            Establishing Live Connection
+          </p>
+        </div>
+      </div>
+    </main>
   );
 }
