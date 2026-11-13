@@ -15,12 +15,18 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/lib/supabaseClient";
 
-
 // ============================================================================
 // SECTION 2 — CONFIGURATION
 // ============================================================================
 
 const EXPERIENCE_ID = "main";
+
+const DESTINATION = {
+  city: "PARIS",
+  airport: "ORLY AIRPORT",
+  code: "ORY",
+  country: "FRANCE",
+};
 
 const STAGES = {
   INITIAL: "initial",
@@ -31,6 +37,10 @@ const STAGES = {
   VERIFIED: "verified",
   CLEARANCE: "clearance",
   DESTINATION_LOCKED: "destination_locked",
+
+  // NEW — DESTINATION REVEAL
+  DESTINATION_REVEALED: "destination_revealed",
+
   SELECTING: "selecting",
   PASSENGER_SELECTED: "passenger_selected",
   WINNER_REVEALED: "winner_revealed",
@@ -46,6 +56,10 @@ const STAGE_ORDER = [
   STAGES.VERIFIED,
   STAGES.CLEARANCE,
   STAGES.DESTINATION_LOCKED,
+
+  // NEW
+  STAGES.DESTINATION_REVEALED,
+
   STAGES.SELECTING,
   STAGES.PASSENGER_SELECTED,
   STAGES.WINNER_REVEALED,
@@ -109,29 +123,40 @@ const STAGE_INFORMATION = {
     progress: 78,
   },
 
-  [STAGES.SELECTING]: {
+  // ========================================================================
+  // NEW STAGE — DESTINATION REVEALED
+  // ========================================================================
+
+  [STAGES.DESTINATION_REVEALED]: {
     sequence: "08",
+    title: "Destination Revealed",
+    status: "Paris Orly Airport — ORY",
+    progress: 83,
+  },
+
+  [STAGES.SELECTING]: {
+    sequence: "09",
     title: "Passenger Selection",
     status: "Selection sequence active",
     progress: 88,
   },
 
   [STAGES.PASSENGER_SELECTED]: {
-    sequence: "09",
+    sequence: "10",
     title: "Passenger Selected",
     status: "Identity secured",
     progress: 94,
   },
 
   [STAGES.WINNER_REVEALED]: {
-    sequence: "10",
+    sequence: "11",
     title: "Passenger Revealed",
     status: "Public clearance complete",
     progress: 100,
   },
 
   [STAGES.CLOSING]: {
-    sequence: "11",
+    sequence: "12",
     title: "Closing Ceremony",
     status: "Experience complete",
     progress: 100,
@@ -151,17 +176,30 @@ const formatCount = (value) =>
     minimumIntegerDigits: 2,
   }).format(value || 0);
 
+// Uniform random index using rejection sampling.
 const secureRandomIndex = (length) => {
-  if (!length || length <= 0) {
+  if (!Number.isSafeInteger(length) || length <= 0) {
     return null;
   }
 
+  const range = 0x100000000;
+
+  if (length > range) {
+    throw new Error("Passenger manifest exceeds random selection range.");
+  }
+
+  const limit = Math.floor(range / length) * length;
   const values = new Uint32Array(1);
-  window.crypto.getRandomValues(values);
 
-  return values[0] % length;
+  let randomValue;
+
+  do {
+    window.crypto.getRandomValues(values);
+    randomValue = values[0];
+  } while (randomValue >= limit);
+
+  return randomValue % length;
 };
-
 
 // ============================================================================
 // SECTION 3 — MAIN OPERATIONS PAGE
@@ -178,17 +216,26 @@ export default function GiveawayOperationsPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const selectionIntervalRef = useRef(null);
+  const executingRef = useRef(false);
 
   const stage = experience?.stage || STAGES.INITIAL;
-  const currentStage = STAGE_INFORMATION[stage];
+
+  const currentStage =
+    STAGE_INFORMATION[stage] ||
+    STAGE_INFORMATION[STAGES.INITIAL];
+
   const stageIndex = STAGE_ORDER.indexOf(stage);
 
   const manifestCount =
-    experience?.manifest_count || passengers.length || 0;
+    experience?.manifest_count ?? passengers.length;
 
   const destinationLocked =
     stageIndex >=
     STAGE_ORDER.indexOf(STAGES.DESTINATION_LOCKED);
+
+  const destinationRevealed =
+    stageIndex >=
+    STAGE_ORDER.indexOf(STAGES.DESTINATION_REVEALED);
 
   const formattedUpdateTime = useMemo(() => {
     if (!experience?.updated_at) {
@@ -203,62 +250,9 @@ export default function GiveawayOperationsPage() {
     }).format(new Date(experience.updated_at));
   }, [experience?.updated_at]);
 
-  const loadExperience = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    try {
-      const { data, error } = await supabase
-        .from("giveaway_experience")
-        .select("*")
-        .eq("id", EXPERIENCE_ID)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      if (!data) {
-        const { data: createdExperience, error: creationError } =
-          await supabase
-            .from("giveaway_experience")
-            .insert({
-              id: EXPERIENCE_ID,
-              stage: STAGES.INITIAL,
-              manifest_count: 0,
-              selected_passenger_id: null,
-              selection_preview: null,
-              is_processing: false,
-              last_action: "Experience initialized",
-              updated_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
-
-        if (creationError) {
-          throw creationError;
-        }
-
-        setExperience(createdExperience);
-        return;
-      }
-
-      setExperience(data);
-
-      if (data.selected_passenger_id) {
-        await loadSelectedPassenger(data.selected_passenger_id);
-      }
-    } catch (error) {
-      console.error("Experience loading error:", error);
-
-      setErrorMessage(
-        error?.message ||
-          "The giveaway experience could not be loaded."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // ========================================================================
+  // LOAD SELECTED PASSENGER
+  // ========================================================================
 
   const loadSelectedPassenger = useCallback(
     async (passengerId) => {
@@ -286,7 +280,10 @@ export default function GiveawayOperationsPage() {
         .maybeSingle();
 
       if (error) {
-        console.error("Selected passenger loading error:", error);
+        console.error(
+          "Selected passenger loading error:",
+          error
+        );
         return;
       }
 
@@ -295,9 +292,83 @@ export default function GiveawayOperationsPage() {
     []
   );
 
+  // ========================================================================
+  // LOAD EXPERIENCE
+  // ========================================================================
+
+  const loadExperience = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const { data, error } = await supabase
+        .from("giveaway_experience")
+        .select("*")
+        .eq("id", EXPERIENCE_ID)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        const {
+          data: createdExperience,
+          error: creationError,
+        } = await supabase
+          .from("giveaway_experience")
+          .insert({
+            id: EXPERIENCE_ID,
+            stage: STAGES.INITIAL,
+            manifest_count: 0,
+            selected_passenger_id: null,
+            selection_preview: null,
+            is_processing: false,
+            last_action: "Experience initialized",
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (creationError) {
+          throw creationError;
+        }
+
+        setExperience(createdExperience);
+        return;
+      }
+
+      setExperience(data);
+
+      if (data.selected_passenger_id) {
+        await loadSelectedPassenger(
+          data.selected_passenger_id
+        );
+      } else {
+        setSelectedPassenger(null);
+      }
+    } catch (error) {
+      console.error(
+        "Experience loading error:",
+        error
+      );
+
+      setErrorMessage(
+        error?.message ||
+          "The giveaway experience could not be loaded."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [loadSelectedPassenger]);
+
   useEffect(() => {
     loadExperience();
   }, [loadExperience]);
+
+  // ========================================================================
+  // SUPABASE REALTIME
+  // ========================================================================
 
   useEffect(() => {
     const channel = supabase
@@ -312,7 +383,8 @@ export default function GiveawayOperationsPage() {
         },
         async (payload) => {
           const updatedExperience =
-            payload.new && Object.keys(payload.new).length
+            payload.new &&
+            Object.keys(payload.new).length
               ? payload.new
               : null;
 
@@ -322,7 +394,9 @@ export default function GiveawayOperationsPage() {
 
           setExperience(updatedExperience);
 
-          if (updatedExperience.selected_passenger_id) {
+          if (
+            updatedExperience.selected_passenger_id
+          ) {
             await loadSelectedPassenger(
               updatedExperience.selected_passenger_id
             );
@@ -341,10 +415,16 @@ export default function GiveawayOperationsPage() {
   useEffect(() => {
     return () => {
       if (selectionIntervalRef.current) {
-        window.clearInterval(selectionIntervalRef.current);
+        window.clearInterval(
+          selectionIntervalRef.current
+        );
       }
     };
   }, []);
+
+  // ========================================================================
+  // UPDATE EXPERIENCE
+  // ========================================================================
 
   const updateExperience = useCallback(
     async (updates) => {
@@ -364,14 +444,22 @@ export default function GiveawayOperationsPage() {
         throw error;
       }
 
-      if (data) {
-        setExperience(data);
+      if (!data) {
+        throw new Error(
+          "Experience update was not confirmed."
+        );
       }
+
+      setExperience(data);
 
       return data;
     },
     []
   );
+
+  // ========================================================================
+  // EXECUTE CEREMONY ACTION
+  // ========================================================================
 
   const executeAction = useCallback(
     async ({
@@ -380,11 +468,23 @@ export default function GiveawayOperationsPage() {
       finalStage,
       processingDuration = 0,
       callback,
+      requiredStage,
     }) => {
-      if (isExecuting) {
+      if (executingRef.current) {
         return;
       }
 
+      if (
+        requiredStage &&
+        stage !== requiredStage
+      ) {
+        setErrorMessage(
+          `Cannot execute ${actionName} from the current stage.`
+        );
+        return;
+      }
+
+      executingRef.current = true;
       setIsExecuting(true);
       setErrorMessage("");
       setSuccessMessage("");
@@ -414,12 +514,18 @@ export default function GiveawayOperationsPage() {
           });
         }
 
-        setSuccessMessage(`${actionName} completed.`);
+        setSuccessMessage(
+          `${actionName} completed.`
+        );
       } catch (error) {
-        console.error(`${actionName} error:`, error);
+        console.error(
+          `${actionName} error:`,
+          error
+        );
 
         setErrorMessage(
-          error?.message || `${actionName} could not be completed.`
+          error?.message ||
+            `${actionName} could not be completed.`
         );
 
         await updateExperience({
@@ -427,11 +533,16 @@ export default function GiveawayOperationsPage() {
           last_action: `${actionName} failed`,
         }).catch(() => {});
       } finally {
+        executingRef.current = false;
         setIsExecuting(false);
       }
     },
-    [isExecuting, updateExperience]
+    [stage, updateExperience]
   );
+
+  // ========================================================================
+  // MAIN RENDER
+  // ========================================================================
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020711] text-[#f2efe8]">
@@ -451,20 +562,31 @@ export default function GiveawayOperationsPage() {
             manifestCount={manifestCount}
             selectedPassenger={selectedPassenger}
             destinationLocked={destinationLocked}
+            destinationRevealed={destinationRevealed}
             isLoading={isLoading}
           />
 
           <CeremonyControls
             stage={stage}
-            isExecuting={isExecuting}
+            isExecuting={isExecuting || isLoading}
             passengerCount={manifestCount}
             selectedPassenger={selectedPassenger}
+
+            // ================================================================
+            // 01 — LOAD MANIFEST
+            // ================================================================
+
             onLoadManifest={() =>
               executeAction({
-                actionName: "Passenger Manifest Loading",
-                processingStage: STAGES.MANIFEST_LOADING,
-                finalStage: STAGES.MANIFEST_READY,
+                actionName:
+                  "Passenger Manifest Loading",
+                processingStage:
+                  STAGES.MANIFEST_LOADING,
+                finalStage:
+                  STAGES.MANIFEST_READY,
                 processingDuration: 1800,
+                requiredStage: STAGES.INITIAL,
+
                 callback: async () => {
                   const loadedPassengers =
                     await fetchEligiblePassengers();
@@ -472,25 +594,46 @@ export default function GiveawayOperationsPage() {
                   setPassengers(loadedPassengers);
 
                   await updateExperience({
-                    manifest_count: loadedPassengers.length,
+                    manifest_count:
+                      loadedPassengers.length,
                     selected_passenger_id: null,
                     selection_preview: null,
                   });
                 },
               })
             }
+
+            // ================================================================
+            // 02 — FINAL BOARDING
+            // ================================================================
+
             onBeginBoarding={() =>
               executeAction({
-                actionName: "Final Boarding Procedure",
-                finalStage: STAGES.FINAL_BOARDING,
+                actionName:
+                  "Final Boarding Procedure",
+                finalStage:
+                  STAGES.FINAL_BOARDING,
+                requiredStage:
+                  STAGES.MANIFEST_READY,
               })
             }
+
+            // ================================================================
+            // 03 — VERIFY MANIFEST
+            // ================================================================
+
             onVerifyManifest={() =>
               executeAction({
-                actionName: "Passenger Manifest Verification",
-                processingStage: STAGES.VERIFYING,
-                finalStage: STAGES.VERIFIED,
+                actionName:
+                  "Passenger Manifest Verification",
+                processingStage:
+                  STAGES.VERIFYING,
+                finalStage:
+                  STAGES.VERIFIED,
                 processingDuration: 2400,
+                requiredStage:
+                  STAGES.FINAL_BOARDING,
+
                 callback: async () => {
                   const verifiedPassengers =
                     passengers.length > 0
@@ -503,61 +646,149 @@ export default function GiveawayOperationsPage() {
                     );
                   }
 
-                  setPassengers(verifiedPassengers);
+                  setPassengers(
+                    verifiedPassengers
+                  );
 
                   await updateExperience({
-                    manifest_count: verifiedPassengers.length,
+                    manifest_count:
+                      verifiedPassengers.length,
                   });
                 },
               })
             }
+
+            // ================================================================
+            // 04 — CONFIRM CLEARANCE
+            // ================================================================
+
             onConfirmClearance={() =>
               executeAction({
-                actionName: "Ground Operations Clearance",
-                finalStage: STAGES.CLEARANCE,
+                actionName:
+                  "Ground Operations Clearance",
+                finalStage:
+                  STAGES.CLEARANCE,
+                requiredStage:
+                  STAGES.VERIFIED,
               })
             }
+
+            // ================================================================
+            // 05 — LOCK DESTINATION
+            // ================================================================
+
             onLockDestination={() =>
               executeAction({
-                actionName: "Secret Destination Lock",
-                finalStage: STAGES.DESTINATION_LOCKED,
+                actionName:
+                  "Secret Destination Lock",
+                finalStage:
+                  STAGES.DESTINATION_LOCKED,
+                requiredStage:
+                  STAGES.CLEARANCE,
               })
             }
-            onSelectPassenger={() =>
-              handlePassengerSelection({
-                passengers,
-                selectionIntervalRef,
-                updateExperience,
-                setPassengers,
-                setSelectedPassenger,
-                setIsExecuting,
-                setErrorMessage,
-                setSuccessMessage,
+
+            // ================================================================
+            // 06 — NEW: REVEAL DESTINATION
+            // ================================================================
+
+            onRevealDestination={() =>
+              executeAction({
+                actionName:
+                  `Destination Reveal — ${DESTINATION.city} ${DESTINATION.code}`,
+                finalStage:
+                  STAGES.DESTINATION_REVEALED,
+                requiredStage:
+                  STAGES.DESTINATION_LOCKED,
               })
             }
+
+            // ================================================================
+            // 07 — SELECT PASSENGER
+            // ================================================================
+
+            onSelectPassenger={async () => {
+              if (
+                executingRef.current ||
+                stage !==
+                  STAGES.DESTINATION_REVEALED
+              ) {
+                return;
+              }
+
+              executingRef.current = true;
+
+              try {
+                await handlePassengerSelection({
+                  passengers,
+                  selectionIntervalRef,
+                  updateExperience,
+                  setPassengers,
+                  setSelectedPassenger,
+                  setIsExecuting,
+                  setErrorMessage,
+                  setSuccessMessage,
+                });
+              } finally {
+                executingRef.current = false;
+              }
+            }}
+
+            // ================================================================
+            // 08 — REVEAL WINNER
+            // ================================================================
+
             onRevealWinner={() =>
               executeAction({
-                actionName: "Passenger Public Reveal",
-                finalStage: STAGES.WINNER_REVEALED,
+                actionName:
+                  "Passenger Public Reveal",
+                finalStage:
+                  STAGES.WINNER_REVEALED,
+                requiredStage:
+                  STAGES.PASSENGER_SELECTED,
               })
             }
+
+            // ================================================================
+            // 09 — CLOSING
+            // ================================================================
+
             onClosing={() =>
               executeAction({
-                actionName: "Closing Ceremony",
-                finalStage: STAGES.CLOSING,
+                actionName:
+                  "Closing Ceremony",
+                finalStage:
+                  STAGES.CLOSING,
+                requiredStage:
+                  STAGES.WINNER_REVEALED,
               })
             }
-            onReset={() =>
-              resetGiveawayExperience({
-                selectionIntervalRef,
-                updateExperience,
-                setPassengers,
-                setSelectedPassenger,
-                setIsExecuting,
-                setErrorMessage,
-                setSuccessMessage,
-              })
-            }
+
+            // ================================================================
+            // 00 — RESET
+            // ================================================================
+
+            onReset={async () => {
+              if (executingRef.current) {
+                return;
+              }
+
+              executingRef.current = true;
+
+              try {
+                await resetGiveawayExperience({
+                  selectionIntervalRef,
+                  updateExperience,
+                  setPassengers,
+                  setSelectedPassenger,
+                  setIsExecuting,
+                  setErrorMessage,
+                  setSuccessMessage,
+                });
+              } finally {
+                executingRef.current = false;
+              }
+            }}
           />
         </div>
 
@@ -571,7 +802,6 @@ export default function GiveawayOperationsPage() {
     </main>
   );
 }
-
 
 // ============================================================================
 // SECTION 4 — PASSENGER MANIFEST
@@ -623,7 +853,6 @@ async function fetchEligiblePassengers() {
   return validPassengers;
 }
 
-
 // ============================================================================
 // SECTION 5 — PASSENGER SELECTION
 // ============================================================================
@@ -659,43 +888,60 @@ async function handlePassengerSelection({
     await updateExperience({
       stage: STAGES.SELECTING,
       is_processing: true,
-      last_action: "Passenger Selection Sequence",
-      manifest_count: activePassengers.length,
+      last_action:
+        "Passenger Selection Sequence",
+      manifest_count:
+        activePassengers.length,
       selected_passenger_id: null,
+      selection_preview: null,
     });
 
-    selectionIntervalRef.current = window.setInterval(() => {
-      const previewIndex = secureRandomIndex(
-        activePassengers.length
-      );
+    selectionIntervalRef.current =
+      window.setInterval(() => {
+        const previewIndex =
+          secureRandomIndex(
+            activePassengers.length
+          );
 
-      if (previewIndex === null) {
-        return;
-      }
+        if (previewIndex === null) {
+          return;
+        }
 
-      const previewPassenger = activePassengers[previewIndex];
+        const previewPassenger =
+          activePassengers[previewIndex];
 
-      updateExperience({
-        selection_preview: {
-          id: previewPassenger.id,
-          ticket_code: previewPassenger.ticket_code,
-          flight: previewPassenger.flight,
-          seat: previewPassenger.seat,
-          gate: previewPassenger.gate,
-        },
-      }).catch((error) => {
-        console.error("Preview update error:", error);
-      });
-    }, SELECTION_TICK);
+        updateExperience({
+          selection_preview: {
+            id: previewPassenger.id,
+            ticket_code:
+              previewPassenger.ticket_code,
+            flight:
+              previewPassenger.flight,
+            seat:
+              previewPassenger.seat,
+            gate:
+              previewPassenger.gate,
+          },
+        }).catch((error) => {
+          console.error(
+            "Preview update error:",
+            error
+          );
+        });
+      }, SELECTION_TICK);
 
     await wait(SELECTION_DURATION);
 
-    window.clearInterval(selectionIntervalRef.current);
+    window.clearInterval(
+      selectionIntervalRef.current
+    );
+
     selectionIntervalRef.current = null;
 
-    const winnerIndex = secureRandomIndex(
-      activePassengers.length
-    );
+    const winnerIndex =
+      secureRandomIndex(
+        activePassengers.length
+      );
 
     if (winnerIndex === null) {
       throw new Error(
@@ -703,10 +949,15 @@ async function handlePassengerSelection({
       );
     }
 
-    const winner = activePassengers[winnerIndex];
-    const selectedAt = new Date().toISOString();
+    const winner =
+      activePassengers[winnerIndex];
 
-    const { error: previousWinnerError } = await supabase
+    const selectedAt =
+      new Date().toISOString();
+
+    const {
+      error: previousWinnerError,
+    } = await supabase
       .from("participants")
       .update({
         giveaway_winner: false,
@@ -719,64 +970,105 @@ async function handlePassengerSelection({
       throw previousWinnerError;
     }
 
-    const { error: winnerUpdateError } = await supabase
+    const {
+      data: winnerUpdateData,
+      error: winnerUpdateError,
+    } = await supabase
       .from("participants")
       .update({
         giveaway_winner: true,
-        giveaway_selected_at: selectedAt,
+        giveaway_selected_at:
+          selectedAt,
       })
       .eq("id", winner.id)
-      .eq("giveaway_eligible", true);
+      .eq("giveaway_eligible", true)
+      .select("id")
+      .maybeSingle();
 
     if (winnerUpdateError) {
       throw winnerUpdateError;
     }
 
+    if (!winnerUpdateData) {
+      throw new Error(
+        "Winner update was not confirmed."
+      );
+    }
+
     const storedWinner = {
       ...winner,
       giveaway_winner: true,
-      giveaway_selected_at: selectedAt,
+      giveaway_selected_at:
+        selectedAt,
     };
 
-    setSelectedPassenger(storedWinner);
+    setSelectedPassenger(
+      storedWinner
+    );
 
     await updateExperience({
-      stage: STAGES.PASSENGER_SELECTED,
-      selected_passenger_id: winner.id,
+      stage:
+        STAGES.PASSENGER_SELECTED,
+      selected_passenger_id:
+        winner.id,
       selection_preview: {
         id: winner.id,
-        ticket_code: winner.ticket_code,
-        flight: winner.flight,
-        seat: winner.seat,
-        gate: winner.gate,
+        ticket_code:
+          winner.ticket_code,
+        flight:
+          winner.flight,
+        seat:
+          winner.seat,
+        gate:
+          winner.gate,
       },
       is_processing: false,
-      last_action: "Passenger selected",
+      last_action:
+        "Passenger selected",
     });
 
-    setSuccessMessage("Passenger selection completed.");
+    setSuccessMessage(
+      "Passenger selection completed."
+    );
   } catch (error) {
-    if (selectionIntervalRef.current) {
-      window.clearInterval(selectionIntervalRef.current);
-      selectionIntervalRef.current = null;
+    if (
+      selectionIntervalRef.current
+    ) {
+      window.clearInterval(
+        selectionIntervalRef.current
+      );
+
+      selectionIntervalRef.current =
+        null;
     }
 
-    console.error("Passenger selection error:", error);
+    console.error(
+      "Passenger selection error:",
+      error
+    );
 
     setErrorMessage(
       error?.message ||
         "Passenger selection could not be completed."
     );
 
+    // Return to the already revealed destination.
     await updateExperience({
-      stage: STAGES.DESTINATION_LOCKED,
+      stage:
+        STAGES.DESTINATION_REVEALED,
+      selection_preview: null,
       is_processing: false,
-      last_action: "Passenger selection failed",
+      last_action:
+        "Passenger selection failed",
     }).catch(() => {});
   } finally {
     setIsExecuting(false);
   }
 }
+
+// ============================================================================
+// RESET EXPERIENCE
+// ============================================================================
 
 async function resetGiveawayExperience({
   selectionIntervalRef,
@@ -787,9 +1079,15 @@ async function resetGiveawayExperience({
   setErrorMessage,
   setSuccessMessage,
 }) {
-  if (selectionIntervalRef.current) {
-    window.clearInterval(selectionIntervalRef.current);
-    selectionIntervalRef.current = null;
+  if (
+    selectionIntervalRef.current
+  ) {
+    window.clearInterval(
+      selectionIntervalRef.current
+    );
+
+    selectionIntervalRef.current =
+      null;
   }
 
   setIsExecuting(true);
@@ -803,14 +1101,21 @@ async function resetGiveawayExperience({
       selected_passenger_id: null,
       selection_preview: null,
       is_processing: false,
-      last_action: "Experience reset",
+      last_action:
+        "Experience reset",
     });
 
     setPassengers([]);
     setSelectedPassenger(null);
-    setSuccessMessage("Experience reset completed.");
+
+    setSuccessMessage(
+      "Experience reset completed."
+    );
   } catch (error) {
-    console.error("Experience reset error:", error);
+    console.error(
+      "Experience reset error:",
+      error
+    );
 
     setErrorMessage(
       error?.message ||
@@ -821,12 +1126,14 @@ async function resetGiveawayExperience({
   }
 }
 
-
 // ============================================================================
 // SECTION 6 — OPERATIONS HEADER
 // ============================================================================
 
-function OperationsHeader({ status, updatedAt }) {
+function OperationsHeader({
+  status,
+  updatedAt,
+}) {
   return (
     <header className="flex flex-col gap-6 border-b border-white/[0.07] pb-6 sm:flex-row sm:items-end sm:justify-between">
       <div>
@@ -865,7 +1172,10 @@ function OperationsHeader({ status, updatedAt }) {
   );
 }
 
-function HeaderMetric({ label, value }) {
+function HeaderMetric({
+  label,
+  value,
+}) {
   return (
     <div>
       <p className="text-[7px] uppercase tracking-[0.3em] text-white/20">
@@ -879,7 +1189,6 @@ function HeaderMetric({ label, value }) {
   );
 }
 
-
 // ============================================================================
 // SECTION 7 — LIVE STATUS PANEL
 // ============================================================================
@@ -891,6 +1200,7 @@ function LiveStatusPanel({
   manifestCount,
   selectedPassenger,
   destinationLocked,
+  destinationRevealed,
   isLoading,
 }) {
   return (
@@ -941,14 +1251,20 @@ function LiveStatusPanel({
               <StatusCell
                 label="Destination"
                 value={
-                  destinationLocked ? "LOCKED" : "PENDING"
+                  destinationRevealed
+                    ? "REVEALED · ORY"
+                    : destinationLocked
+                      ? "LOCKED"
+                      : "PENDING"
                 }
               />
 
               <StatusCell
                 label="Processing"
                 value={
-                  experience?.is_processing ? "ACTIVE" : "STANDBY"
+                  experience?.is_processing
+                    ? "ACTIVE"
+                    : "STANDBY"
                 }
               />
 
@@ -957,6 +1273,41 @@ function LiveStatusPanel({
                 value={stage.toUpperCase()}
               />
             </div>
+
+            {/* NEW — DESTINATION REVEAL STATUS */}
+
+            {destinationRevealed && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 12,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.8,
+                }}
+                className="mt-7 border border-[#c9aa70]/20 bg-[#c9aa70]/[0.035] px-5 py-5"
+              >
+                <p className="text-[8px] uppercase tracking-[0.3em] text-[#cdb582]/55">
+                  Destination Declassified
+                </p>
+
+                <p className="mt-4 text-3xl font-extralight tracking-[-0.04em] text-[#f1eee7]">
+                  {DESTINATION.city}
+                </p>
+
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-[#cdb582]/65">
+                  {DESTINATION.airport} · {DESTINATION.code}
+                </p>
+
+                <p className="mt-3 text-[9px] uppercase tracking-[0.25em] text-white/25">
+                  {DESTINATION.country}
+                </p>
+              </motion.div>
+            )}
 
             <div className="mt-7 border-l border-[#c9aa70]/25 bg-[#c9aa70]/[0.025] px-5 py-4">
               <p className="text-[8px] uppercase tracking-[0.3em] text-[#cdb582]/45">
@@ -1011,7 +1362,10 @@ function LiveStatusPanel({
   );
 }
 
-function StatusCell({ label, value }) {
+function StatusCell({
+  label,
+  value,
+}) {
   return (
     <div className="bg-[#050c16] px-4 py-4">
       <p className="text-[7px] uppercase tracking-[0.27em] text-white/18">
@@ -1024,7 +1378,6 @@ function StatusCell({ label, value }) {
     </div>
   );
 }
-
 
 // ============================================================================
 // SECTION 8 — CEREMONY CONTROLS
@@ -1040,6 +1393,7 @@ function CeremonyControls({
   onVerifyManifest,
   onConfirmClearance,
   onLockDestination,
+  onRevealDestination,
   onSelectPassenger,
   onRevealWinner,
   onClosing,
@@ -1060,14 +1414,25 @@ function CeremonyControls({
       </div>
 
       <div className="grid gap-2 p-5 sm:grid-cols-2 lg:p-7 xl:grid-cols-3">
+
+        {/* 01 — LOAD MANIFEST */}
+
         <ControlButton
           number="01"
           label="Load Manifest"
           description="Retrieve eligible passenger records"
-          active={stage === STAGES.MANIFEST_LOADING}
-          disabled={isExecuting}
+          active={
+            stage === STAGES.MANIFEST_LOADING ||
+            stage === STAGES.MANIFEST_READY
+          }
+          disabled={
+            stage !== STAGES.INITIAL ||
+            isExecuting
+          }
           onClick={onLoadManifest}
         />
+
+        {/* 02 — FINAL BOARDING */}
 
         <ControlButton
           number="02"
@@ -1075,21 +1440,32 @@ function CeremonyControls({
           description="Start the public boarding ceremony"
           active={stage === STAGES.FINAL_BOARDING}
           disabled={
-            passengerCount === 0 || isExecuting
+            stage !== STAGES.MANIFEST_READY ||
+            passengerCount === 0 ||
+            isExecuting
           }
           onClick={onBeginBoarding}
         />
+
+        {/* 03 — VERIFY MANIFEST */}
 
         <ControlButton
           number="03"
           label="Verify Manifest"
           description="Confirm passenger eligibility"
-          active={stage === STAGES.VERIFYING}
+          active={
+            stage === STAGES.VERIFYING ||
+            stage === STAGES.VERIFIED
+          }
           disabled={
-            passengerCount === 0 || isExecuting
+            stage !== STAGES.FINAL_BOARDING ||
+            passengerCount === 0 ||
+            isExecuting
           }
           onClick={onVerifyManifest}
         />
+
+        {/* 04 — CONFIRM CLEARANCE */}
 
         <ControlButton
           number="04"
@@ -1097,29 +1473,56 @@ function CeremonyControls({
           description="Authorise the final departure sequence"
           active={stage === STAGES.CLEARANCE}
           disabled={
-            stage !== STAGES.VERIFIED || isExecuting
+            stage !== STAGES.VERIFIED ||
+            isExecuting
           }
           onClick={onConfirmClearance}
         />
+
+        {/* 05 — LOCK DESTINATION */}
 
         <ControlButton
           number="05"
           label="Lock Destination"
           description="Secure the secret destination"
-          active={stage === STAGES.DESTINATION_LOCKED}
+          active={
+            stage === STAGES.DESTINATION_LOCKED
+          }
           disabled={
-            stage !== STAGES.CLEARANCE || isExecuting
+            stage !== STAGES.CLEARANCE ||
+            isExecuting
           }
           onClick={onLockDestination}
         />
 
+        {/* ================================================================
+            06 — NEW: REVEAL DESTINATION
+            ================================================================ */}
+
         <ControlButton
           number="06"
+          label="Reveal Destination"
+          description="Reveal Paris Orly Airport — ORY"
+          active={
+            stage === STAGES.DESTINATION_REVEALED
+          }
+          disabled={
+            stage !== STAGES.DESTINATION_LOCKED ||
+            isExecuting
+          }
+          important
+          onClick={onRevealDestination}
+        />
+
+        {/* 07 — SELECT PASSENGER */}
+
+        <ControlButton
+          number="07"
           label="Select Passenger"
           description="Execute the secure selection sequence"
           active={stage === STAGES.SELECTING}
           disabled={
-            stage !== STAGES.DESTINATION_LOCKED ||
+            stage !== STAGES.DESTINATION_REVEALED ||
             passengerCount === 0 ||
             isExecuting
           }
@@ -1127,11 +1530,15 @@ function CeremonyControls({
           onClick={onSelectPassenger}
         />
 
+        {/* 08 — REVEAL PASSENGER */}
+
         <ControlButton
-          number="07"
+          number="08"
           label="Reveal Passenger"
           description="Release the selected identity publicly"
-          active={stage === STAGES.WINNER_REVEALED}
+          active={
+            stage === STAGES.WINNER_REVEALED
+          }
           disabled={
             stage !== STAGES.PASSENGER_SELECTED ||
             !selectedPassenger ||
@@ -1141,8 +1548,10 @@ function CeremonyControls({
           onClick={onRevealWinner}
         />
 
+        {/* 09 — CLOSING CEREMONY */}
+
         <ControlButton
-          number="08"
+          number="09"
           label="Closing Ceremony"
           description="Complete the Secret Destination act"
           active={stage === STAGES.CLOSING}
@@ -1152,6 +1561,8 @@ function CeremonyControls({
           }
           onClick={onClosing}
         />
+
+        {/* 00 — RESET EXPERIENCE */}
 
         <ControlButton
           number="00"
@@ -1165,6 +1576,10 @@ function CeremonyControls({
     </section>
   );
 }
+
+// ============================================================================
+// CONTROL BUTTON
+// ============================================================================
 
 function ControlButton({
   number,
@@ -1225,7 +1640,6 @@ function ControlButton({
   );
 }
 
-
 // ============================================================================
 // SECTION 9 — SYSTEM FEEDBACK
 // ============================================================================
@@ -1276,7 +1690,6 @@ function SystemMessages({
     </AnimatePresence>
   );
 }
-
 
 // ============================================================================
 // SECTION 10 — BRAND & BACKGROUND
