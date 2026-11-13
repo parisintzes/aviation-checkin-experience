@@ -703,11 +703,12 @@ export default function GiveawayOperationsPage() {
               })
             }
 
-            // ================================================================
-            // 07 — SELECT PASSENGER
-            // ================================================================
+           // ================================================================
+// 07 — SELECT PASSENGER
+// ================================================================
 
-            onSelectPassenger={async () => {
+onSelectPassenger={async () => {
+  // Prevent duplicate execution.
   if (
     executingRef.current ||
     stage !== STAGES.DESTINATION_REVEALED
@@ -721,21 +722,50 @@ export default function GiveawayOperationsPage() {
   setSuccessMessage("");
 
   try {
-  // Start the passenger selection stage.
-  await updateExperience({
-    stage: STAGES.SELECTING,
-    is_processing: true,
-    selection_preview: null,
-    last_action: "Passenger Selection Sequence",
-  });
+    // STEP 1 — Check the current database state.
+    const { data: currentState, error: stateError } =
+      await supabase
+        .from("giveaway_experience")
+        .select("stage, selected_passenger_id")
+        .eq("id", EXPERIENCE_ID)
+        .single();
 
-  const response = await fetch(
-    "/api/giveaway/select-winner",
+    if (stateError) {
+      throw stateError;
+    }
+
+    if (currentState.selected_passenger_id != null) {
+      throw new Error(
+        "A passenger has already been selected."
+      );
+    }
+
+    if (
+      currentState.stage !== STAGES.DESTINATION_REVEALED
+    ) {
+      throw new Error(
+        "The experience is not ready for passenger selection."
+      );
+    }
+
+    // STEP 2 — Start the selection sequence.
+    await updateExperience({
+      stage: STAGES.SELECTING,
+      is_processing: true,
+      selected_passenger_id: null,
+      selection_preview: null,
+      last_action: "Passenger Selection Sequence",
+    });
+
+    // STEP 3 — Call the secure server API.
+    const response = await fetch(
+      "/api/giveaway/select-winner",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        cache: "no-store",
       }
     );
 
@@ -750,42 +780,93 @@ export default function GiveawayOperationsPage() {
     const winnerId = result.winnerId;
 
     if (winnerId == null) {
-      throw new Error("No winner was returned.");
-    }
-
-    await loadSelectedPassenger(winnerId);
-
-    // Read the final stage written by the database function.
-    const { data, error } = await supabase
-      .from("giveaway_experience")
-      .select("*")
-      .eq("id", EXPERIENCE_ID)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (
-      data.stage !== STAGES.PASSENGER_SELECTED ||
-      String(data.selected_passenger_id) !== String(winnerId)
-    ) {
       throw new Error(
-        "Winner was selected, but the experience state needs verification."
+        "The server did not return a selected passenger."
       );
     }
 
-    setExperience(data);
+    // STEP 4 — Verify the database result.
+    const { data: finalState, error: finalError } =
+      await supabase
+        .from("giveaway_experience")
+        .select("*")
+        .eq("id", EXPERIENCE_ID)
+        .single();
+
+    if (finalError) {
+      throw finalError;
+    }
+
+    if (
+      finalState.stage !== STAGES.PASSENGER_SELECTED ||
+      String(finalState.selected_passenger_id) !==
+        String(winnerId)
+    ) {
+      throw new Error(
+        "Passenger selection was not fully confirmed."
+      );
+    }
+
+    // STEP 5 — Synchronize Ground Operations.
+    setExperience(finalState);
+
+    await loadSelectedPassenger(winnerId);
 
     setSuccessMessage(
-      "Passenger selected successfully. Ready for reveal."
+      "Passenger selected successfully. Ready for public reveal."
     );
   } catch (error) {
-    console.error("Passenger selection error:", error);
-
-    setErrorMessage(
-      error?.message || "Passenger selection failed."
+    console.error(
+      "Passenger selection error:",
+      error
     );
+
+    // Check whether the database completed the draw
+    // even if the API response failed.
+    try {
+      const { data: recoveryState, error: recoveryError } =
+        await supabase
+          .from("giveaway_experience")
+          .select("*")
+          .eq("id", EXPERIENCE_ID)
+          .single();
+
+      if (recoveryError) {
+        throw recoveryError;
+      }
+
+      setExperience(recoveryState);
+
+      if (
+        recoveryState.stage === STAGES.PASSENGER_SELECTED &&
+        recoveryState.selected_passenger_id != null
+      ) {
+        await loadSelectedPassenger(
+          recoveryState.selected_passenger_id
+        );
+
+        setSuccessMessage(
+          "Passenger selection was recovered successfully. Ready for reveal."
+        );
+
+        setErrorMessage("");
+        return;
+      }
+
+      setErrorMessage(
+        error?.message ||
+          "Passenger selection could not be completed."
+      );
+    } catch (recoveryError) {
+      console.error(
+        "Passenger recovery error:",
+        recoveryError
+      );
+
+      setErrorMessage(
+        "Selection status could not be verified. Do not repeat the draw."
+      );
+    }
   } finally {
     executingRef.current = false;
     setIsExecuting(false);
